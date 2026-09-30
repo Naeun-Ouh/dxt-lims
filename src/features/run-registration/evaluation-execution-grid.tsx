@@ -24,6 +24,12 @@ import {
   type NextRunPreview,
 } from './decision-continuation-model';
 import type { DecisionCommand, EvaluationCommand } from './lifecycle-authoring';
+import {
+  saveEvaluationRecord,
+  saveConclusionRecord,
+  conclusionPrerequisite,
+  confirmedCreatedRunNumber,
+} from './evaluation-workflow';
 
 export function EvaluationExecutionGrid({
   model,
@@ -73,16 +79,37 @@ export function EvaluationExecutionGrid({
       ),
     [model, measurements, targetBindings, engineerEvaluations],
   );
-  const [selected, setSelected] = useState<EvaluationProjection | null>(
-    () =>
+  const [selection, setSelection] = useState<{
+    subjectId: string;
+    targetId: string;
+  } | null>(() => {
+    const initial =
       projections.find((projection) =>
         decisionContext?.engineerEvaluationIds.includes(
           projection.engineerEvaluation?.id ?? '',
         ),
-      ) ??
-      projections[0] ??
-      null,
-  );
+      ) ?? projections[0];
+    return initial
+      ? { subjectId: initial.subject.id, targetId: initial.binding.target.id }
+      : null;
+  });
+  // Keep identity in state, never a stale copy of a saved Evaluation projection.
+  const selected =
+    projections.find(
+      (projection) =>
+        projection.subject.id === selection?.subjectId &&
+        projection.binding.target.id === selection.targetId,
+    ) ?? null;
+  const selectProjection = (projection: EvaluationProjection | null) =>
+    setSelection(
+      projection
+        ? {
+            subjectId: projection.subject.id,
+            targetId: projection.binding.target.id,
+          }
+        : null,
+    );
+  const [saving, setSaving] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const achieved = projections.filter(
     (projection) => projection.achievement.status === 'ACHIEVED',
@@ -130,7 +157,9 @@ export function EvaluationExecutionGrid({
           form="engineer-evaluation-form"
           disabled={
             !onRecordEvaluation ||
-            !onRecordDecision ||
+            !actor ||
+            !now ||
+            saving ||
             !selected?.achievement.measurementSummaryId
           }
         >
@@ -177,9 +206,10 @@ export function EvaluationExecutionGrid({
                     >
                       <td>
                         <button
+                          disabled={saving}
                           onClick={() => {
                             if (projection) {
-                              setSelected(projection);
+                              selectProjection(projection);
                               setInspectorOpen(true);
                             }
                           }}
@@ -240,7 +270,8 @@ export function EvaluationExecutionGrid({
                 <button
                   key={subject.id}
                   aria-pressed={selected?.subject.id === subject.id}
-                  onClick={() => setSelected(projection ?? null)}
+                  disabled={saving}
+                  onClick={() => selectProjection(projection ?? null)}
                 >
                   {subject.displayLabel}{' '}
                   <span>{projection?.resultValue ?? '—'}</span>
@@ -248,29 +279,28 @@ export function EvaluationExecutionGrid({
               );
             })}
           </div>
-          {onRecordEvaluation && onRecordDecision && actor && now && (
+          {(onRecordEvaluation || onRecordDecision) && actor && now && (
             <EvaluationAuthoringPanel
-              key={`${selected?.subject.id}:${selected?.binding.target.id}`}
+              key={`${selected?.subject.id}:${selected?.binding.target.id}:${selected?.achievement.measurementSummaryId}`}
               model={model}
               catalog={catalog}
               selected={selected}
               onRecordEvaluation={onRecordEvaluation}
               onRecordDecision={onRecordDecision}
-              initialNextActionTypeId={
-                selected?.engineerEvaluation &&
-                decisionContext?.engineerEvaluationIds.includes(
-                  selected.engineerEvaluation.id,
-                )
-                  ? continuation?.actionType?.id
-                  : undefined
-              }
+              saving={saving}
+              setSaving={setSaving}
               actor={actor}
               now={now}
             />
           )}
-          {!(onRecordEvaluation && onRecordDecision && actor && now) && (
+          {!((onRecordEvaluation || onRecordDecision) && actor && now) && (
             <section className="evaluation-readonly-comment">
               <h2>{t('Engineer Comment')}</h2>
+              <p>
+                {t(
+                  'Read-only. You do not have permission to record Evaluation or Run Conclusion.',
+                )}
+              </p>
               <p>
                 {selected?.engineerEvaluation?.comment ?? t('Not reviewed')}
               </p>
@@ -278,6 +308,7 @@ export function EvaluationExecutionGrid({
           )}
           {selectedContinuation && (
             <DecisionContinuationPanel
+              key={selectedContinuation.context.decision.id}
               continuation={selectedContinuation}
               selected={selected}
               nextRunHref={nextRunHref}
@@ -349,7 +380,7 @@ function DecisionContinuationPanel({
           <p>{evaluation?.comment ?? t('Not reviewed')}</p>
         </div>
         <div>
-          <span>{t('Run Conclusion')}</span>
+          <span>{t('Saved Run Conclusion')}</span>
           <b>{continuation.context.decisionStatement}</b>
           <p>{decision.reason}</p>
         </div>
@@ -389,13 +420,7 @@ function DecisionContinuationPanel({
                 setCreateError('');
                 try {
                   const result = await onCreateNextRun?.();
-                  if (
-                    result &&
-                    typeof result === 'object' &&
-                    'runNumber' in result &&
-                    typeof result.runNumber === 'number'
-                  )
-                    setCreatedNumber(result.runNumber);
+                  setCreatedNumber(confirmedCreatedRunNumber(result));
                   setStaged(true);
                 } catch (e) {
                   setCreateError(
@@ -432,117 +457,144 @@ function EvaluationAuthoringPanel({
   onRecordDecision,
   actor,
   now,
-  initialNextActionTypeId,
+  saving,
+  setSaving,
 }: {
   model: ExperimentWorkspaceModel;
   catalog: ReferenceCatalog;
   selected: EvaluationProjection | null;
-  onRecordEvaluation: (command: Omit<EvaluationCommand, 'id'>) => unknown;
-  onRecordDecision: (command: Omit<DecisionCommand, 'id'>) => unknown;
+  onRecordEvaluation?: (command: Omit<EvaluationCommand, 'id'>) => unknown;
+  onRecordDecision?: (command: Omit<DecisionCommand, 'id'>) => unknown;
   actor: string;
   now: () => string;
-  initialNextActionTypeId?: string;
+  saving: boolean;
+  setSaving: (saving: boolean) => void;
 }) {
   const { t } = useLocale();
+  // A comment is informative unless the engineer explicitly classifies it.
+  // Never derive an ACCEPT disposition from automatic Target Status.
   const [disposition, setDisposition] = useState<
     EngineerEvaluationRecord['disposition']
-  >(selected?.engineerEvaluation?.disposition ?? 'ACCEPT');
+  >(selected?.engineerEvaluation?.disposition ?? 'INFORMATIVE');
   const [comment, setComment] = useState(
     selected?.engineerEvaluation?.comment ?? '',
   );
   const [conclusion, setConclusion] = useState('');
   const [reason, setReason] = useState('');
-  const nextRunType = catalog.nextActionTypes.find(
-    (item) => item.code === 'DESIGN_NEXT_EXPERIMENT',
-  );
-  const [nextActionType, setNextActionType] = useState(
-    initialNextActionTypeId ?? '',
-  );
+  const [nextActionType, setNextActionType] = useState('');
   const [nextAction, setNextAction] = useState('');
-  const changeOptions = model.snapshot.assignments;
-  const [changeId, setChangeId] = useState(changeOptions[0]?.id ?? '');
-  const [changeValue, setChangeValue] = useState(changeOptions[0]?.value ?? '');
+  const [changeId, setChangeId] = useState('');
+  const [changeValue, setChangeValue] = useState('');
   const [message, setMessage] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const actionType = catalog.nextActionTypes.find(
+    (item) => item.id === nextActionType && item.active,
+  );
+  const isNextRun = actionType?.code === 'DESIGN_NEXT_EXPERIMENT';
+  const blocker = conclusionPrerequisite(selected, comment, disposition);
+  const conclusionBlocked = !onRecordDecision
+    ? 'You do not have permission to record Run Conclusion.'
+    : blocker;
+  const measured = !!selected?.achievement.measurementSummaryId;
+  const canSaveConclusion =
+    !saving &&
+    !conclusionBlocked &&
+    !!actionType &&
+    !!conclusion.trim() &&
+    !!reason.trim() &&
+    (!isNextRun || !!nextAction.trim()) &&
+    (!isNextRun || !changeId || !!changeValue.trim());
+
   const saveEvaluation = async () => {
-    if (!selected?.achievement.measurementSummaryId) {
-      setMessage(
-        'Select a measured Subject result before recording Evaluation.',
-      );
+    if (
+      saving ||
+      !onRecordEvaluation ||
+      !selected?.achievement.measurementSummaryId ||
+      !comment.trim()
+    )
       return;
-    }
+    setSaving(true);
+    setMessage('');
+    setError('');
     try {
-      setSaving(true);
-      await onRecordEvaluation({
-        subjectId: selected.subject.id,
-        seriesTargetId: selected.binding.target.id,
-        measurementSummaryId: selected.achievement.measurementSummaryId,
-        disposition,
-        comment,
-        evaluator: actor,
-        evaluatedAt: now(),
-      });
+      await saveEvaluationRecord(
+        selected.runId,
+        {
+          subjectId: selected.subject.id,
+          seriesTargetId: selected.binding.target.id,
+          measurementSummaryId: selected.achievement.measurementSummaryId,
+          disposition,
+          comment,
+          evaluator: actor,
+          evaluatedAt: now(),
+        },
+        onRecordEvaluation,
+      );
       setMessage('Engineer Evaluation saved.');
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : 'Unable to save Evaluation.',
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : 'Unable to save Evaluation.',
       );
     } finally {
       setSaving(false);
     }
   };
-  const saveDecision = async () => {
-    if (!selected?.engineerEvaluation) {
-      setMessage('Record Engineer Evaluation before Decision.');
+  const saveConclusion = async () => {
+    if (
+      !canSaveConclusion ||
+      !onRecordDecision ||
+      !selected?.engineerEvaluation ||
+      !actionType
+    )
       return;
-    }
+    setSaving(true);
+    setMessage('');
+    setError('');
     try {
-      const summaryId = selected.achievement.measurementSummaryId;
-      setSaving(true);
-      await onRecordDecision({
-        decisionStatement: conclusion,
-        conclusion,
-        reason,
-        nextActionTypeDefinitionId: nextActionType,
-        nextActionNote: nextAction,
-        evaluationIds: [selected.engineerEvaluation.id],
-        targetReferences: summaryId
-          ? [
-              {
-                seriesTargetId: selected.binding.target.id,
-                measurementSummaryId: summaryId,
-                status: selected.achievement.status,
-              },
-            ]
-          : [],
-        targetSubjectIds: [selected.subject.id],
-        targetOperationIds: selected.measurement
-          ? [selected.measurement.operation.id]
-          : [],
-        recordedBy: actor,
-        recordedAt: now(),
-        nextRunChange:
-          nextActionType === nextRunType?.id && changeId && changeValue.trim()
-            ? { assignmentId: changeId, after: changeValue.trim() }
-            : null,
-      });
-      setMessage('Decision and Next Action saved.');
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : 'Unable to save Decision.',
+      await saveConclusionRecord(
+        selected.runId,
+        {
+          decisionStatement: conclusion.trim(),
+          conclusion: conclusion.trim(),
+          reason: reason.trim(),
+          nextActionTypeDefinitionId: actionType.id,
+          // Complete is an explicit user-selected action, not inferred from a result.
+          nextActionNote: isNextRun ? nextAction.trim() : 'Complete Run',
+          evaluationIds: [selected.engineerEvaluation.id],
+          targetReferences: [
+            {
+              seriesTargetId: selected.binding.target.id,
+              measurementSummaryId: selected.achievement.measurementSummaryId!,
+              status: selected.achievement.status,
+            },
+          ],
+          targetSubjectIds: [selected.subject.id],
+          targetOperationIds: selected.measurement
+            ? [selected.measurement.operation.id]
+            : [],
+          recordedBy: actor,
+          recordedAt: now(),
+          nextRunChange:
+            isNextRun && changeId
+              ? { assignmentId: changeId, after: changeValue.trim() }
+              : null,
+        },
+        onRecordDecision,
+      );
+      setMessage('Run Conclusion saved.');
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : 'Unable to save Decision.',
       );
     } finally {
       setSaving(false);
     }
-  };
-  const changeAssignment = (id: string) => {
-    setChangeId(id);
-    setChangeValue(changeOptions.find((item) => item.id === id)?.value ?? '');
   };
   return (
     <section
       className="evaluation-authoring-panel"
       aria-label={t('Author Evaluation and Decision')}
+      aria-busy={saving}
     >
       <header>
         <b>{t('Engineer Comment')}</b>
@@ -555,37 +607,53 @@ function EvaluationAuthoringPanel({
         id="engineer-evaluation-form"
         onSubmit={(event) => {
           event.preventDefault();
-          if (!saving) void saveEvaluation();
+          void saveEvaluation();
         }}
       >
-        <div className="evaluation-authoring-row">
-          <label>
-            {t('Judgment')}
-            <select
-              value={disposition}
-              onChange={(event) =>
-                setDisposition(
-                  event.target.value as EngineerEvaluationRecord['disposition'],
-                )
-              }
-            >
-              <option value="ACCEPT">{t('ACCEPT')}</option>
-              <option value="NEEDS_REVIEW">{t('NEEDS REVIEW')}</option>
-              <option value="UNSUITABLE">{t('UNSUITABLE')}</option>
-              <option value="INFORMATIVE">{t('INFORMATIVE')}</option>
-            </select>
-          </label>
+        <fieldset
+          className="evaluation-comment-fields"
+          disabled={saving || !measured || !onRecordEvaluation}
+        >
           <label className="authoring-grow">
-            {t('Engineer Comment')}
+            <span className="sr-only">{t('Engineer Comment')}</span>
             <textarea
+              required
               rows={4}
               value={comment}
-              onChange={(event) => setComment(event.target.value)}
+              onChange={(event) => {
+                setComment(event.target.value);
+                setMessage('');
+              }}
               placeholder={t('Engineering interpretation')}
             />
           </label>
-          {saving && <output>{t('Saving…')}</output>}
-        </div>
+          <details className="evaluation-classification">
+            <summary>{t('Evaluation classification')}</summary>
+            <p>
+              {t(
+                'Comments are recorded as Informative by default. Target Status does not determine engineer judgment.',
+              )}
+            </p>
+            <label>
+              {t('Judgment')}
+              <select
+                value={disposition}
+                onChange={(event) => {
+                  setDisposition(
+                    event.target
+                      .value as EngineerEvaluationRecord['disposition'],
+                  );
+                  setMessage('');
+                }}
+              >
+                <option value="INFORMATIVE">{t('INFORMATIVE')}</option>
+                <option value="ACCEPT">{t('ACCEPT')}</option>
+                <option value="NEEDS_REVIEW">{t('NEEDS REVIEW')}</option>
+                <option value="UNSUITABLE">{t('UNSUITABLE')}</option>
+              </select>
+            </label>
+          </details>
+        </fieldset>
       </form>
       <header>
         <b>{t('Run Conclusion')}</b>
@@ -593,137 +661,144 @@ function EvaluationAuthoringPanel({
           {t('Conclusion is recorded separately after saving Evaluation.')}
         </small>
       </header>
-      <fieldset className="conclusion-options">
-        <legend className="sr-only">{t('Next Action')}</legend>
-        {catalog.nextActionTypes
-          .filter(
-            (item) =>
-              item.active &&
-              ['EXPERIMENT_COMPLETE', 'DESIGN_NEXT_EXPERIMENT'].includes(
-                item.code,
-              ),
-          )
-          .map((item) => (
-            <label key={item.id}>
-              <input
-                type="radio"
-                name="run-conclusion"
-                checked={nextActionType === item.id}
-                onChange={() => setNextActionType(item.id)}
-              />
-              {t(
-                item.code === 'EXPERIMENT_COMPLETE'
-                  ? 'Complete Run'
-                  : 'Create Next Run',
-              )}
-            </label>
-          ))}
-      </fieldset>
-      <details className="conclusion-record-form">
-        <summary>{t('Record conclusion details')}</summary>
-        <div className="evaluation-authoring-row">
-          <label className="authoring-grow">
-            {t('Decision')}
-            <input
-              value={conclusion}
-              onChange={(event) => setConclusion(event.target.value)}
-              placeholder={t('Concise scientific decision')}
-            />
-          </label>
-          <label className="authoring-grow">
-            {t('Rationale')}
-            <input
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              placeholder={t('Why continue this way?')}
-            />
-          </label>
-          <label>
-            {t('Next Action')}
-            <select
-              value={nextActionType}
-              onChange={(event) => setNextActionType(event.target.value)}
-            >
-              <option value="">{t('Choose Next Action')}</option>
-              {catalog.nextActionTypes
-                .filter((item) => item.active)
-                .map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {t(item.name)}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <label className="authoring-grow">
-            {t('Action note')}
-            <input
-              value={nextAction}
-              onChange={(event) => setNextAction(event.target.value)}
-              placeholder={t('What should the next experiment do?')}
-            />
-          </label>
-        </div>
-        {nextActionType === nextRunType?.id && (
+      {conclusionBlocked && (
+        <output className="evaluation-prerequisite">
+          {t(conclusionBlocked)}
+        </output>
+      )}
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void saveConclusion();
+        }}
+        onChange={() => {
+          setMessage('');
+          setError('');
+        }}
+      >
+        <fieldset
+          className="evaluation-conclusion-fields"
+          disabled={saving || !!conclusionBlocked}
+        >
+          <fieldset className="conclusion-options">
+            <legend className="sr-only">{t('Next Action')}</legend>
+            {catalog.nextActionTypes
+              .filter(
+                (item) =>
+                  item.active &&
+                  ['EXPERIMENT_COMPLETE', 'DESIGN_NEXT_EXPERIMENT'].includes(
+                    item.code,
+                  ),
+              )
+              .map((item) => (
+                <label key={item.id}>
+                  <input
+                    type="radio"
+                    name="run-conclusion"
+                    value={item.id}
+                    checked={nextActionType === item.id}
+                    onChange={() => setNextActionType(item.id)}
+                  />
+                  {t(
+                    item.code === 'EXPERIMENT_COMPLETE'
+                      ? 'Complete Run'
+                      : 'Design Next Experiment',
+                  )}
+                </label>
+              ))}
+          </fieldset>
+          <p className="evaluation-draft-note">
+            {t(
+              'Selection is a draft. Save Run Conclusion to record it. No Run is created here.',
+            )}
+          </p>
           <div className="evaluation-authoring-row">
-            <label>
-              {t('Change')}
-              <select
-                value={changeId}
-                onChange={(event) => changeAssignment(event.target.value)}
-              >
-                {changeOptions.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label} ·{' '}
-                    {item.subjectId ?? item.positionId ?? t('Run')}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              {t('Next value')}
-              <input
-                value={changeValue}
-                onChange={(event) => setChangeValue(event.target.value)}
+            <label className="authoring-grow">
+              {t('Run Conclusion')}
+              <textarea
+                required
+                rows={2}
+                value={conclusion}
+                onChange={(event) => setConclusion(event.target.value)}
+                placeholder={t('Concise scientific decision')}
               />
             </label>
+            <label className="authoring-grow">
+              {t('Reason')}
+              <textarea
+                required
+                rows={2}
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder={t('Why continue this way?')}
+              />
+            </label>
+          </div>
+          {isNextRun && (
+            <>
+              <label className="evaluation-next-note">
+                {t('Next Action')}
+                <textarea
+                  required
+                  rows={2}
+                  value={nextAction}
+                  onChange={(event) => setNextAction(event.target.value)}
+                  placeholder={t('What should the next experiment do?')}
+                />
+              </label>
+              <details className="conclusion-record-form">
+                <summary>{t('Optional next Run change')}</summary>
+                <div className="evaluation-authoring-row">
+                  <label>
+                    {t('Change')}
+                    <select
+                      value={changeId}
+                      onChange={(event) => {
+                        setChangeId(event.target.value);
+                        setChangeValue(
+                          model.snapshot.assignments.find(
+                            (item) => item.id === event.target.value,
+                          )?.value ?? '',
+                        );
+                      }}
+                    >
+                      <option value="">{t('No change')}</option>
+                      {model.snapshot.assignments.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.label} ·{' '}
+                          {item.subjectId ?? item.positionId ?? t('Run')}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {changeId && (
+                    <label>
+                      {t('Next value')}
+                      <input
+                        required
+                        value={changeValue}
+                        onChange={(event) => setChangeValue(event.target.value)}
+                      />
+                    </label>
+                  )}
+                </div>
+              </details>
+            </>
+          )}
+          <div className="evaluation-conclusion-actions">
             <button
+              type="submit"
               className="primary"
-              disabled={
-                saving ||
-                !selected?.engineerEvaluation ||
-                !nextActionType ||
-                !conclusion.trim() ||
-                !reason.trim() ||
-                !nextAction.trim()
-              }
-              onClick={() => {
-                void saveDecision();
-              }}
+              disabled={!canSaveConclusion}
             >
-              {t('Save Decision & Next Action')}
+              {t('Save Run Conclusion')}
             </button>
           </div>
-        )}
-        {nextActionType !== nextRunType?.id && (
-          <button
-            className="primary"
-            disabled={
-              saving ||
-              !selected?.engineerEvaluation ||
-              !nextActionType ||
-              !conclusion.trim() ||
-              !reason.trim() ||
-              !nextAction.trim()
-            }
-            onClick={() => {
-              void saveDecision();
-            }}
-          >
-            {t('Save Decision & Next Action')}
-          </button>
-        )}
-      </details>
+        </fieldset>
+      </form>
+      {saving && <output>{t('Saving…')}</output>}
       {message && <output>{t(message)}</output>}
+      {error && <output role="alert">{t(error)}</output>}
     </section>
   );
 }
