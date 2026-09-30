@@ -1,0 +1,146 @@
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { authorizedOperation } from '@/src/infrastructure/postgres/authorized-application';
+import { handleRepositoryRequest,dispatchRepository } from '@/app/api/repository/route';
+import { DxtApplication } from '@/src/application/dxt-application';
+import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
+import { projectAnalysisRows,saveAnalysisView,type SavedAnalysisView } from '@/src/domain/analysis';
+import type { SavedAnalysisAccess,SavedAnalysisSharing } from '@/src/application/saved-analysis-access';
+import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
+import type { productionMeasurementContract } from './postgres-measurement-contract';
+
+export async function savedAnalysisAuthorizationContract(db:SqlDatabase,proofs:Awaited<ReturnType<typeof productionMeasurementContract>>){
+ const call=(p:string,input:Record<string,unknown>)=>authorizedOperation(db,`share-${p}`,input,dispatchRepository);
+ const api=(p:string,input:Record<string,unknown>)=>handleRepositoryRequest(new Request('http://localhost/api/repository',{method:'POST',headers:{'content-type':'application/json','x-role':'ADMIN','x-principal-id':'share-owner','x-department':'share-a'},body:JSON.stringify(input)}),(i,d)=>authorizedOperation(db,`share-${p}`,i,d??dispatchRepository));
+ const ok=async(p:string,input:Record<string,unknown>)=>{const r=await api(p,input);assert.equal(r.status,200,await r.clone().text());return r.json();};
+ const read=(p:string,id:string)=>call(p,{operation:'analysis.load',id}) as Promise<{version:number;record:SavedAnalysisView}>;
+ const access=(id:string)=>call('owner',{operation:'analysis.access',id}) as Promise<SavedAnalysisAccess>;
+ const save=(view:SavedAnalysisView,version=0)=>({operation:'analysis.save',view,command:{commandId:randomUUID(),expectedVersion:version}});
+ const share=(id:string,sharing:SavedAnalysisSharing,version:number)=>({operation:'analysis.share',id,sharing,command:{commandId:randomUUID(),expectedVersion:version}});
+ const privateAudience:SavedAnalysisSharing={visibility:'PRIVATE',targetId:null,audiences:[]};
+ const direct:SavedAnalysisSharing={...privateAudience,audiences:[{kind:'PRINCIPAL',id:'share-peer'}]};
+ for(const p of ['owner','peer','viewer','outsider','admin','editor'])await db.query('INSERT INTO auth_principal VALUES($1,$2,true,$3)',[`share-${p}`,`trusted-share-${p}`,p==='admin'?'ADMIN':'GENERAL_USER']);
+ await db.query("INSERT INTO auth_org_unit VALUES('share-a','DEPARTMENT',NULL),('share-b','DEPARTMENT',NULL),('share-area','AREA',NULL)");
+ await db.query("INSERT INTO auth_membership VALUES('share-viewer','share-a',false),('share-peer','share-b',false),('share-owner','share-a',false)");
+ const roots=(await db.query<{study_id:string;series_slug:string}>('SELECT study_id,series_slug FROM study')).rows;
+ for(const s of roots)await db.query("INSERT INTO study_access(study_id,responsible_user_id,responsible_department_id,area_id,visibility) VALUES($1,'share-owner','share-a','share-area','PRIVATE') ON CONFLICT(study_id) DO UPDATE SET responsible_user_id='share-owner',responsible_department_id='share-a',area_id='share-area',visibility='PRIVATE'",[s.study_id]);
+ const grant=async(p:string,action:string,slug:string)=>db.query('INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT $1,study_id,$2,$3,$4 FROM study WHERE series_slug=$5',[randomUUID(),`share-${p}`,action,'share-admin',slug]);
+ const tables=['saved_analysis','saved_analysis_access','saved_analysis_access_grant','saved_analysis_source_ref','saved_analysis_command_receipt'];
+ const state=async()=>{const result=[];for(const t of tables)result.push((await db.query(`SELECT to_jsonb(t) payload FROM ${t} t ORDER BY to_jsonb(t)::text`)).rows);return result;};
+ const app=new DxtApplication(createProductionSliceRepositories(db,await hydrateConfigurationPackages(db,['config-package-photo-v1','config-package-material-rd-v1'])));
+ const views:SavedAnalysisView[]=[];
+ for(const proof of proofs){
+  const selection={...proof.selection,aggregation:'MEAN' as const};
+  const rows=projectAnalysisRows(await app.queryAnalysisSources(await app.analysisSourceCatalog(),selection),selection);
+  const view=saveAnalysisView({id:`sharing-${proof.snapshot.id}`,name:`Private ${proof.snapshot.subjects[0].type} analysis`,owner:'forged-owner',visibility:'SHARED',studyId:selection.studyId,runIds:selection.runIds,subjectIds:selection.subjectIds,parameterIds:selection.parameterIds,datasetIds:selection.datasetIds,visualization:{type:'TABLE',xDimension:'SUBJECT',groupBy:'SUBJECT'},preparation:{aggregation:'MEAN',datasetOrigin:'ALL',includeExcluded:true},filters:{text:'',sort:'SUBJECT'},savedAt:'2026-09-20T00:00:00Z'},rows);
+  views.push(view);
+  const create=save(view);await ok('owner',create);await ok('owner',create);
+  let loaded=await read('owner',view.id);assert.equal(loaded.version,1);assert.equal(loaded.record.owner,'trusted-share-owner');assert.equal(loaded.record.visibility,'PRIVATE');
+  const ownership=(await db.query("SELECT p.* FROM saved_analysis_access p JOIN saved_analysis a ON a.id=p.saved_analysis_id WHERE a.domain_id=$1",[view.id])).rows[0];
+  assert.equal(ownership.owner_principal_id,'share-owner');assert.equal(ownership.created_by_principal_id,'share-owner');
+  assert.equal((await api('admin',{operation:'analysis.load',id:view.id})).status,404,'Admin metadata role does not create a Saved Analysis audience');
+  assert.equal((await access(view.id)).canShareSavedAnalysis,false,'scientific ownership/access is not publication authority');
+  const before=await state();assert.equal((await api('owner',share(view.id,direct,loaded.version))).status,403);assert.deepEqual(await state(),before);
+  await grant('owner','MANAGE_ACCESS',view.studyId);
+  assert.equal((await access(view.id)).canShareSavedAnalysis,true);
+  assert.equal((await api('owner',share(view.id,{visibility:'AREA',targetId:'share-area',audiences:[]},loaded.version))).status,403,'restricted Study does not permit Area publication');
+  const sourceGrants=await db.query('SELECT * FROM study_access_grant ORDER BY id');
+  const shared=share(view.id,direct,loaded.version);const outcome=await ok('owner',shared) as {actor:string};assert.equal(outcome.actor,'share-owner');await ok('owner',shared);
+  assert.deepEqual(await db.query('SELECT * FROM study_access_grant ORDER BY id'),sourceGrants,'sharing never propagates scientific grants');
+  assert.equal((await api('peer',{operation:'analysis.load',id:view.id})).status,404,'audience without sources denied');
+  assert.deepEqual(await call('peer',{operation:'analysis.list'}),[]);
+  await grant('peer','VIEW_RUN',view.studyId);await ok('peer',{operation:'analysis.load',id:view.id});
+  const peerAccess=await call('peer',{operation:'analysis.access',id:view.id}) as SavedAnalysisAccess;assert.equal(peerAccess.canEditSavedAnalysis,false);assert.equal(peerAccess.canShareSavedAnalysis,false);assert.equal(peerAccess.canDeleteSavedAnalysis,false);
+  await db.query("INSERT INTO saved_analysis_access_grant SELECT $1,id,'share-admin',NULL,'MANAGE_SAVED_ANALYSIS_ACCESS','share-admin',true,NULL FROM saved_analysis WHERE domain_id=$2",[randomUUID(),view.id]);
+  assert.equal((await api('admin',{operation:'analysis.load',id:view.id})).status,404,'metadata management does not grant rendering/audience rights');
+  const protectedBefore=await state();
+  for(const request of [save({...view,name:'attack'},2),share(view.id,privateAudience,2),{operation:'analysis.delete',id:view.id},{operation:'analysis.transfer',id:view.id}])assert.equal((await api('peer',request)).status,403);
+  assert.deepEqual(await state(),protectedBefore);
+  await db.query("UPDATE study_access_grant SET active=false WHERE principal_id='share-peer'");
+  assert.equal((await api('peer',{operation:'analysis.load',id:view.id})).status,404);
+  assert.deepEqual(await call('peer',{operation:'analysis.list'}),[]);
+  await grant('peer','VIEW_RUN',view.studyId);
+  loaded=await read('owner',view.id);
+  await ok('owner',share(view.id,privateAudience,loaded.version));
+  assert.equal((await api('peer',{operation:'analysis.load',id:view.id})).status,404,'share revocation independently denies');
+  assert.equal((await api('peer',{operation:'measurement.query',query:{datasetIds:view.datasetIds,savedAnalysisId:view.id}})).status,404,'pinned UI queries reauthorize Saved Analysis audience');
+  assert.equal((await api('peer',{operation:'measurement.query',query:{datasetIds:view.datasetIds}})).status,200,'revocation did not alter scientific rights');
+  // Content and audience share a version, preserving concurrent edits.
+  loaded=await read('owner',view.id);await ok('owner',save({...view,name:'Updated exact view',owner:'another-forged'},loaded.version));
+  assert.equal((await api('owner',share(view.id,direct,loaded.version))).status,409);
+  loaded=await read('owner',view.id);assert.equal(loaded.record.owner,'trusted-share-owner');
+  const race=await Promise.all([api('owner',save({...view,name:'Concurrent content'},loaded.version)),api('owner',share(view.id,direct,loaded.version))]);
+  assert.deepEqual(race.map(r=>r.status).sort((a,b)=>a-b),[200,409]);
+  // Injected failure rolls back policy, grants, aggregate version and receipt together.
+  await db.query("CREATE OR REPLACE FUNCTION fail_share_receipt() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'share receipt failure'; END $$");
+  await db.query('CREATE TRIGGER fail_share_receipt BEFORE INSERT ON saved_analysis_command_receipt FOR EACH ROW EXECUTE FUNCTION fail_share_receipt()');
+  const rollbackBefore=await state();try{assert.notEqual((await api('owner',share(view.id,direct,(await read('owner',view.id)).version))).status,200);}finally{await db.query('DROP TRIGGER fail_share_receipt ON saved_analysis_command_receipt');}
+  assert.deepEqual(await state(),rollbackBefore);
+  const sid=roots.find(s=>s.series_slug===view.studyId)!.study_id;
+  await db.query("UPDATE study_access SET visibility='RESPONSIBLE_DEPARTMENT' WHERE study_id=$1",[sid]);
+  await ok('owner',share(view.id,{visibility:'DEPARTMENT',targetId:'share-a',audiences:[]},(await read('owner',view.id)).version));
+  await ok('viewer',{operation:'analysis.load',id:view.id});
+  // Keep scientific access granted during org transfer, isolating the audience condition.
+  await grant('viewer','VIEW_RUN',view.studyId);
+  await db.query("UPDATE auth_membership SET unit_id='share-b' WHERE principal_id='share-viewer'");
+  assert.equal((await api('viewer',{operation:'analysis.load',id:view.id})).status,404);
+  assert.equal((await db.query('SELECT owner_principal_id,created_by_principal_id FROM saved_analysis_access WHERE saved_analysis_id=$1',[ownership.saved_analysis_id])).rows[0].created_by_principal_id,'share-owner');
+  await db.query("UPDATE auth_membership SET unit_id='share-a' WHERE principal_id='share-viewer'");
+  await ok('owner',share(view.id,{visibility:'STUDY',targetId:view.studyId,audiences:[]},(await read('owner',view.id)).version));
+  await ok('peer',{operation:'analysis.load',id:view.id});
+  await db.query("UPDATE study_access SET visibility='AREA' WHERE study_id=$1",[sid]);
+  await db.query("INSERT INTO auth_membership VALUES('share-peer','share-area',false) ON CONFLICT DO NOTHING");
+  await ok('owner',share(view.id,{visibility:'AREA',targetId:'share-area',audiences:[]},(await read('owner',view.id)).version));
+  await ok('peer',{operation:'analysis.load',id:view.id});
+  await db.query("DELETE FROM auth_membership WHERE principal_id='share-peer' AND unit_id='share-area'");
+  assert.equal((await api('peer',{operation:'analysis.load',id:view.id})).status,404);
+  await ok('owner',share(view.id,{...privateAudience,audiences:[{kind:'DEPARTMENT',id:'share-a'}]},(await read('owner',view.id)).version));
+  await ok('viewer',{operation:'analysis.load',id:view.id});
+  // Current owner loses source access: ownership remains but view and writes deny.
+  const ownerGrants=await db.query("SELECT id FROM study_access_grant WHERE principal_id='share-owner' AND active");
+  await db.query("UPDATE study_access SET responsible_user_id='share-admin',visibility='PRIVATE' WHERE study_id=$1",[sid]);
+  await db.query("UPDATE study_access_grant SET active=false WHERE principal_id='share-owner'");
+  assert.equal((await api('owner',{operation:'analysis.load',id:view.id})).status,404);
+  assert.equal((await db.query('SELECT owner_principal_id FROM saved_analysis_access WHERE saved_analysis_id=$1',[ownership.saved_analysis_id])).rows[0].owner_principal_id,'share-owner');
+  await db.query("UPDATE study_access SET responsible_user_id='share-owner' WHERE study_id=$1",[sid]);
+  await db.query('UPDATE study_access_grant SET active=true WHERE id=ANY($1::text[])',[ownerGrants.rows.map(r=>r.id)]);
+  await ok('owner',share(view.id,privateAudience,(await read('owner',view.id)).version));
+ }
+ const cross={...views[0],id:randomUUID(),name:'Hidden multi-source view',runIds:views.flatMap(v=>v.runIds),datasetIds:views.flatMap(v=>v.datasetIds),subjectIds:[...new Set(views.flatMap(v=>v.subjectIds))],parameterIds:[...new Set(views.flatMap(v=>v.parameterIds))],sourceReferences:views.flatMap(v=>v.sourceReferences)};
+ await ok('owner',save(cross));await ok('owner',share(cross.id,direct,1));
+ await db.query("UPDATE study_access_grant SET active=false WHERE principal_id='share-peer'");
+ await grant('peer','VIEW_RUN',views[0].studyId);
+ assert.equal((await api('peer',{operation:'analysis.load',id:cross.id})).status,404);assert.ok(!JSON.stringify(await call('peer',{operation:'analysis.list'})).includes('Hidden multi-source view'));
+ await grant('peer','VIEW_RUN',views[1].studyId);await ok('peer',{operation:'analysis.load',id:cross.id});
+ // Source edits validate the entire final set, including mismatched Subject/Parameter/representative identity.
+ const invalidBefore=await state();
+ for(const change of [{datasetIds:['missing']},{sourceReferences:cross.sourceReferences.map(r=>({...r,parameterId:'missing'}))},{sourceReferences:cross.sourceReferences.map(r=>({...r,representativeResultId:'missing'}))}])assert.equal((await api('owner',save({...cross,...change},2))).status,404);
+ assert.deepEqual(await state(),invalidBefore);
+ // Explicit EDIT is independent of SHARE, and cannot bypass final-source authorization.
+ await db.query("INSERT INTO saved_analysis_access_grant SELECT $1,id,'share-peer',NULL,'EDIT_SAVED_ANALYSIS','share-admin',true,NULL FROM saved_analysis WHERE domain_id=$2",[randomUUID(),views[0].id]);
+ await ok('owner',share(views[0].id,direct,(await read('owner',views[0].id)).version));
+ assert.equal((await call('peer',{operation:'analysis.access',id:views[0].id}) as SavedAnalysisAccess).canEditSavedAnalysis,true);
+ assert.equal((await call('peer',{operation:'analysis.access',id:views[0].id}) as SavedAnalysisAccess).canShareSavedAnalysis,false);
+ const editable=await read('peer',views[0].id);
+ await ok('peer',save({...editable.record,name:'Delegated edit'},editable.version));
+ assert.equal((await api('peer',share(views[0].id,privateAudience,editable.version+1))).status,403);
+ await db.query("UPDATE study_access_grant SET active=false WHERE principal_id='share-peer' AND study_id=(SELECT study_id FROM study WHERE series_slug=$1)",[views[1].studyId]);
+ const sourceEditBefore=await state();
+ assert.equal((await api('peer',save({...cross,id:views[0].id},editable.version+1))).status,404,'all resulting sources are reauthorized on edit');
+ assert.deepEqual(await state(),sourceEditBefore);
+ await grant('peer','VIEW_RUN',views[1].studyId);
+ const same=save({...views[0],id:randomUUID()});
+ const raced=await Promise.all([api('owner',same),api('peer',same)]);
+ assert.equal(raced.filter(r=>r.status===200).length,1,'racing creation cannot steal a trusted owner');
+ assert.ok(raced.filter(r=>r.status!==200).every(r=>[403,404,409].includes(r.status)));
+ const winning=raced[0].status===200?'share-owner':'share-peer';
+ assert.equal((await db.query('SELECT p.owner_principal_id FROM saved_analysis_access p JOIN saved_analysis a ON a.id=p.saved_analysis_id WHERE a.domain_id=$1',[same.view.id])).rows[0].owner_principal_id,winning);
+ // Legacy free text and SHARED never backfill trust.
+ const legacy={...views[0],id:randomUUID(),owner:'share-peer',visibility:'SHARED' as const};await app.savedAnalyses.save(legacy,randomUUID());
+ assert.equal((await api('peer',{operation:'analysis.load',id:legacy.id})).status,404);
+ await db.query('INSERT INTO saved_analysis_access(saved_analysis_id,owner_principal_id) SELECT id,$2 FROM saved_analysis WHERE domain_id=$1',[legacy.id,'share-peer']);
+ await ok('peer',{operation:'analysis.load',id:legacy.id});
+ await assert.rejects(call('missing',{operation:'analysis.list'}));
+ return views.map(v=>v.id);
+}

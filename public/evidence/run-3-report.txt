@@ -1,0 +1,6 @@
+DXT LIMS mock metrology snapshot
+Run 3
+DTS: 4.3
+BCD: 17.2 nm
+3sigma: 1.31 nm
+Layer: CURATED

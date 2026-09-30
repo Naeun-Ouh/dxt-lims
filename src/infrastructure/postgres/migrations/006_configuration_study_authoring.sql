@@ -1,0 +1,12 @@
+BEGIN;
+CREATE TABLE configuration_authoring_state (singleton boolean PRIMARY KEY DEFAULT true CHECK(singleton), version bigint NOT NULL DEFAULT 0);
+INSERT INTO configuration_authoring_state VALUES(true,0);
+CREATE TABLE configuration_package_draft (id text PRIMARY KEY, payload jsonb NOT NULL);
+CREATE TABLE configuration_definition_authorship (revision_id text PRIMARY KEY, definition_id text NOT NULL, version integer NOT NULL CHECK(version>0), scope_key text NOT NULL, payload jsonb NOT NULL, UNIQUE(definition_id,version,scope_key));
+CREATE TABLE configuration_rule_state (revision_id text PRIMARY KEY, status text NOT NULL CHECK(status IN ('DRAFT','ACTIVE','INACTIVE')));
+CREATE TABLE configuration_authoring_receipt (command_id text PRIMARY KEY, request_hash text NOT NULL, result jsonb NOT NULL);
+CREATE TABLE study_setup_command_receipt (study_id uuid NOT NULL REFERENCES study(study_id), command_id text NOT NULL, request_hash text NOT NULL, setup_version_id uuid NOT NULL REFERENCES study_setup_version(setup_version_id), PRIMARY KEY(study_id,command_id));
+CREATE TRIGGER configuration_draft_immutable BEFORE UPDATE OR DELETE ON configuration_package_draft FOR EACH ROW EXECUTE FUNCTION reject_immutable_configuration_change();
+CREATE TRIGGER configuration_authorship_immutable BEFORE UPDATE OR DELETE ON configuration_definition_authorship FOR EACH ROW EXECUTE FUNCTION reject_immutable_configuration_change();
+ALTER TABLE study_setup_assignment ADD COLUMN ordinal integer NOT NULL DEFAULT 0;
+COMMIT;

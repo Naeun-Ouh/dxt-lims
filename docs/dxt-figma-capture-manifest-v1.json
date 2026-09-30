@@ -1,0 +1,4150 @@
+{
+  "schemaVersion": "1.0",
+  "title": "DXT As-Is UI Route & State Capture Manifest",
+  "inspectedAt": "2026-09-26",
+  "baseUrl": "http://localhost:3200",
+  "status": "INVENTORY_ONLY_NOT_CAPTURED",
+  "routeInventory": [
+    {
+      "id": "home",
+      "routePattern": "/",
+      "kind": "CANONICAL",
+      "purpose": "Home dashboard",
+      "source": "app/page.tsx",
+      "queryContract": {},
+      "entryPoint": "Brand/Home"
+    },
+    {
+      "id": "study-dts-improvement",
+      "routePattern": "/series/dts-improvement",
+      "kind": "CANONICAL",
+      "purpose": "Overview / Experiment Setup / Runs",
+      "source": "app/series/dts-improvement/page.tsx",
+      "queryContract": {
+        "view": [
+          "overview",
+          "setup",
+          "runs"
+        ],
+        "picker": "1; Material also accepts an operation ID",
+        "inspector": "1",
+        "item": "existing selected setup item"
+      },
+      "entryPoint": "Home accessible Studies / Run Study link"
+    },
+    {
+      "id": "study-cmp-stability",
+      "routePattern": "/series/cmp-stability",
+      "kind": "CANONICAL",
+      "purpose": "Overview / Experiment Setup / Runs",
+      "source": "app/series/cmp-stability/page.tsx",
+      "queryContract": {
+        "view": [
+          "overview",
+          "setup",
+          "runs"
+        ],
+        "picker": "1; Material also accepts an operation ID",
+        "inspector": "1",
+        "item": "existing selected setup item"
+      },
+      "entryPoint": "Home accessible Studies / Run Study link"
+    },
+    {
+      "id": "study-adhesion-material-optimization",
+      "routePattern": "/series/adhesion-material-optimization",
+      "kind": "CANONICAL",
+      "purpose": "Overview / Experiment Setup / Runs",
+      "source": "app/series/adhesion-material-optimization/page.tsx",
+      "queryContract": {
+        "view": [
+          "overview",
+          "setup",
+          "runs"
+        ],
+        "picker": "1; Material also accepts an operation ID",
+        "inspector": "1",
+        "item": "existing selected setup item"
+      },
+      "entryPoint": "Home accessible Studies / Run Study link"
+    },
+    {
+      "id": "creation",
+      "routePattern": "/runs/new",
+      "kind": "CANONICAL",
+      "purpose": "Source choice and review",
+      "source": "app/runs/new/page.tsx",
+      "queryContract": {
+        "series": [
+          "dts-improvement",
+          "cmp-stability",
+          "adhesion-material-optimization"
+        ],
+        "from": "study-default selects STUDY_DEFAULT; other values select PREVIOUS_RUN. Existing/Blank and selected Run ID are local state."
+      },
+      "entryPoint": "Study Create Run"
+    },
+    {
+      "id": "run",
+      "routePattern": "/series/[seriesSlug]/runs/[runNumber]/engineering-grid",
+      "kind": "CANONICAL",
+      "purpose": "Plan / Actual / Measurement / Evaluation",
+      "source": "app/series/[seriesSlug]/runs/[runNumber]/engineering-grid/page.tsx",
+      "queryContract": {
+        "view": [
+          "plan",
+          "actual",
+          "measurement",
+          "evaluation"
+        ],
+        "subject": "existing Subject ID (Plan jump)",
+        "action": "preview (Evaluation next action)"
+      },
+      "entryPoint": "Home Continue / Study Runs"
+    },
+    {
+      "id": "analysis",
+      "routePattern": "/analysis",
+      "kind": "CANONICAL",
+      "purpose": "Source selection, chart/table, saved context and sharing",
+      "source": "app/analysis/page.tsx",
+      "queryContract": {
+        "study": "registered slug",
+        "runs": "comma-separated Run numbers, not Run IDs",
+        "parameters": "comma-separated exact parameter IDs",
+        "subjects": "comma-separated Subject IDs",
+        "view": [
+          "LINE",
+          "BAR",
+          "SCATTER",
+          "TABLE"
+        ],
+        "savedView": "exact existing Saved Analysis ID"
+      },
+      "entryPoint": "Run Analyze / Analyze Measurement"
+    },
+    {
+      "id": "reference",
+      "routePattern": "/reference",
+      "kind": "CANONICAL",
+      "purpose": "Definitions / Applicability / Package Versions",
+      "source": "app/reference/page.tsx",
+      "queryContract": {
+        "section": [
+          "definitions",
+          "applicability",
+          "packages"
+        ],
+        "definition": "exact revision ID",
+        "package": "exact package version ID",
+        "preview": "1",
+        "validation": "1",
+        "inspector": "1"
+      },
+      "entryPoint": "Global Reference Studio navigation"
+    },
+    {
+      "id": "samples",
+      "routePattern": "/samples",
+      "kind": "CANONICAL",
+      "purpose": "Catalog and local creation wizard",
+      "source": "app/samples/page.tsx",
+      "queryContract": {},
+      "entryPoint": "Global Samples navigation"
+    },
+    {
+      "id": "sample",
+      "routePattern": "/samples/[sampleCode]",
+      "kind": "CANONICAL",
+      "purpose": "Identity, revision history, usage",
+      "source": "app/samples/[sampleCode]/page.tsx",
+      "queryContract": {},
+      "entryPoint": "Samples catalog"
+    },
+    {
+      "id": "revision",
+      "routePattern": "/samples/[sampleCode]/revisions/[revision]",
+      "kind": "CANONICAL",
+      "purpose": "Exact material revision and delta",
+      "source": "app/samples/[sampleCode]/revisions/[revision]/page.tsx",
+      "queryContract": {},
+      "entryPoint": "Sample revision history"
+    },
+    {
+      "id": "legacy-run",
+      "routePattern": "/series/dts-improvement/runs/[runId]",
+      "kind": "VISIBLE_LEGACY",
+      "purpose": "Historical mock detail, only Runs 1–4",
+      "source": "app/series/dts-improvement/runs/[runId]/page.tsx",
+      "queryContract": {},
+      "entryPoint": "Sample detail → Used in experiments"
+    },
+    {
+      "id": "legacy-prep",
+      "routePattern": "/series/dts-improvement/runs/[runId]/data-preparation",
+      "kind": "VISIBLE_LEGACY",
+      "purpose": "Local Group / Calculate prototype",
+      "source": "app/series/dts-improvement/runs/[runId]/data-preparation/page.tsx",
+      "queryContract": {},
+      "entryPoint": "Historical Run → Prepare Data"
+    }
+  ],
+  "counts": {
+    "totalRoutes": 13,
+    "normalizedRouteFamilies": 11,
+    "productionAndMasterRoutes": 11,
+    "visibleLegacyRoutes": 2,
+    "totalCaptureFrames": 152,
+    "priority": {
+      "P1": 61,
+      "P3": 39,
+      "P2": 52
+    },
+    "domainVariant": {
+      "GENERIC": 125,
+      "SEMICONDUCTOR VARIANT": 19,
+      "MATERIAL VARIANT": 8
+    },
+    "availability": {
+      "READY": 100,
+      "ROLE_REQUIRED": 14,
+      "FAULT_REQUIRED": 8,
+      "WRITE_REQUIRED": 14,
+      "STATE_REQUIRED": 14,
+      "TRANSIENT": 2
+    }
+  },
+  "countingRules": [
+    "Routes count canonical path patterns; three registered static Study routes count separately. Static Run specializations share the dynamic engineering-grid canonical pattern.",
+    "Query tabs, forms, drawers, confirmations, permissions and transient states count as frames, not routes.",
+    "Two still-linked legacy route patterns are included in totalRoutes and clearly labeled.",
+    "Conditional frames remain in totalCaptureFrames; READY is a source/data-backed candidate, not a screenshot or browser-render certification."
+  ],
+  "representativeData": [
+    {
+      "study": "dts-improvement",
+      "runs": [
+        19,
+        20
+      ],
+      "runIds": [
+        "run-ea41ef82-bf47-4eb8-8c70-a8888b97d7ff-19",
+        "run-55bbfaa3-5060-4d9e-ada4-e08c9753038a-20"
+      ],
+      "subjects": [
+        "PHO7814.01",
+        "PHO7814.02",
+        "PHO7814.03",
+        "PHO7814.04"
+      ],
+      "notes": "19 has one execution and BCD SITE evidence; 20 has no execution/evaluation/Decision."
+    },
+    {
+      "study": "cmp-stability",
+      "runs": [
+        13,
+        14
+      ],
+      "runIds": [
+        "run-09c8cddc-0ee5-406a-af4a-cab5e7e86852-13",
+        "run-7c86bb87-2f1e-447b-bbd2-ebed18a03e19-14"
+      ],
+      "subjects": [
+        "RSA6420.01",
+        "RSA6420.02",
+        "RSA6420.03",
+        "RSA6420.04"
+      ],
+      "notes": "13 has one execution and PRE/POST thickness datasets; 14 has no execution/Decision."
+    },
+    {
+      "study": "adhesion-material-optimization",
+      "runs": [
+        4,
+        5
+      ],
+      "runIds": [
+        "run-559045fa-fd86-4222-bab5-39fb0022e91c-4",
+        "run-97666cd1-1229-4f5d-a73f-d0cf364955a4-5"
+      ],
+      "subjects": [
+        "SP-01",
+        "SP-02",
+        "SP-03",
+        "SP-04"
+      ],
+      "notes": "4 has one execution, Peel Force and Viscosity datasets, evaluation/Decision; 5 has no execution/Decision."
+    },
+    {
+      "savedAnalysisId": "analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8",
+      "name": "UAT v1 PHOTO BCD 17.05",
+      "study": "dts-improvement",
+      "run": 19,
+      "datasetIds": [
+        "measurement-1789997153371-6d42jc:dataset"
+      ],
+      "visibility": "PRIVATE"
+    },
+    {
+      "sample": "D031",
+      "revisions": [
+        1,
+        2,
+        3
+      ],
+      "source": "src/mock/materials.ts",
+      "productionPersistence": false
+    }
+  ],
+  "currentConditions": [
+    "Verified read-only repository calls: run.list, execution.load, measurement.load, decision.load, analysis.list, measurement.datasets, configuration.load, study.permissions, run.preview.",
+    "All three Study Default previews READY. The current principal can edit setup/Plan and create Runs, but has no configuration author/activation rights.",
+    "PHOTO v1 package is INACTIVE; CMP v1 and Material v1 ACTIVE. There are no draft packages or authored definitions in current configuration response.",
+    "All six existing UAT snapshots list all four subjects in every registered operation; no production split/rejoin capture data is available.",
+    "Five source measurement datasets and one private Saved Analysis were returned. No production derived or excluded-result example was verified."
+  ],
+  "excludedRoutes": [
+    {
+      "route": "/api/repository",
+      "reason": "API endpoint, not a user-facing screen."
+    },
+    {
+      "route": "/series/dts-improvement/analysis",
+      "reason": "Same Analysis Workspace with initial Study context; canonical capture /analysis?study=dts-improvement."
+    },
+    {
+      "route": "/series/dts-improvement/runs/18/workspace",
+      "reason": "PostgreSQL mode redirects to engineering-grid; no separate production screen."
+    },
+    {
+      "route": "/series/cmp-stability/runs/12/workspace",
+      "reason": "PostgreSQL mode redirects to engineering-grid; no separate production screen."
+    },
+    {
+      "route": "/reference/conditions/[conditionCode]",
+      "reason": "Legacy detail family has no incoming link from current Reference Studio/navigation; only linked within orphan legacy reference pages."
+    },
+    {
+      "route": "/reference/measurement-operations/[operationCode]",
+      "reason": "Orphan legacy detail family; no current navigation entry."
+    },
+    {
+      "route": "/reference/experiment-types/[typeCode]/areas/[areaCode]",
+      "reason": "Orphan legacy reference family; no current navigation entry."
+    },
+    {
+      "route": "Static engineering-grid files for DTS18/19, CMP12/13, Material3/4",
+      "reason": "Same canonical engineering-grid route family; mock 18/12/3 are not populated production UAT candidates."
+    }
+  ],
+  "notImplementedScreens": [
+    "SSO/login/logout/account switch or enterprise identity administration",
+    "Standalone Authorization administration or Study sharing UI",
+    "Standalone Reference Reasoning Readiness route (readiness belongs to Study Setup)",
+    "Standalone Decision route or Run Review route (inline/local state)",
+    "Compare workspace (disabled tab)",
+    "Analysis cross-Study selection authoring (current UI selects one Study)",
+    "New Study creation or Study title/intent editing screen; only three registered Study entry routes (study.edit API is not an exposed authoring screen)",
+    "Separate equipment/recipe master routes or automatic Position-to-Site mapping"
+  ],
+  "captures": [
+    {
+      "id": "home-populated",
+      "group": "Home",
+      "screenName": "Dashboard",
+      "route": "/",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "POPULATED",
+      "study": null,
+      "run": null,
+      "purpose": "Continue Working, compact metrics, September activity Gantt, recent Runs and accessible Studies in one generic capture.",
+      "capturePriority": "P1",
+      "frameName": "Home / Dashboard / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-home/production-home.tsx",
+      "routeId": "home",
+      "url": "http://localhost:3200/",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "home-empty",
+      "group": "Home",
+      "screenName": "Dashboard",
+      "route": "/",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "EMPTY",
+      "study": null,
+      "run": null,
+      "purpose": "No personal work and permission-filtered empty discovery.",
+      "capturePriority": "P3",
+      "frameName": "Home / Dashboard / Empty",
+      "setupSteps": [
+        "Use an existing approved principal with no personal/accessible work; no fabricated Studies."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-home/production-home.tsx",
+      "routeId": "home",
+      "url": "http://localhost:3200/",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "home-error",
+      "group": "Home",
+      "screenName": "Dashboard",
+      "route": "/",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "ERROR",
+      "study": null,
+      "run": null,
+      "purpose": "Repository or access-unavailable landing message.",
+      "capturePriority": "P3",
+      "frameName": "Home / Dashboard / Error",
+      "setupSteps": [
+        "Requires a naturally occurring or approved isolated failure; do not stop the shared server."
+      ],
+      "availability": "FAULT_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "app/page.tsx",
+      "routeId": "home",
+      "url": "http://localhost:3200/",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "study-overview",
+      "group": "Study",
+      "screenName": "Overview",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "overview"
+      },
+      "domainVariant": "GENERIC",
+      "state": "POPULATED",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Study intent, targets and Run entry navigation.",
+      "capturePriority": "P1",
+      "frameName": "Study / Overview / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=overview",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "study-runs",
+      "group": "Study",
+      "screenName": "Runs",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "runs"
+      },
+      "domainVariant": "GENERIC",
+      "state": "POPULATED",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Persisted Run list, lifecycle stages and continuation links.",
+      "capturePriority": "P1",
+      "frameName": "Study / Runs / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=runs",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "setup-wafer",
+      "group": "Study",
+      "screenName": "Setup Wafer",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "setup"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "EDITABLE",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Operation-based default conditions and wafer vocabulary.",
+      "capturePriority": "P1",
+      "frameName": "Study / Setup Wafer / Editable",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "setup-specimen",
+      "group": "Study",
+      "screenName": "Setup Specimen",
+      "route": "/series/adhesion-material-optimization",
+      "queryParams": {
+        "view": "setup"
+      },
+      "domainVariant": "MATERIAL VARIANT",
+      "state": "EDITABLE",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Specimen defaults: MIX, COAT, CURE, TEST and formulation.",
+      "capturePriority": "P1",
+      "frameName": "Study / Setup Specimen / Editable",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-adhesion-material-optimization",
+      "url": "http://localhost:3200/series/adhesion-material-optimization?view=setup",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "setup-picker",
+      "group": "Study",
+      "screenName": "Setup Picker",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "setup",
+        "picker": "1"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Applicable Reference items with already-added indicators.",
+      "capturePriority": "P1",
+      "frameName": "Study / Setup Picker / Open",
+      "setupSteps": [
+        "Open Add Item for EXPOSURE; do not select an item."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup&picker=1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "setup-inspector",
+      "group": "Study",
+      "screenName": "Setup Inspector",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "setup",
+        "inspector": "1"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Default item definition, applicability and exact provenance.",
+      "capturePriority": "P1",
+      "frameName": "Study / Setup Inspector / Open",
+      "setupSteps": [
+        "Select an existing item and open Details."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup&inspector=1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "setup-readonly",
+      "group": "Study",
+      "screenName": "Setup",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "setup"
+      },
+      "domainVariant": "GENERIC",
+      "state": "READ_ONLY",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Study reader cannot change defaults.",
+      "capturePriority": "P3",
+      "frameName": "Study / Setup / Read Only",
+      "setupSteps": [
+        "Use an approved existing Study reader. Disabled fieldset also affects inspection in current UI."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "setup-saving",
+      "group": "Study",
+      "screenName": "Setup",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "setup"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVING",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Autosave progress for default changes.",
+      "capturePriority": "P3",
+      "frameName": "Study / Setup / Saving",
+      "setupSteps": [
+        "Only during a separately approved real setup edit; capture in-flight state."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "setup-saved",
+      "group": "Study",
+      "screenName": "Setup",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "setup"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVED",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Autosave completion notice.",
+      "capturePriority": "P2",
+      "frameName": "Study / Setup / Saved",
+      "setupSteps": [
+        "Only following a separately approved real setup edit."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "setup-error",
+      "group": "Study",
+      "screenName": "Setup",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "setup"
+      },
+      "domainVariant": "GENERIC",
+      "state": "ERROR",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Setup load or save error notice.",
+      "capturePriority": "P3",
+      "frameName": "Study / Setup / Error",
+      "setupSteps": [
+        "Use a naturally occurring or approved isolated failure; never corrupt the UAT setup."
+      ],
+      "availability": "FAULT_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "readiness-ready",
+      "group": "Study",
+      "screenName": "Reasoning Readiness",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "setup"
+      },
+      "domainVariant": "GENERIC",
+      "state": "READY",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Confirmed exact evaluation and next-action context for the selected package.",
+      "capturePriority": "P1",
+      "frameName": "Study / Reasoning Readiness / Ready",
+      "setupSteps": [
+        "Scroll to Lifecycle readiness and show the exact immutable context ID."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/study-readiness-panel.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "readiness-proposal",
+      "group": "Study",
+      "screenName": "Reasoning Readiness",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "setup"
+      },
+      "domainVariant": "GENERIC",
+      "state": "PROPOSAL",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Existing proposal source and exact reasoning references before confirmation.",
+      "capturePriority": "P2",
+      "frameName": "Study / Reasoning Readiness / Proposal",
+      "setupSteps": [
+        "Open the source/proposal section and expand its exact references. Do not Confirm."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "All three current Study Default previews are READY; no missing-readiness state was created.",
+      "sourceEvidence": "src/features/experiment-series/study-readiness-panel.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "readiness-missing",
+      "group": "Study",
+      "screenName": "Reasoning Readiness",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "setup"
+      },
+      "domainVariant": "GENERIC",
+      "state": "NOT_READY",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Missing reasoning and blocked Run creation.",
+      "capturePriority": "P3",
+      "frameName": "Study / Reasoning Readiness / Not Ready",
+      "setupSteps": [
+        "Requires an existing legitimate unready setup/package; none verified in this UAT."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/study-readiness-panel.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "create-study-default",
+      "group": "Creation",
+      "screenName": "Source",
+      "route": "/runs/new",
+      "queryParams": {
+        "series": "adhesion-material-optimization",
+        "from": "study-default"
+      },
+      "domainVariant": "GENERIC",
+      "state": "STUDY_DEFAULT",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Distinct inheritance source and source-specific controls.",
+      "capturePriority": "P1",
+      "frameName": "Creation / Source / Study Default",
+      "setupSteps": [
+        "Open the route; leave Study Default selected."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/production-run-entry.tsx",
+      "routeId": "creation",
+      "url": "http://localhost:3200/runs/new?series=adhesion-material-optimization&from=study-default",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "create-previous",
+      "group": "Creation",
+      "screenName": "Source",
+      "route": "/runs/new",
+      "queryParams": {
+        "series": "adhesion-material-optimization",
+        "from": "study-default"
+      },
+      "domainVariant": "GENERIC",
+      "state": "PREVIOUS_RUN",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Distinct inheritance source and source-specific controls.",
+      "capturePriority": "P1",
+      "frameName": "Creation / Source / Previous Run",
+      "setupSteps": [
+        "Select Previous Run. It resolves the latest persisted Run (currently Material 5), not an invented URL from=4 pin."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/production-run-entry.tsx",
+      "routeId": "creation",
+      "url": "http://localhost:3200/runs/new?series=adhesion-material-optimization&from=study-default",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "create-existing",
+      "group": "Creation",
+      "screenName": "Source",
+      "route": "/runs/new",
+      "queryParams": {
+        "series": "adhesion-material-optimization",
+        "from": "study-default"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EXISTING_RUN",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Distinct inheritance source and source-specific controls.",
+      "capturePriority": "P1",
+      "frameName": "Creation / Source / Existing Run",
+      "setupSteps": [
+        "Select Existing Run and choose Material Run 4."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/production-run-entry.tsx",
+      "routeId": "creation",
+      "url": "http://localhost:3200/runs/new?series=adhesion-material-optimization&from=study-default",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "create-blank",
+      "group": "Creation",
+      "screenName": "Source",
+      "route": "/runs/new",
+      "queryParams": {
+        "series": "adhesion-material-optimization",
+        "from": "study-default"
+      },
+      "domainVariant": "GENERIC",
+      "state": "BLANK",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Distinct inheritance source and source-specific controls.",
+      "capturePriority": "P1",
+      "frameName": "Creation / Source / Blank",
+      "setupSteps": [
+        "Select Blank; do not create a Run."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/production-run-entry.tsx",
+      "routeId": "creation",
+      "url": "http://localhost:3200/runs/new?series=adhesion-material-optimization&from=study-default",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "create-review",
+      "group": "Creation",
+      "screenName": "Review",
+      "route": "/runs/new",
+      "queryParams": {
+        "series": "adhesion-material-optimization",
+        "from": "study-default"
+      },
+      "domainVariant": "GENERIC",
+      "state": "PREVIEW",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Server-resolved exact package, subjects, operations, assignments and readiness.",
+      "capturePriority": "P1",
+      "frameName": "Creation / Review / Preview",
+      "setupSteps": [
+        "Choose Existing Run 4, click Review Inheritance and expand Review exact inherited values. Stop before Create Run."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/production-run-entry.tsx",
+      "routeId": "creation",
+      "url": "http://localhost:3200/runs/new?series=adhesion-material-optimization&from=study-default",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "create-blank-review",
+      "group": "Creation",
+      "screenName": "Blank Review",
+      "route": "/runs/new",
+      "queryParams": {
+        "series": "adhesion-material-optimization",
+        "from": "study-default"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EMPTY",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Blank inheritance preview with no Operations/variables/Measurement plan.",
+      "capturePriority": "P1",
+      "frameName": "Creation / Blank Review / Empty",
+      "setupSteps": [
+        "Select Blank then Review Inheritance. Do not create an unusable empty Run for a screenshot."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/production-run-entry.tsx",
+      "routeId": "creation",
+      "url": "http://localhost:3200/runs/new?series=adhesion-material-optimization&from=study-default",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "create-invalid",
+      "group": "Creation",
+      "screenName": "Source",
+      "route": "/runs/new",
+      "queryParams": {
+        "series": "adhesion-material-optimization",
+        "from": "study-default"
+      },
+      "domainVariant": "GENERIC",
+      "state": "INVALID",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Missing existing-source selection error.",
+      "capturePriority": "P3",
+      "frameName": "Creation / Source / Invalid",
+      "setupSteps": [
+        "Select Existing Run with no selection, then Review Inheritance (read-only preview)."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/production-run-entry.tsx",
+      "routeId": "creation",
+      "url": "http://localhost:3200/runs/new?series=adhesion-material-optimization&from=study-default",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "create-not-ready",
+      "group": "Creation",
+      "screenName": "Review",
+      "route": "/runs/new",
+      "queryParams": {
+        "series": "adhesion-material-optimization",
+        "from": "study-default"
+      },
+      "domainVariant": "GENERIC",
+      "state": "NOT_READY",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Creation disabled and link back to Setup when reasoning is missing.",
+      "capturePriority": "P3",
+      "frameName": "Creation / Review / Not Ready",
+      "setupSteps": [
+        "Use an existing legitimate unready setup; none currently verified."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/production-run-entry.tsx",
+      "routeId": "creation",
+      "url": "http://localhost:3200/runs/new?series=adhesion-material-optimization&from=study-default",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "create-busy",
+      "group": "Creation",
+      "screenName": "Review",
+      "route": "/runs/new",
+      "queryParams": {
+        "series": "adhesion-material-optimization",
+        "from": "study-default"
+      },
+      "domainVariant": "GENERIC",
+      "state": "LOADING",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Disabled source/review controls while server preview resolves.",
+      "capturePriority": "P3",
+      "frameName": "Creation / Review / Loading",
+      "setupSteps": [
+        "Capture during read-only Review Inheritance request using browser network throttling if needed."
+      ],
+      "availability": "TRANSIENT",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/production-run-entry.tsx",
+      "routeId": "creation",
+      "url": "http://localhost:3200/runs/new?series=adhesion-material-optimization&from=study-default",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-wafer",
+      "group": "Run",
+      "screenName": "Plan Wafer",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "EDITABLE",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Existing independent Plan; domain-specific Operations, references, units and Subject headings.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan Wafer / Editable",
+      "setupSteps": [
+        "Expand a configured Operation; show FIXED / VARIED rows."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-specimen",
+      "group": "Run",
+      "screenName": "Plan Specimen",
+      "route": "/series/adhesion-material-optimization/runs/5/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "MATERIAL VARIANT",
+      "state": "EDITABLE",
+      "study": "adhesion-material-optimization",
+      "run": 5,
+      "purpose": "Existing independent Plan; domain-specific Operations, references, units and Subject headings.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan Specimen / Editable",
+      "setupSteps": [
+        "Expand a configured Operation; show FIXED / VARIED rows."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/adhesion-material-optimization/runs/5/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-cmp",
+      "group": "Run",
+      "screenName": "Plan Cmp",
+      "route": "/series/cmp-stability/runs/14/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "EDITABLE",
+      "study": "cmp-stability",
+      "run": 14,
+      "purpose": "Existing independent Plan; domain-specific Operations, references, units and Subject headings.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan Cmp / Editable",
+      "setupSteps": [
+        "Expand a configured Operation; show FIXED / VARIED rows."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/cmp-stability/runs/14/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-locked",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "LOCKED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Original Plan protected once execution evidence exists; Focus remains view-only.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan / Locked",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-collapsed",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "COLLAPSED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Compact Operation backbone.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan / Collapsed",
+      "setupSteps": [
+        "Collapse Operation rows."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-key-columns",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "COMPACT_KEYS",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "More horizontal room for subject values.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan / Compact Keys",
+      "setupSteps": [
+        "Click Collapse key columns."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-details",
+      "group": "Run",
+      "screenName": "Plan Inspector",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Definition, provenance and deeper context.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan Inspector / Open",
+      "setupSteps": [
+        "Select an existing variable cell, then Details."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-focus",
+      "group": "Run",
+      "screenName": "Focus Range",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SELECTING",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "View-only focus range, separate from saved experiment scope.",
+      "capturePriority": "P1",
+      "frameName": "Run / Focus Range / Selecting",
+      "setupSteps": [
+        "Click Select focus range and select existing Operations. Do not alter participation."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-focus-applied",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "FOCUSED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Only the chosen view-focus Operations.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan / Focused",
+      "setupSteps": [
+        "Apply a focus range over existing Operations. This is view state only."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-full",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "FULL_HISTORY",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "All registered Operations rather than focused/experiment-only projection.",
+      "capturePriority": "P2",
+      "frameName": "Run / Plan / Full History",
+      "setupSteps": [
+        "Choose the Full History/all-registered option in Projection."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-varied",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "VARIED",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Varied-only filter and experimental intent markers.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan / Varied",
+      "setupSteps": [
+        "Choose the Varied filter."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-changed",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "CHANGED",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Changed-only filter against inherited Plan.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan / Changed",
+      "setupSteps": [
+        "Choose Changed; if no inherited delta is visible, leave this conditional rather than inventing changes."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-selection",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "RANGE_SELECTED",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Spreadsheet multi-cell highlight and keyboard interaction.",
+      "capturePriority": "P2",
+      "frameName": "Run / Plan / Range Selected",
+      "setupSteps": [
+        "Select existing variable cells using Shift selection without typing."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-dirty",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "UNSAVED",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Pending Plan edit and enabled Save Plan.",
+      "capturePriority": "P1",
+      "frameName": "Run / Plan / Unsaved",
+      "setupSteps": [
+        "Capture only during a separately authorized real Plan edit; do not invent experimental values."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-invalid",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "INVALID",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Cell validation and disabled save.",
+      "capturePriority": "P3",
+      "frameName": "Run / Plan / Invalid",
+      "setupSteps": [
+        "Only in an approved disposable editing session clear a required cell; never save invalid values."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-saving",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVING",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Plan persistence progress.",
+      "capturePriority": "P3",
+      "frameName": "Run / Plan / Saving",
+      "setupSteps": [
+        "Capture during a separately authorized real Save Plan."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-saved",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVED",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Saved Plan feedback.",
+      "capturePriority": "P2",
+      "frameName": "Run / Plan / Saved",
+      "setupSteps": [
+        "Capture after a separately authorized real Save Plan."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "scope-backbone",
+      "group": "Run",
+      "screenName": "Scope",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SELECTING",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Strict compact scope mode without variable editors or Inspector.",
+      "capturePriority": "P1",
+      "frameName": "Run / Scope / Selecting",
+      "setupSteps": [
+        "Click Define experiment scope. Stop before confirmation."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "scope-range",
+      "group": "Run",
+      "screenName": "Scope",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "RANGE_SELECTED",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Selected range count and Continue/Cancel.",
+      "capturePriority": "P1",
+      "frameName": "Run / Scope / Range Selected",
+      "setupSteps": [
+        "Drag across existing Operations; leave Continue visible."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "scope-subjects",
+      "group": "Run",
+      "screenName": "Scope",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "CONFIRMATION",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Reachable contextual confirmation with Operation range and selected Subjects.",
+      "capturePriority": "P1",
+      "frameName": "Run / Scope / Confirmation",
+      "setupSteps": [
+        "Continue after selecting an existing range. Do not Confirm Experiment Scope."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "scope-change-subjects",
+      "group": "Run",
+      "screenName": "Scope",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SUBJECT_PICKER",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Subject assignment controls inside scope confirmation.",
+      "capturePriority": "P1",
+      "frameName": "Run / Scope / Subject Picker",
+      "setupSteps": [
+        "In confirmation click Change; retain original selections. Cancel afterwards."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "plan-participation",
+      "group": "Run",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "NON_PARTICIPANT",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "N/A differs from missing values; split/rejoin participation matrix.",
+      "capturePriority": "P2",
+      "frameName": "Run / Plan / Non Participant",
+      "setupSteps": [
+        "No partial-participation UAT Run currently exists. Wait for real data; do not change participation for capture."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/engineering-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "actual-wafer",
+      "group": "Actual",
+      "screenName": "Execution Wafer",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "POPULATED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Actual record entry and stored execution alongside unrecorded subjects.",
+      "capturePriority": "P1",
+      "frameName": "Actual / Execution Wafer / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/actual-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "actual-specimen",
+      "group": "Actual",
+      "screenName": "Execution Specimen",
+      "route": "/series/adhesion-material-optimization/runs/4/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "MATERIAL VARIANT",
+      "state": "POPULATED",
+      "study": "adhesion-material-optimization",
+      "run": 4,
+      "purpose": "Actual record entry and stored execution alongside unrecorded subjects.",
+      "capturePriority": "P1",
+      "frameName": "Actual / Execution Specimen / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/actual-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/adhesion-material-optimization/runs/4/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "actual-empty",
+      "group": "Actual",
+      "screenName": "Execution",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EMPTY",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Existing next Run with no recorded execution; no synthetic evidence.",
+      "capturePriority": "P1",
+      "frameName": "Actual / Execution / Empty",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/actual-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "actual-override",
+      "group": "Actual",
+      "screenName": "Entry",
+      "route": "/series/adhesion-material-optimization/runs/4/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OVERRIDE_SELECTED",
+      "study": "adhesion-material-optimization",
+      "run": 4,
+      "purpose": "Difference-from-plan entry field for an existing planned variable.",
+      "capturePriority": "P1",
+      "frameName": "Actual / Entry / Override Selected",
+      "setupSteps": [
+        "Choose an existing override variable; leave value unchanged and do not Save Actual."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/actual-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/adhesion-material-optimization/runs/4/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "actual-deviations",
+      "group": "Actual",
+      "screenName": "Execution",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "GENERIC",
+      "state": "DEVIATION_FILTER",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Only values differing from Plan; an empty result is valid if no deviations exist.",
+      "capturePriority": "P1",
+      "frameName": "Actual / Execution / Deviation Filter",
+      "setupSteps": [
+        "Choose Differs from plan/Deviations filter."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/actual-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "actual-missing",
+      "group": "Actual",
+      "screenName": "Execution",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "GENERIC",
+      "state": "MISSING",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Not recorded filter and missing evidence cells.",
+      "capturePriority": "P1",
+      "frameName": "Actual / Execution / Missing",
+      "setupSteps": [
+        "Choose Not recorded/Missing filter."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/actual-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "actual-details",
+      "group": "Actual",
+      "screenName": "Inspector",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Exact execution evidence and Plan comparison for selected Operation/Subject.",
+      "capturePriority": "P1",
+      "frameName": "Actual / Inspector / Open",
+      "setupSteps": [
+        "Select a recorded cell, then Details."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/actual-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "actual-saving",
+      "group": "Actual",
+      "screenName": "Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVING",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Save Actual busy state.",
+      "capturePriority": "P3",
+      "frameName": "Actual / Entry / Saving",
+      "setupSteps": [
+        "Capture only during separately authorized actual evidence entry."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/actual-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "actual-saved",
+      "group": "Actual",
+      "screenName": "Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Actual save confirmation and record visible in grid.",
+      "capturePriority": "P2",
+      "frameName": "Actual / Entry / Saved",
+      "setupSteps": [
+        "Capture after separately authorized actual evidence entry."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/actual-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "actual-invalid",
+      "group": "Actual",
+      "screenName": "Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "GENERIC",
+      "state": "ERROR",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Rejected execution input or save failure notice.",
+      "capturePriority": "P3",
+      "frameName": "Actual / Entry / Error",
+      "setupSteps": [
+        "Use a naturally occurring validation failure or approved isolated error; do not record fabricated execution."
+      ],
+      "availability": "FAULT_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/actual-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-wafer",
+      "group": "Measurement",
+      "screenName": "Results Wafer",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "POPULATED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Wafer/site, specimen/subject, or CMP PRE/POST evidence; includes existing Analyze entry.",
+      "capturePriority": "P1",
+      "frameName": "Measurement / Results Wafer / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-specimen",
+      "group": "Measurement",
+      "screenName": "Results Specimen",
+      "route": "/series/adhesion-material-optimization/runs/4/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "MATERIAL VARIANT",
+      "state": "POPULATED",
+      "study": "adhesion-material-optimization",
+      "run": 4,
+      "purpose": "Wafer/site, specimen/subject, or CMP PRE/POST evidence; includes existing Analyze entry.",
+      "capturePriority": "P1",
+      "frameName": "Measurement / Results Specimen / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/adhesion-material-optimization/runs/4/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-cmp",
+      "group": "Measurement",
+      "screenName": "Results Cmp",
+      "route": "/series/cmp-stability/runs/13/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "POPULATED",
+      "study": "cmp-stability",
+      "run": 13,
+      "purpose": "Wafer/site, specimen/subject, or CMP PRE/POST evidence; includes existing Analyze entry.",
+      "capturePriority": "P1",
+      "frameName": "Measurement / Results Cmp / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/cmp-stability/runs/13/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-site-entry",
+      "group": "Measurement",
+      "screenName": "Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "SITE",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Wafer SITE input with site identity and coordinate controls.",
+      "capturePriority": "P1",
+      "frameName": "Measurement / Entry / Site",
+      "setupSteps": [
+        "Choose SITE grain in entry form; do not save."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-subject-entry",
+      "group": "Measurement",
+      "screenName": "Entry",
+      "route": "/series/adhesion-material-optimization/runs/4/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "MATERIAL VARIANT",
+      "state": "SUBJECT",
+      "study": "adhesion-material-optimization",
+      "run": 4,
+      "purpose": "Material SUBJECT-only measurement form, distinct from Sample properties.",
+      "capturePriority": "P1",
+      "frameName": "Measurement / Entry / Subject",
+      "setupSteps": [
+        "Inspect entry fields with existing Specimen context; do not save."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/adhesion-material-optimization/runs/4/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-sites",
+      "group": "Measurement",
+      "screenName": "Site Detail",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "SELECTED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Raw site result, coordinates and validity beneath selected representative result.",
+      "capturePriority": "P1",
+      "frameName": "Measurement / Site Detail / Selected",
+      "setupSteps": [
+        "Select PHO7814.01 BCD and reveal Site Detail."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-inspector",
+      "group": "Measurement",
+      "screenName": "Inspector",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Exact dataset, measurement execution and representative lineage.",
+      "capturePriority": "P1",
+      "frameName": "Measurement / Inspector / Open",
+      "setupSteps": [
+        "Select populated result and click Details."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-empty",
+      "group": "Measurement",
+      "screenName": "Results",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EMPTY",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Existing next Run without observations or Analyze entry.",
+      "capturePriority": "P1",
+      "frameName": "Measurement / Results / Empty",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-excluded",
+      "group": "Measurement",
+      "screenName": "Site Detail",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EXCLUDED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Excluded raw observation with reason remains traceable.",
+      "capturePriority": "P3",
+      "frameName": "Measurement / Site Detail / Excluded",
+      "setupSteps": [
+        "Requires an existing excluded observation. None verified in production UAT; do not exclude one for a screenshot."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-saving",
+      "group": "Measurement",
+      "screenName": "Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVING",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Measurement save progress.",
+      "capturePriority": "P3",
+      "frameName": "Measurement / Entry / Saving",
+      "setupSteps": [
+        "Capture only during separately authorized real measurement entry."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-saved",
+      "group": "Measurement",
+      "screenName": "Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Saved measurement feedback.",
+      "capturePriority": "P2",
+      "frameName": "Measurement / Entry / Saved",
+      "setupSteps": [
+        "Capture only after separately authorized real measurement entry."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "measurement-invalid",
+      "group": "Measurement",
+      "screenName": "Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "GENERIC",
+      "state": "ERROR",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Missing/invalid value or persistence error feedback.",
+      "capturePriority": "P3",
+      "frameName": "Measurement / Entry / Error",
+      "setupSteps": [
+        "Use approved non-committing validation/fault session; do not create observations."
+      ],
+      "availability": "FAULT_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/measurement-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-wafer",
+      "group": "Evaluation",
+      "screenName": "Assessment Wafer",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "POPULATED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Computed achievement, engineer judgment, Decision and Next Action on existing results.",
+      "capturePriority": "P1",
+      "frameName": "Evaluation / Assessment Wafer / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-specimen",
+      "group": "Evaluation",
+      "screenName": "Assessment Specimen",
+      "route": "/series/adhesion-material-optimization/runs/4/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "MATERIAL VARIANT",
+      "state": "POPULATED",
+      "study": "adhesion-material-optimization",
+      "run": 4,
+      "purpose": "Computed achievement, engineer judgment, Decision and Next Action on existing results.",
+      "capturePriority": "P1",
+      "frameName": "Evaluation / Assessment Specimen / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/adhesion-material-optimization/runs/4/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-missing",
+      "group": "Evaluation",
+      "screenName": "Assessment",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "MISSING",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Select a subject with no result; missing achievement is not a judgment.",
+      "capturePriority": "P1",
+      "frameName": "Evaluation / Assessment / Missing",
+      "setupSteps": [
+        "Select PHO7814.02."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-unreviewed",
+      "group": "Evaluation",
+      "screenName": "Assessment",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "NOT_REVIEWED",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Existing next Run without engineer evaluation or Decision.",
+      "capturePriority": "P1",
+      "frameName": "Evaluation / Assessment / Not Reviewed",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-details",
+      "group": "Evaluation",
+      "screenName": "Inspector",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Exact target/result references and independent engineer reasoning.",
+      "capturePriority": "P1",
+      "frameName": "Evaluation / Inspector / Open",
+      "setupSteps": [
+        "Select an assessment then Details."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-authoring",
+      "group": "Evaluation",
+      "screenName": "Decision Entry",
+      "route": "/series/adhesion-material-optimization/runs/4/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EDITABLE",
+      "study": "adhesion-material-optimization",
+      "run": 4,
+      "purpose": "Judgment, rationale, Decision and Next Action entry including save buttons.",
+      "capturePriority": "P1",
+      "frameName": "Evaluation / Decision Entry / Editable",
+      "setupSteps": [
+        "Show authoring panels; do not change or save values."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/adhesion-material-optimization/runs/4/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-action-type",
+      "group": "Evaluation",
+      "screenName": "Decision Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "ACTION_CHANGED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Conditional fields for next-experiment versus another available next-action type.",
+      "capturePriority": "P2",
+      "frameName": "Evaluation / Decision Entry / Action Changed",
+      "setupSteps": [
+        "Select an existing alternative Next Action type locally; do not save."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-preview",
+      "group": "Evaluation",
+      "screenName": "Next Run",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "evaluation",
+        "action": "preview"
+      },
+      "domainVariant": "GENERIC",
+      "state": "PREVIEW",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Inherited setup and intended changes from the existing Decision.",
+      "capturePriority": "P1",
+      "frameName": "Evaluation / Next Run / Preview",
+      "setupSteps": [
+        "Click Preview Next Run; stop before Create."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=evaluation&action=preview",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-created",
+      "group": "Evaluation",
+      "screenName": "Next Run",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "CREATED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Successful next-run continuation link.",
+      "capturePriority": "P1",
+      "frameName": "Evaluation / Next Run / Created",
+      "setupSteps": [
+        "Capture only after a separately authorized real next-run creation; existing Run 20 is evidence, not replay permission."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-saving",
+      "group": "Evaluation",
+      "screenName": "Decision Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVING",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Independent evaluation/decision persistence feedback.",
+      "capturePriority": "P3",
+      "frameName": "Evaluation / Decision Entry / Saving",
+      "setupSteps": [
+        "Capture during a separately authorized real save."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-error",
+      "group": "Evaluation",
+      "screenName": "Decision Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "ERROR",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Evaluation/Decision or next-run creation failure notice.",
+      "capturePriority": "P3",
+      "frameName": "Evaluation / Decision Entry / Error",
+      "setupSteps": [
+        "Use naturally occurring or approved isolated fault."
+      ],
+      "availability": "FAULT_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-narrow",
+      "group": "Evaluation",
+      "screenName": "Decision Entry",
+      "route": "/series/adhesion-material-optimization/runs/4/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "NARROW_LAYOUT",
+      "study": "adhesion-material-optimization",
+      "run": 4,
+      "purpose": "920px wrapping and Save Decision action from reported UX issue.",
+      "capturePriority": "P2",
+      "frameName": "Evaluation / Decision Entry / Narrow Layout",
+      "setupSteps": [
+        "Use 920 × 789 viewport and scroll to Decision entry; preserve As-Is appearance."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/adhesion-material-optimization/runs/4/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-default",
+      "group": "Analysis",
+      "screenName": "Workspace",
+      "route": "/analysis",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "DEFAULT",
+      "study": null,
+      "run": null,
+      "purpose": "Actual default selection and available saved cards; do not assume default is a separate route.",
+      "capturePriority": "P1",
+      "frameName": "Analysis / Workspace / Default",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-wafer",
+      "group": "Analysis",
+      "screenName": "Workspace Wafer",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "SELECTED_DATA",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Existing BCD source and wafer/site-aware result context.",
+      "capturePriority": "P1",
+      "frameName": "Analysis / Workspace Wafer / Selected Data",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-specimen",
+      "group": "Analysis",
+      "screenName": "Workspace Specimen",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "adhesion-material-optimization",
+        "runs": "4"
+      },
+      "domainVariant": "MATERIAL VARIANT",
+      "state": "SELECTED_DATA",
+      "study": "adhesion-material-optimization",
+      "run": 4,
+      "purpose": "Existing Peel Force/Viscosity subject results with material units.",
+      "capturePriority": "P1",
+      "frameName": "Analysis / Workspace Specimen / Selected Data",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=adhesion-material-optimization&runs=4",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-filters",
+      "group": "Analysis",
+      "screenName": "Selection",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Expanded Dataset/Parameter/Subject checkbox panel.",
+      "capturePriority": "P1",
+      "frameName": "Analysis / Selection / Open",
+      "setupSteps": [
+        "Open one filter popover with existing selections."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-table",
+      "group": "Analysis",
+      "screenName": "Workspace",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19",
+        "view": "TABLE"
+      },
+      "domainVariant": "GENERIC",
+      "state": "TABLE",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Table-only result presentation.",
+      "capturePriority": "P1",
+      "frameName": "Analysis / Workspace / Table",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19&view=TABLE",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-bar",
+      "group": "Analysis",
+      "screenName": "Workspace",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19",
+        "view": "BAR"
+      },
+      "domainVariant": "GENERIC",
+      "state": "BAR",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Bar visualization over the same existing results.",
+      "capturePriority": "P2",
+      "frameName": "Analysis / Workspace / Bar",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19&view=BAR",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-scatter",
+      "group": "Analysis",
+      "screenName": "Workspace",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19",
+        "view": "SCATTER"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "SCATTER",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Coordinate-aware scatter for existing SITE observation.",
+      "capturePriority": "P2",
+      "frameName": "Analysis / Workspace / Scatter",
+      "setupSteps": [
+        "Select RAW aggregation and an available coordinate axis."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19&view=SCATTER",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-details",
+      "group": "Analysis",
+      "screenName": "Inspector",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Read-only exact result/source provenance.",
+      "capturePriority": "P1",
+      "frameName": "Analysis / Inspector / Open",
+      "setupSteps": [
+        "Inspect the existing PHO7814.01 BCD row."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-empty",
+      "group": "Analysis",
+      "screenName": "Workspace",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EMPTY",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "No matching results without adding data.",
+      "capturePriority": "P2",
+      "frameName": "Analysis / Workspace / Empty",
+      "setupSteps": [
+        "Uncheck all datasets or use a nonmatching local text filter."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-save",
+      "group": "Analysis",
+      "screenName": "Save View",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Name entry and exact-reference save contract.",
+      "capturePriority": "P1",
+      "frameName": "Analysis / Save View / Open",
+      "setupSteps": [
+        "Click Save View; leave name blank; close without saving."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-saved",
+      "group": "Analysis",
+      "screenName": "Workspace",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19",
+        "savedView": "analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Reopened existing exact saved context.",
+      "capturePriority": "P1",
+      "frameName": "Analysis / Workspace / Saved",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19&savedView=analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-update",
+      "group": "Analysis",
+      "screenName": "Save View",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19",
+        "savedView": "analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8"
+      },
+      "domainVariant": "GENERIC",
+      "state": "UPDATE",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Edit existing saved view configuration without duplicating measurements.",
+      "capturePriority": "P2",
+      "frameName": "Analysis / Save View / Update",
+      "setupSteps": [
+        "Open existing saved view then Update Saved View; cancel."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19&savedView=analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-sharing",
+      "group": "Analysis",
+      "screenName": "Sharing",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19",
+        "savedView": "analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Visibility, recipient-type and explicit audience controls.",
+      "capturePriority": "P2",
+      "frameName": "Analysis / Sharing / Open",
+      "setupSteps": [
+        "Open existing saved view then Manage sharing; do not add/save/revoke recipients."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/sharing-control.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19&savedView=analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-shared-reader",
+      "group": "Analysis",
+      "screenName": "Sharing",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19",
+        "savedView": "analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8"
+      },
+      "domainVariant": "GENERIC",
+      "state": "READ_ONLY",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Audience reader can inspect but cannot update/share.",
+      "capturePriority": "P3",
+      "frameName": "Analysis / Sharing / Read Only",
+      "setupSteps": [
+        "Use an existing approved audience reader with access to all underlying sources."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19&savedView=analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-unresolved",
+      "group": "Analysis",
+      "screenName": "Workspace",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19",
+        "savedView": "analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8"
+      },
+      "domainVariant": "GENERIC",
+      "state": "UNRESOLVED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Exact saved source missing; no substitution.",
+      "capturePriority": "P3",
+      "frameName": "Analysis / Workspace / Unresolved",
+      "setupSteps": [
+        "Requires an existing unresolved saved context. Do not delete or revoke sources to fabricate it."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19&savedView=analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-saving",
+      "group": "Analysis",
+      "screenName": "Save View",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVING",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Saving exact context progress.",
+      "capturePriority": "P3",
+      "frameName": "Analysis / Save View / Saving",
+      "setupSteps": [
+        "Capture only during separately authorized real save/update."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "analysis-error",
+      "group": "Analysis",
+      "screenName": "Workspace",
+      "route": "/analysis",
+      "queryParams": {
+        "study": "dts-improvement",
+        "runs": "19",
+        "savedView": "analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8"
+      },
+      "domainVariant": "GENERIC",
+      "state": "ERROR",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Source query or saved-open error.",
+      "capturePriority": "P3",
+      "frameName": "Analysis / Workspace / Error",
+      "setupSteps": [
+        "Use a naturally occurring or approved isolated failure."
+      ],
+      "availability": "FAULT_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?study=dts-improvement&runs=19&savedView=analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-definitions",
+      "group": "Reference",
+      "screenName": "Definitions",
+      "route": "/reference",
+      "queryParams": {
+        "section": "definitions"
+      },
+      "domainVariant": "GENERIC",
+      "state": "READ_ONLY",
+      "study": null,
+      "run": null,
+      "purpose": "Definitions list with authoring unavailable to the current UAT principal.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Definitions / Read Only",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=definitions",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-filtered",
+      "group": "Reference",
+      "screenName": "Definitions",
+      "route": "/reference",
+      "queryParams": {
+        "section": "definitions"
+      },
+      "domainVariant": "GENERIC",
+      "state": "FILTERED",
+      "study": null,
+      "run": null,
+      "purpose": "Search/type filtering and result density.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Definitions / Filtered",
+      "setupSteps": [
+        "Search for an existing definition, e.g. Energy."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=definitions",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-empty",
+      "group": "Reference",
+      "screenName": "Definitions",
+      "route": "/reference",
+      "queryParams": {
+        "section": "definitions"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EMPTY",
+      "study": null,
+      "run": null,
+      "purpose": "No matching definitions.",
+      "capturePriority": "P3",
+      "frameName": "Reference / Definitions / Empty",
+      "setupSteps": [
+        "Use a nonmatching local search query."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=definitions",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-definition",
+      "group": "Reference",
+      "screenName": "Definition Inspector",
+      "route": "/reference",
+      "queryParams": {
+        "section": "definitions",
+        "definition": "condition-energy-v1",
+        "inspector": "1"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": null,
+      "run": null,
+      "purpose": "Core Definition, applicability, usage, revision history and technical details.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Definition Inspector / Open",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=definitions&definition=condition-energy-v1&inspector=1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-create",
+      "group": "Reference",
+      "screenName": "Definition Entry",
+      "route": "/reference",
+      "queryParams": {
+        "section": "definitions"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EDITABLE",
+      "study": null,
+      "run": null,
+      "purpose": "New immutable definition form before submission.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Definition Entry / Editable",
+      "setupSteps": [
+        "Requires approved configuration author role; open Create Definition without submit."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=definitions",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-revision",
+      "group": "Reference",
+      "screenName": "Definition Inspector",
+      "route": "/reference",
+      "queryParams": {
+        "section": "definitions"
+      },
+      "domainVariant": "GENERIC",
+      "state": "NEW_REVISION",
+      "study": null,
+      "run": null,
+      "purpose": "Revision-created notice and exact prior/current versions.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Definition Inspector / New Revision",
+      "setupSteps": [
+        "Requires approved author and a legitimate existing new revision; do not Create Revision for a screenshot."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=definitions",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-applicability",
+      "group": "Reference",
+      "screenName": "Applicability",
+      "route": "/reference",
+      "queryParams": {
+        "section": "applicability"
+      },
+      "domainVariant": "GENERIC",
+      "state": "READ_ONLY",
+      "study": null,
+      "run": null,
+      "purpose": "Existing applicability rules and scope conditions.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Applicability / Read Only",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=applicability",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-rule-detail",
+      "group": "Reference",
+      "screenName": "Applicability Inspector",
+      "route": "/reference",
+      "queryParams": {
+        "section": "applicability"
+      },
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": null,
+      "run": null,
+      "purpose": "Detailed selected rule and authoring boundary.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Applicability Inspector / Open",
+      "setupSteps": [
+        "Select existing rule and open its inspector."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=applicability",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-rule-form",
+      "group": "Reference",
+      "screenName": "Applicability Entry",
+      "route": "/reference",
+      "queryParams": {
+        "section": "applicability"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EDITABLE",
+      "study": null,
+      "run": null,
+      "purpose": "Add rule inputs with selected version and context.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Applicability Entry / Editable",
+      "setupSteps": [
+        "Requires approved applicability manager; open Add; do not submit."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=applicability",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-rule-invalid",
+      "group": "Reference",
+      "screenName": "Applicability Entry",
+      "route": "/reference",
+      "queryParams": {
+        "section": "applicability"
+      },
+      "domainVariant": "GENERIC",
+      "state": "INVALID",
+      "study": null,
+      "run": null,
+      "purpose": "Rule validation feedback before persistence.",
+      "capturePriority": "P3",
+      "frameName": "Reference / Applicability Entry / Invalid",
+      "setupSteps": [
+        "Requires approved applicability manager; validate incomplete form without Add."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=applicability",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-resolver-photo",
+      "group": "Reference",
+      "screenName": "Resolver PHOTO",
+      "route": "/reference",
+      "queryParams": {
+        "section": "applicability",
+        "definition": "condition-energy-v1",
+        "preview": "1",
+        "package": "config-package-photo-v1"
+      },
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "RESOLVED",
+      "study": null,
+      "run": null,
+      "purpose": "PHOTO context restricts equipment/recipe/parameters.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Resolver PHOTO / Resolved",
+      "setupSteps": [
+        "Open Test/Preview; choose existing PHOTO EXPOSURE context and EXP-03."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=applicability&definition=condition-energy-v1&preview=1&package=config-package-photo-v1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-resolver-material",
+      "group": "Reference",
+      "screenName": "Resolver Material",
+      "route": "/reference",
+      "queryParams": {
+        "section": "applicability",
+        "definition": "condition-cure-temperature-v1",
+        "preview": "1",
+        "package": "config-package-material-rd-v1"
+      },
+      "domainVariant": "MATERIAL VARIANT",
+      "state": "RESOLVED",
+      "study": null,
+      "run": null,
+      "purpose": "Material operation context and specimen references.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Resolver Material / Resolved",
+      "setupSteps": [
+        "Open Test/Preview and choose material package and existing CURE context."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=applicability&definition=condition-cure-temperature-v1&preview=1&package=config-package-material-rd-v1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-packages",
+      "group": "Reference",
+      "screenName": "Package Versions",
+      "route": "/reference",
+      "queryParams": {
+        "section": "packages"
+      },
+      "domainVariant": "GENERIC",
+      "state": "POPULATED",
+      "study": null,
+      "run": null,
+      "purpose": "All exact package versions, statuses and pinned Run usage.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Package Versions / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=packages",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-package-active",
+      "group": "Reference",
+      "screenName": "Package Inspector",
+      "route": "/reference",
+      "queryParams": {
+        "section": "packages",
+        "package": "config-package-cmp-v1"
+      },
+      "domainVariant": "GENERIC",
+      "state": "ACTIVE",
+      "study": null,
+      "run": null,
+      "purpose": "Active exact manifest and activation safety.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Package Inspector / Active",
+      "setupSteps": [
+        "Select CMP v1; expand exact manifest sections."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=packages&package=config-package-cmp-v1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-package-inactive",
+      "group": "Reference",
+      "screenName": "Package Inspector",
+      "route": "/reference",
+      "queryParams": {
+        "section": "packages",
+        "package": "config-package-photo-v1"
+      },
+      "domainVariant": "GENERIC",
+      "state": "INACTIVE",
+      "study": null,
+      "run": null,
+      "purpose": "Inactive PHOTO package remains historically pinned; not missing.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Package Inspector / Inactive",
+      "setupSteps": [
+        "Select PHOTO v1; inspect status and Run usage."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=packages&package=config-package-photo-v1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-package-validation",
+      "group": "Reference",
+      "screenName": "Package Validation",
+      "route": "/reference",
+      "queryParams": {
+        "section": "packages",
+        "package": "config-package-cmp-v1",
+        "validation": "1"
+      },
+      "domainVariant": "GENERIC",
+      "state": "VALIDATED",
+      "study": null,
+      "run": null,
+      "purpose": "Validation result for exact selected package.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Package Validation / Validated",
+      "setupSteps": [
+        "Click Validate exact version; validation is read-only."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=packages&package=config-package-cmp-v1&validation=1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-package-draft",
+      "group": "Reference",
+      "screenName": "Package Versions",
+      "route": "/reference",
+      "queryParams": {
+        "section": "packages"
+      },
+      "domainVariant": "GENERIC",
+      "state": "DRAFT",
+      "study": null,
+      "run": null,
+      "purpose": "Draft package shell and assembly affordance.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Package Versions / Draft",
+      "setupSteps": [
+        "Requires approved manager and a legitimate draft; current drafts list is empty."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=packages",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-package-invalid",
+      "group": "Reference",
+      "screenName": "Package Validation",
+      "route": "/reference",
+      "queryParams": {
+        "section": "packages"
+      },
+      "domainVariant": "GENERIC",
+      "state": "INVALID",
+      "study": null,
+      "run": null,
+      "purpose": "Validation errors preventing activation.",
+      "capturePriority": "P3",
+      "frameName": "Reference / Package Validation / Invalid",
+      "setupSteps": [
+        "Requires a legitimate existing invalid draft/version; do not damage active configuration."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=packages",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-package-authorized",
+      "group": "Reference",
+      "screenName": "Package Inspector",
+      "route": "/reference",
+      "queryParams": {
+        "section": "packages"
+      },
+      "domainVariant": "GENERIC",
+      "state": "ACTIVATION_AVAILABLE",
+      "study": null,
+      "run": null,
+      "purpose": "Enabled manager controls and validation prerequisite.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Package Inspector / Activation Available",
+      "setupSteps": [
+        "Use an approved configuration manager and existing eligible package; do not activate/deactivate."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=packages",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-error",
+      "group": "Reference",
+      "screenName": "Studio",
+      "route": "/reference",
+      "queryParams": {
+        "section": "definitions"
+      },
+      "domainVariant": "GENERIC",
+      "state": "ERROR",
+      "study": null,
+      "run": null,
+      "purpose": "Configuration load/command failure notice.",
+      "capturePriority": "P3",
+      "frameName": "Reference / Studio / Error",
+      "setupSteps": [
+        "Use naturally occurring or approved isolated failure."
+      ],
+      "availability": "FAULT_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/home.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=definitions",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "samples-list",
+      "group": "Samples",
+      "screenName": "Master",
+      "route": "/samples",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "POPULATED",
+      "study": null,
+      "run": null,
+      "purpose": "Existing material-condition catalog; do not confuse with Specimen experimental subject.",
+      "capturePriority": "P2",
+      "frameName": "Samples / Master / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/sample-explorer/explorer.tsx",
+      "routeId": "samples",
+      "url": "http://localhost:3200/samples",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "samples-empty",
+      "group": "Samples",
+      "screenName": "Master",
+      "route": "/samples",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "EMPTY",
+      "study": null,
+      "run": null,
+      "purpose": "Empty local filter results.",
+      "capturePriority": "P3",
+      "frameName": "Samples / Master / Empty",
+      "setupSteps": [
+        "Enter a nonmatching search; clear afterwards."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/sample-explorer/explorer.tsx",
+      "routeId": "samples",
+      "url": "http://localhost:3200/samples",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "sample-detail",
+      "group": "Samples",
+      "screenName": "Sample",
+      "route": "/samples/D031",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "POPULATED",
+      "study": null,
+      "run": null,
+      "purpose": "Identity, revisions, latest structure/properties and linked historical experiment usage.",
+      "capturePriority": "P2",
+      "frameName": "Samples / Sample / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/sample-detail/detail.tsx",
+      "routeId": "sample",
+      "url": "http://localhost:3200/samples/D031",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "sample-revision",
+      "group": "Samples",
+      "screenName": "Revision",
+      "route": "/samples/D031/revisions/3",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "DELTA",
+      "study": null,
+      "run": null,
+      "purpose": "Exact revision, structure, properties, registered delta and provenance.",
+      "capturePriority": "P2",
+      "frameName": "Samples / Revision / Delta",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/sample-revision-detail/detail.tsx",
+      "routeId": "revision",
+      "url": "http://localhost:3200/samples/D031/revisions/3",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "sample-first-revision",
+      "group": "Samples",
+      "screenName": "Revision",
+      "route": "/samples/D031/revisions/1",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "INITIAL",
+      "study": null,
+      "run": null,
+      "purpose": "Initial revision with no predecessor delta.",
+      "capturePriority": "P2",
+      "frameName": "Samples / Revision / Initial",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/sample-revision-detail/detail.tsx",
+      "routeId": "revision",
+      "url": "http://localhost:3200/samples/D031/revisions/1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "sample-create-1",
+      "group": "Samples",
+      "screenName": "Create Identity",
+      "route": "/samples",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": null,
+      "run": null,
+      "purpose": "Existing five-step local review prototype, still reachable from Samples.",
+      "capturePriority": "P2",
+      "frameName": "Samples / Create Identity / Open",
+      "setupSteps": [
+        "Open Create sample and advance to Identity using built-in defaults only; do not claim registration or create scientific data."
+      ],
+      "availability": "READY",
+      "captureNotes": "Defaults are shipped mock UI values, not a new persisted Sample. Finish review only closes modal.",
+      "sourceEvidence": "src/features/sample-create/create-sample.tsx",
+      "routeId": "samples",
+      "url": "http://localhost:3200/samples",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "sample-create-2",
+      "group": "Samples",
+      "screenName": "Create Revision Information",
+      "route": "/samples",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": null,
+      "run": null,
+      "purpose": "Existing five-step local review prototype, still reachable from Samples.",
+      "capturePriority": "P2",
+      "frameName": "Samples / Create Revision Information / Open",
+      "setupSteps": [
+        "Open Create sample and advance to Revision Information using built-in defaults only; do not claim registration or create scientific data."
+      ],
+      "availability": "READY",
+      "captureNotes": "Defaults are shipped mock UI values, not a new persisted Sample. Finish review only closes modal.",
+      "sourceEvidence": "src/features/sample-create/create-sample.tsx",
+      "routeId": "samples",
+      "url": "http://localhost:3200/samples",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "sample-create-3",
+      "group": "Samples",
+      "screenName": "Create Material Structure",
+      "route": "/samples",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": null,
+      "run": null,
+      "purpose": "Existing five-step local review prototype, still reachable from Samples.",
+      "capturePriority": "P2",
+      "frameName": "Samples / Create Material Structure / Open",
+      "setupSteps": [
+        "Open Create sample and advance to Material Structure using built-in defaults only; do not claim registration or create scientific data."
+      ],
+      "availability": "READY",
+      "captureNotes": "Defaults are shipped mock UI values, not a new persisted Sample. Finish review only closes modal.",
+      "sourceEvidence": "src/features/sample-create/create-sample.tsx",
+      "routeId": "samples",
+      "url": "http://localhost:3200/samples",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "sample-create-4",
+      "group": "Samples",
+      "screenName": "Create Properties",
+      "route": "/samples",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": null,
+      "run": null,
+      "purpose": "Existing five-step local review prototype, still reachable from Samples.",
+      "capturePriority": "P2",
+      "frameName": "Samples / Create Properties / Open",
+      "setupSteps": [
+        "Open Create sample and advance to Properties using built-in defaults only; do not claim registration or create scientific data."
+      ],
+      "availability": "READY",
+      "captureNotes": "Defaults are shipped mock UI values, not a new persisted Sample. Finish review only closes modal.",
+      "sourceEvidence": "src/features/sample-create/create-sample.tsx",
+      "routeId": "samples",
+      "url": "http://localhost:3200/samples",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "sample-create-5",
+      "group": "Samples",
+      "screenName": "Create Review",
+      "route": "/samples",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "OPEN",
+      "study": null,
+      "run": null,
+      "purpose": "Existing five-step local review prototype, still reachable from Samples.",
+      "capturePriority": "P2",
+      "frameName": "Samples / Create Review / Open",
+      "setupSteps": [
+        "Open Create sample and advance to Review using built-in defaults only; do not claim registration or create scientific data."
+      ],
+      "availability": "READY",
+      "captureNotes": "Defaults are shipped mock UI values, not a new persisted Sample. Finish review only closes modal.",
+      "sourceEvidence": "src/features/sample-create/create-sample.tsx",
+      "routeId": "samples",
+      "url": "http://localhost:3200/samples",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "legacy-run",
+      "group": "Legacy",
+      "screenName": "Run Detail",
+      "route": "/series/dts-improvement/runs/1",
+      "queryParams": {},
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "POPULATED",
+      "study": "dts-improvement",
+      "run": 1,
+      "purpose": "Still linked by Sample usage; original mock Run detail remains part of As-Is.",
+      "capturePriority": "P2",
+      "frameName": "Legacy / Run Detail / Populated",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "availability": "READY",
+      "captureNotes": "Mock fixture route, not PostgreSQL Run 19. Keep in a separate Figma Legacy page.",
+      "sourceEvidence": "src/features/experiment-run/run.tsx",
+      "routeId": "legacy-run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "legacy-wafer",
+      "group": "Legacy",
+      "screenName": "Identity Detail",
+      "route": "/series/dts-improvement/runs/4",
+      "queryParams": {},
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "SELECTED",
+      "study": "dts-improvement",
+      "run": 4,
+      "purpose": "Historical wafer identity observation and candidate detail.",
+      "capturePriority": "P2",
+      "frameName": "Legacy / Identity Detail / Selected",
+      "setupSteps": [
+        "In Execution, click Needs identity review for an existing candidate; do not Confirm identity."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-run/execution-context.tsx",
+      "routeId": "legacy-run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/4",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "legacy-measurement",
+      "group": "Legacy",
+      "screenName": "Measurement Detail",
+      "route": "/series/dts-improvement/runs/4",
+      "queryParams": {},
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "SITE_TABLE",
+      "study": "dts-improvement",
+      "run": 4,
+      "purpose": "Legacy measurement drawer, site table and source validity display.",
+      "capturePriority": "P2",
+      "frameName": "Legacy / Measurement Detail / Site Table",
+      "setupSteps": [
+        "Scroll to Measurement results and select existing wafer/dataset. Do not exclude or edit observations."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-run/measurement-results.tsx",
+      "routeId": "legacy-run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/4",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "legacy-scatter",
+      "group": "Legacy",
+      "screenName": "Measurement Detail",
+      "route": "/series/dts-improvement/runs/4",
+      "queryParams": {},
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "SCATTER",
+      "study": "dts-improvement",
+      "run": 4,
+      "purpose": "Legacy coordinate visualization separate from production Analysis.",
+      "capturePriority": "P2",
+      "frameName": "Legacy / Measurement Detail / Scatter",
+      "setupSteps": [
+        "In the existing measurement drawer choose Scatter."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-run/measurement-results.tsx",
+      "routeId": "legacy-run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/4",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "legacy-prep-group",
+      "group": "Legacy",
+      "screenName": "Data Preparation",
+      "route": "/series/dts-improvement/runs/4/data-preparation",
+      "queryParams": {},
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "GROUP",
+      "study": "dts-improvement",
+      "run": 4,
+      "purpose": "Existing logical-group UI reachable via historical Run Prepare Data.",
+      "capturePriority": "P2",
+      "frameName": "Legacy / Data Preparation / Group",
+      "setupSteps": [
+        "Open Group tab; inspect shipped group only; do not create groups."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/data-preparation/workspace.tsx",
+      "routeId": "legacy-prep",
+      "url": "http://localhost:3200/series/dts-improvement/runs/4/data-preparation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "legacy-prep-calc",
+      "group": "Legacy",
+      "screenName": "Data Preparation",
+      "route": "/series/dts-improvement/runs/4/data-preparation",
+      "queryParams": {},
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "CALCULATE",
+      "study": "dts-improvement",
+      "run": 4,
+      "purpose": "Existing arithmetic, derived result lineage and unmatched-site warning.",
+      "capturePriority": "P2",
+      "frameName": "Legacy / Data Preparation / Calculate",
+      "setupSteps": [
+        "Choose Calculate; display shipped result, do not run a new calculation or save recipe."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/data-preparation/workspace.tsx",
+      "routeId": "legacy-prep",
+      "url": "http://localhost:3200/series/dts-improvement/runs/4/data-preparation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "access-plan",
+      "group": "Access",
+      "screenName": "Plan",
+      "route": "/series/dts-improvement/runs/20/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "READ_ONLY",
+      "study": "dts-improvement",
+      "run": 20,
+      "purpose": "Same visible scientific data with unauthorized authoring actions absent/disabled.",
+      "capturePriority": "P3",
+      "frameName": "Access / Plan / Read Only",
+      "setupSteps": [
+        "Use an approved existing read-only principal; do not modify grants for screenshots."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/created-run-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/20/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "access-actual",
+      "group": "Access",
+      "screenName": "Actual",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "actual"
+      },
+      "domainVariant": "GENERIC",
+      "state": "READ_ONLY",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Same visible scientific data with unauthorized authoring actions absent/disabled.",
+      "capturePriority": "P3",
+      "frameName": "Access / Actual / Read Only",
+      "setupSteps": [
+        "Use an approved existing read-only principal; do not modify grants for screenshots."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/created-run-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=actual",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "access-measurement",
+      "group": "Access",
+      "screenName": "Measurement",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "measurement"
+      },
+      "domainVariant": "GENERIC",
+      "state": "READ_ONLY",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Same visible scientific data with unauthorized authoring actions absent/disabled.",
+      "capturePriority": "P3",
+      "frameName": "Access / Measurement / Read Only",
+      "setupSteps": [
+        "Use an approved existing read-only principal; do not modify grants for screenshots."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/created-run-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=measurement",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "access-evaluation",
+      "group": "Access",
+      "screenName": "Evaluation",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "READ_ONLY",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Same visible scientific data with unauthorized authoring actions absent/disabled.",
+      "capturePriority": "P3",
+      "frameName": "Access / Evaluation / Read Only",
+      "setupSteps": [
+        "Use an approved existing read-only principal; do not modify grants for screenshots."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/created-run-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "access-forbidden",
+      "group": "Access",
+      "screenName": "Study",
+      "route": "/series/adhesion-material-optimization",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "FORBIDDEN",
+      "study": "adhesion-material-optimization",
+      "run": null,
+      "purpose": "Fail-closed unavailable/access-denied message.",
+      "capturePriority": "P3",
+      "frameName": "Access / Study / Forbidden",
+      "setupSteps": [
+        "Use an approved existing principal without access to this real Study."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "app/series/adhesion-material-optimization/page.tsx",
+      "routeId": "study-adhesion-material-optimization",
+      "url": "http://localhost:3200/series/adhesion-material-optimization",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "access-saved",
+      "group": "Access",
+      "screenName": "Saved Analysis",
+      "route": "/analysis",
+      "queryParams": {
+        "savedView": "analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8"
+      },
+      "domainVariant": "GENERIC",
+      "state": "UNAUTHORIZED",
+      "study": null,
+      "run": null,
+      "purpose": "Saved audience AND every source authorization denial.",
+      "capturePriority": "P3",
+      "frameName": "Access / Saved Analysis / Unauthorized",
+      "setupSteps": [
+        "Use an existing approved principal lacking one required permission. Do not change sharing or source ACLs."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/analysis/workspace.tsx",
+      "routeId": "analysis",
+      "url": "http://localhost:3200/analysis?savedView=analysis-view-d7bd3bc8-97cf-4646-aa85-2cf85072ebe8",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "access-run-unavailable",
+      "group": "Access",
+      "screenName": "Run",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "ERROR",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Run load failure/unavailable boundary.",
+      "capturePriority": "P3",
+      "frameName": "Access / Run / Error",
+      "setupSteps": [
+        "Use naturally occurring or approved isolated failure on this existing Run; do not delete it."
+      ],
+      "availability": "FAULT_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/created-run-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "not-found",
+      "group": "Access",
+      "screenName": "Not Found",
+      "route": "/samples/__not_found__",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "NOT_FOUND",
+      "study": null,
+      "run": null,
+      "purpose": "Global Next Not Found screen through validated missing Sample code.",
+      "capturePriority": "P3",
+      "frameName": "Access / Not Found / Not Found",
+      "setupSteps": [
+        "Diagnostic nonexistent code, not invented scientific data; this path instantiates the canonical Sample route."
+      ],
+      "availability": "READY",
+      "captureNotes": "__not_found__ is deliberately absent from src/mock/materials.ts. No resource is created.",
+      "sourceEvidence": "app/not-found.tsx",
+      "routeId": "sample",
+      "url": "http://localhost:3200/samples/__not_found__",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "study-runs-empty",
+      "group": "Study",
+      "screenName": "Runs",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "runs"
+      },
+      "domainVariant": "GENERIC",
+      "state": "EMPTY",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Run list without entries and available creation action.",
+      "capturePriority": "P3",
+      "frameName": "Study / Runs / Empty",
+      "setupSteps": [
+        "Requires an existing legitimate empty Study; all current Studies have two Runs."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/productized-series.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=runs",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "study-runs-more",
+      "group": "Study",
+      "screenName": "Runs",
+      "route": "/series/dts-improvement",
+      "queryParams": {
+        "view": "runs"
+      },
+      "domainVariant": "GENERIC",
+      "state": "PAGINATED",
+      "study": "dts-improvement",
+      "run": null,
+      "purpose": "Load more Runs affordance in server-scoped list.",
+      "capturePriority": "P2",
+      "frameName": "Study / Runs / Paginated",
+      "setupSteps": [
+        "Requires more existing visible Runs than one page; do not generate Runs for pagination."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/repository-series-runs.tsx",
+      "routeId": "study-dts-improvement",
+      "url": "http://localhost:3200/series/dts-improvement?view=runs",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "run-loading",
+      "group": "Run",
+      "screenName": "Workspace",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "plan"
+      },
+      "domainVariant": "GENERIC",
+      "state": "LOADING",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Initial Loading Run boundary before grid hydration.",
+      "capturePriority": "P3",
+      "frameName": "Run / Workspace / Loading",
+      "setupSteps": [
+        "Observe normal navigation with optional read-only network throttling."
+      ],
+      "availability": "TRANSIENT",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-series/created-run-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=plan",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "evaluation-saved",
+      "group": "Evaluation",
+      "screenName": "Decision Entry",
+      "route": "/series/dts-improvement/runs/19/engineering-grid",
+      "queryParams": {
+        "view": "evaluation"
+      },
+      "domainVariant": "GENERIC",
+      "state": "SAVED",
+      "study": "dts-improvement",
+      "run": 19,
+      "purpose": "Engineer Evaluation saved or Decision and Next Action saved notice.",
+      "capturePriority": "P2",
+      "frameName": "Evaluation / Decision Entry / Saved",
+      "setupSteps": [
+        "Capture only after separately authorized real reasoning save."
+      ],
+      "availability": "WRITE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/run-registration/evaluation-execution-grid.tsx",
+      "routeId": "run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/19/engineering-grid?view=evaluation",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-definition-invalid",
+      "group": "Reference",
+      "screenName": "Definition Entry",
+      "route": "/reference",
+      "queryParams": {
+        "section": "definitions"
+      },
+      "domainVariant": "GENERIC",
+      "state": "INVALID",
+      "study": null,
+      "run": null,
+      "purpose": "Required field validation in definition form.",
+      "capturePriority": "P3",
+      "frameName": "Reference / Definition Entry / Invalid",
+      "setupSteps": [
+        "Requires approved author role; submit an incomplete form only if validation prevents command dispatch; otherwise defer."
+      ],
+      "availability": "ROLE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/definitions-view.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=definitions",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-resolver-empty",
+      "group": "Reference",
+      "screenName": "Resolver",
+      "route": "/reference",
+      "queryParams": {
+        "section": "applicability",
+        "preview": "1"
+      },
+      "domainVariant": "GENERIC",
+      "state": "NO_MATCH",
+      "study": null,
+      "run": null,
+      "purpose": "Empty applicability result without adding or changing rules.",
+      "capturePriority": "P3",
+      "frameName": "Reference / Resolver / No Match",
+      "setupSteps": [
+        "Use an existing incompatible combination in preview only; do not modify applicability."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/resolver-preview.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=applicability&preview=1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "reference-package-assembled",
+      "group": "Reference",
+      "screenName": "Package Inspector",
+      "route": "/reference",
+      "queryParams": {
+        "section": "packages"
+      },
+      "domainVariant": "GENERIC",
+      "state": "ASSEMBLED",
+      "study": null,
+      "run": null,
+      "purpose": "Immutable assembled DRAFT manifest distinct from draft shell.",
+      "capturePriority": "P2",
+      "frameName": "Reference / Package Inspector / Assembled",
+      "setupSteps": [
+        "Requires an existing legitimately assembled draft; no current draft exists."
+      ],
+      "availability": "STATE_REQUIRED",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/reference-studio/package-view.tsx",
+      "routeId": "reference",
+      "url": "http://localhost:3200/reference?section=packages",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "legacy-evidence",
+      "group": "Legacy",
+      "screenName": "Evidence Viewer",
+      "route": "/series/dts-improvement/runs/1",
+      "queryParams": {},
+      "domainVariant": "SEMICONDUCTOR VARIANT",
+      "state": "OPEN",
+      "study": "dts-improvement",
+      "run": 1,
+      "purpose": "Evidence image/report dialog and measurement context.",
+      "capturePriority": "P2",
+      "frameName": "Legacy / Evidence Viewer / Open",
+      "setupSteps": [
+        "Click an existing Evidence card and inspect; close without changes."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-run/interactions.tsx",
+      "routeId": "legacy-run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "legacy-next",
+      "group": "Legacy",
+      "screenName": "Next Run",
+      "route": "/series/dts-improvement/runs/1",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "PREVIEW",
+      "study": "dts-improvement",
+      "run": 1,
+      "purpose": "Legacy inheritance modal before linking to planner.",
+      "capturePriority": "P2",
+      "frameName": "Legacy / Next Run / Preview",
+      "setupSteps": [
+        "Click Create Next Run in historical Run; stop in preview and close."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-run/interactions.tsx",
+      "routeId": "legacy-run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/1",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    },
+    {
+      "id": "legacy-conditions",
+      "group": "Legacy",
+      "screenName": "Conditions",
+      "route": "/series/dts-improvement/runs/4",
+      "queryParams": {},
+      "domainVariant": "GENERIC",
+      "state": "EXPANDED",
+      "study": "dts-improvement",
+      "run": 4,
+      "purpose": "Expanded unchanged conditions and Sample details.",
+      "capturePriority": "P2",
+      "frameName": "Legacy / Conditions / Expanded",
+      "setupSteps": [
+        "Expand existing conditions/Sample details; no editing."
+      ],
+      "availability": "READY",
+      "captureNotes": "",
+      "sourceEvidence": "src/features/experiment-run/conditions.tsx",
+      "routeId": "legacy-run",
+      "url": "http://localhost:3200/series/dts-improvement/runs/4",
+      "capturePolicy": "No captures performed in this task. Later capture: inspect only; never submit scientific/configuration/sharing changes merely for a screenshot."
+    }
+  ]
+}

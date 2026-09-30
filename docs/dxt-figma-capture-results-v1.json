@@ -1,0 +1,143 @@
+{
+  "status": "IN_PROGRESS",
+  "fontPolicy": "Normalize missing Arial to corresponding Inter; preserve Cousine",
+  "accepted": [
+    {
+      "id": "home-populated",
+      "node": "11:2",
+      "captureId": "14e281bf-8ffa-42f5-9fa4-d6625bf08240",
+      "normalized": 116
+    },
+    {
+      "id": "plan-wafer",
+      "node": "23:2",
+      "captureId": "beeac5d7-961a-4877-8801-3a02c59fe1dd"
+    },
+    {
+      "id": "analysis-default",
+      "url": "http://localhost:3200/analysis",
+      "frameName": "Analysis / Workspace / Default",
+      "capturePriority": "P1",
+      "group": "Analysis",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "captureId": "07ab7f59-b008-455a-b72e-a4e3d542c440",
+      "node": "26:2",
+      "textNodes": 121,
+      "normalized": 117,
+      "missing": 0,
+      "width": 1440,
+      "height": 1194,
+      "parent": "8:27"
+    },
+    {
+      "id": "study-overview",
+      "url": "http://localhost:3200/series/dts-improvement?view=overview",
+      "frameName": "Study / Overview / Populated",
+      "capturePriority": "P1",
+      "group": "Study",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "captureId": "ae044904-6ea8-4fac-8afd-d288eb9ec5d3",
+      "node": "27:2",
+      "textNodes": 61,
+      "normalized": 61,
+      "missing": 0,
+      "width": 1440,
+      "height": 1055,
+      "parent": "8:9"
+    },
+    {
+      "id": "study-runs",
+      "url": "http://localhost:3200/series/dts-improvement?view=runs",
+      "frameName": "Study / Runs / Populated",
+      "capturePriority": "P1",
+      "group": "Study",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "captureId": "3cc7a429-ce62-4edf-bfd1-67a4db6bfe2b",
+      "node": "28:2",
+      "textNodes": 60,
+      "normalized": 57,
+      "missing": 0,
+      "width": 1440,
+      "height": 1055,
+      "parent": "8:9"
+    },
+    {
+      "id": "setup-wafer",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup",
+      "frameName": "Study / Setup Wafer / Editable",
+      "capturePriority": "P1",
+      "group": "Study",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "captureId": "48559ffb-aa4b-41d3-a634-63fcdabb0df0",
+      "node": "29:2",
+      "textNodes": 104,
+      "normalized": 103,
+      "missing": 0,
+      "width": 1440,
+      "height": 1055,
+      "parent": "8:9"
+    },
+    {
+      "id": "setup-specimen",
+      "url": "http://localhost:3200/series/adhesion-material-optimization?view=setup",
+      "frameName": "Study / Setup Specimen / Editable",
+      "capturePriority": "P1",
+      "group": "Study",
+      "setupSteps": [
+        "Open the route and wait for repository data to settle."
+      ],
+      "captureId": "c498ba21-91a0-4463-98b9-6707e1af7a28",
+      "node": "31:2",
+      "textNodes": 108,
+      "normalized": 107,
+      "missing": 0,
+      "width": 1440,
+      "height": 1055,
+      "parent": "8:9"
+    },
+    {
+      "id": "setup-picker",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup&picker=1",
+      "frameName": "Study / Setup Picker / Open",
+      "capturePriority": "P1",
+      "group": "Study",
+      "setupSteps": [
+        "Open Add Item for EXPOSURE; do not select an item."
+      ],
+      "captureId": "caf77342-56e7-4516-ba82-49ad1eec5df3",
+      "node": "32:2",
+      "textNodes": 126,
+      "normalized": 125,
+      "missing": 0,
+      "width": 1440,
+      "height": 1055,
+      "parent": "8:9"
+    },
+    {
+      "id": "setup-inspector",
+      "url": "http://localhost:3200/series/dts-improvement?view=setup&inspector=1",
+      "frameName": "Study / Setup Inspector / Open",
+      "capturePriority": "P1",
+      "group": "Study",
+      "setupSteps": [
+        "Select an existing item and open Details."
+      ],
+      "captureId": "5800dd67-2007-4a7f-aaf9-1cb52296904b",
+      "node": "33:2",
+      "textNodes": 133,
+      "normalized": 132,
+      "missing": 0,
+      "width": 1440,
+      "height": 1055,
+      "parent": "8:9"
+    }
+  ]
+}
