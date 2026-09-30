@@ -1170,5 +1170,20 @@
   "Edit participation for {0}": "{0} 참여 대상 편집",
   "Out-of-plan evidence": "계획 외 기록",
   "Apply": "적용",
-  "Participation changes are not saved yet.": "참여 변경 사항이 아직 저장되지 않았습니다."
+  "Participation changes are not saved yet.": "참여 변경 사항이 아직 저장되지 않았습니다.",
+  "Evaluation classification": "평가 분류",
+  "Comments are recorded as Informative by default. Target Status does not determine engineer judgment.": "코멘트는 기본적으로 참고 정보로 기록됩니다. 목표 판정이 연구원의 판단을 결정하지 않습니다.",
+  "Result Missing. Record a measured result before saving Evaluation or Run Conclusion.": "결과 없음. 평가나 실험 차수 결론을 저장하려면 먼저 계측 결과를 기록하세요.",
+  "Save Evaluation for this result before recording Run Conclusion.": "실험 차수 결론을 기록하기 전에 이 결과의 평가를 저장하세요.",
+  "Save your Evaluation changes before recording Run Conclusion.": "실험 차수 결론을 기록하기 전에 변경한 평가를 저장하세요.",
+  "You do not have permission to record Run Conclusion.": "실험 차수 결론을 기록할 권한이 없습니다.",
+  "Read-only. You do not have permission to record Evaluation or Run Conclusion.": "읽기 전용입니다. 평가나 실험 차수 결론을 기록할 권한이 없습니다.",
+  "Selection is a draft. Save Run Conclusion to record it. No Run is created here.": "선택은 아직 초안입니다. 실험 차수 결론 저장을 눌러 기록하세요. 여기서는 새 차수를 생성하지 않습니다.",
+  "Save Run Conclusion": "실험 차수 결론 저장",
+  "Saved Run Conclusion": "저장된 실험 차수 결론",
+  "Run Conclusion saved.": "실험 차수 결론이 저장되었습니다.",
+  "Optional next Run change": "다음 차수 변경 사항 (선택)",
+  "Next Run creation was not confirmed. Reload before retrying.": "다음 차수 생성이 확인되지 않았습니다. 다시 시도하기 전에 새로고침하세요.",
+  "Evaluation save was not confirmed. Reload before retrying.": "평가 저장이 확인되지 않았습니다. 다시 시도하기 전에 새로고침하세요.",
+  "Run Conclusion save was not confirmed. Reload before retrying.": "실험 차수 결론 저장이 확인되지 않았습니다. 다시 시도하기 전에 새로고침하세요."
 }

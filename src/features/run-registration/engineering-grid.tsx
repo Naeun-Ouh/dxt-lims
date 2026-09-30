@@ -744,7 +744,7 @@ export default function EngineeringGrid({
           resolvedCatalog &&
           resolvedBindings.length ? (
           <EvaluationExecutionGrid
-            key={`evaluation-${resolvedMeasurements.datasets.length}-${resolvedEvaluations.length}-${resolvedDecision?.decision.id ?? 'none'}`}
+            key={`evaluation-${model.snapshot.id}`}
             model={model}
             results={resolvedMeasurements}
             catalog={resolvedCatalog}

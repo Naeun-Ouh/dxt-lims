@@ -742,3 +742,42 @@
 .participation-editor footer .plan-save { background: #1f2937; color: white; border-color: #1f2937; }
 .participation-editor footer button:disabled { opacity: .5; }
 .participation-unsaved { margin: 4px 16px; font-size: 12px; color: #9a6700; }
+
+/* Evaluation v1: visible save boundaries, with provenance kept in Inspector. */
+.workspace-plan-final .evaluation-comment-fields,
+.workspace-plan-final .evaluation-conclusion-fields {
+  border: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+.workspace-plan-final .evaluation-classification {
+  margin-top: 8px;
+  font-size: 10px;
+  color: #64748b;
+}
+.workspace-plan-final .evaluation-classification select {
+  max-width: 240px;
+}
+.workspace-plan-final .evaluation-prerequisite,
+.workspace-plan-final .evaluation-draft-note {
+  margin: 8px 0;
+  font-size: 11px;
+  color: #475569;
+}
+.workspace-plan-final .evaluation-conclusion-fields textarea {
+  min-height: 64px;
+}
+.workspace-plan-final .evaluation-next-note {
+  display: block;
+  margin: 12px 0;
+  font-size: 10px;
+}
+.workspace-plan-final .evaluation-conclusion-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.workspace-plan-final .conclusion-options {
+  flex-wrap: wrap;
+}

@@ -306,5 +306,20 @@
   "Out-of-plan evidence": "Out-of-plan evidence",
   "NOT_PARTICIPATING": "Not participating",
   "Apply": "Apply",
-  "Participation changes are not saved yet.": "Participation changes are not saved yet."
+  "Participation changes are not saved yet.": "Participation changes are not saved yet.",
+  "Evaluation classification": "Evaluation classification",
+  "Comments are recorded as Informative by default. Target Status does not determine engineer judgment.": "Comments are recorded as Informative by default. Target Status does not determine engineer judgment.",
+  "Result Missing. Record a measured result before saving Evaluation or Run Conclusion.": "Result Missing. Record a measured result before saving Evaluation or Run Conclusion.",
+  "Save Evaluation for this result before recording Run Conclusion.": "Save Evaluation for this result before recording Run Conclusion.",
+  "Save your Evaluation changes before recording Run Conclusion.": "Save your Evaluation changes before recording Run Conclusion.",
+  "You do not have permission to record Run Conclusion.": "You do not have permission to record Run Conclusion.",
+  "Read-only. You do not have permission to record Evaluation or Run Conclusion.": "Read-only. You do not have permission to record Evaluation or Run Conclusion.",
+  "Selection is a draft. Save Run Conclusion to record it. No Run is created here.": "Selection is a draft. Save Run Conclusion to record it. No Run is created here.",
+  "Save Run Conclusion": "Save Run Conclusion",
+  "Saved Run Conclusion": "Saved Run Conclusion",
+  "Run Conclusion saved.": "Run Conclusion saved.",
+  "Optional next Run change": "Optional next Run change",
+  "Next Run creation was not confirmed. Reload before retrying.": "Next Run creation was not confirmed. Reload before retrying.",
+  "Evaluation save was not confirmed. Reload before retrying.": "Evaluation save was not confirmed. Reload before retrying.",
+  "Run Conclusion save was not confirmed. Reload before retrying.": "Run Conclusion save was not confirmed. Reload before retrying."
 }
