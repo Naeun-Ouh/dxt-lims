@@ -1185,5 +1185,18 @@
   "Optional next Run change": "다음 차수 변경 사항 (선택)",
   "Next Run creation was not confirmed. Reload before retrying.": "다음 차수 생성이 확인되지 않았습니다. 다시 시도하기 전에 새로고침하세요.",
   "Evaluation save was not confirmed. Reload before retrying.": "평가 저장이 확인되지 않았습니다. 다시 시도하기 전에 새로고침하세요.",
-  "Run Conclusion save was not confirmed. Reload before retrying.": "실험 차수 결론 저장이 확인되지 않았습니다. 다시 시도하기 전에 새로고침하세요."
+  "Run Conclusion save was not confirmed. Reload before retrying.": "실험 차수 결론 저장이 확인되지 않았습니다. 다시 시도하기 전에 새로고침하세요.",
+  "NOT VALIDATED": "미검증",
+  "VALIDATING": "검증 중",
+  "PASSED": "검증 통과",
+  "FAILED": "검증 실패",
+  "Package validation failed.": "패키지 검증에 실패했습니다.",
+  "Validation did not return the selected exact package version.": "선택한 정확한 패키지 버전의 검증 결과를 받지 못했습니다.",
+  "You do not have permission to validate this package.": "이 패키지를 검증할 권한이 없습니다.",
+  "Reference resolution": "참조 해석",
+  "Applicability conflict checks": "적용 규칙 충돌 검사",
+  "Grain resolution": "분석 단위 해석",
+  "Editor key registration": "편집기 키 등록",
+  "Package graph completeness": "패키지 그래프 완전성",
+  "Configuration changed. Validate the current version again.": "구성이 변경되었습니다. 현재 버전을 다시 검증하세요."
 }
