@@ -1,3 +1,4 @@
+import { studyCreationContract } from './postgres-study-creation-contract';
 import {dashboardAuthorizationContract} from './postgres-dashboard-authorization-contract';
 import {savedAnalysisAuthorizationContract} from './postgres-saved-analysis-authorization-contract';
 import {configurationAuthorizationContract} from './postgres-configuration-authorization-contract';
@@ -76,6 +77,7 @@ void test('native PostgreSQL 18 executes the Production Adapter slice through no
   await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/011_authorization_configuration.sql'), 'utf8'));
   await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/012_authorization_saved_analysis.sql'), 'utf8'));
   await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/013_authorization_discovery.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/014_study_creation_grant.sql'), 'utf8'));
     await seedProductionSlice(database, configurationRepository);
     await provisionMeasurementReferences(database, definitions);
   await provisionReasoningContexts(database,lifecycleAuthoringProfiles);
@@ -145,6 +147,7 @@ void test('native PostgreSQL 18 executes the Production Adapter slice through no
     await configurationAuthorizationContract(database);
     await savedAnalysisAuthorizationContract(database,measurementProof);
     await dashboardAuthorizationContract(database,measurementProof);
+    await studyCreationContract(database);
     await database.close();
   } finally {
     await database?.close().catch(() => undefined);

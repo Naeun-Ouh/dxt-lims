@@ -1,3 +1,4 @@
+import { studyCreateSchema, studySlugSchema } from '@/src/application/study-creation';
 import {discoveryQuerySchema} from '@/src/application/discovery';
 import {savedAnalysisSharingSchema} from '@/src/application/saved-analysis-access';
 import { runCreationRequestSchema } from '@/src/application/run-creation';
@@ -18,12 +19,15 @@ const slug = z.enum(['dts-improvement', 'cmp-stability', 'adhesion-material-opti
 const strings=z.array(z.string().min(1)).max(10000).optional();
 const measurementQuery=z.object({savedAnalysisId:z.string().min(1).optional(),runIds:strings,datasetIds:strings,parameterDefinitionIds:strings,subjectIds:strings,siteIdentities:strings,coordinateDefinitionIds:strings,validity:z.enum(['INCLUDED','EXCLUDED']).optional(),limit:z.number().int().min(1).max(10000).optional()});
 export const requestSchema = z.discriminatedUnion('operation', [
+ z.object({operation:z.literal('study.creation.options')}),
+ z.object({operation:z.literal('study.create'),input:studyCreateSchema,commandId:z.string().min(1).max(200)}),
+ z.object({operation:z.literal('study.identity'),slug:studySlugSchema}),
  z.object({operation:z.literal('study.list'),query:discoveryQuerySchema.optional()}),
  z.object({operation:z.literal('dashboard.query'),query:discoveryQuerySchema.optional()}),
  z.object({operation:z.literal('run.summaries'),query:discoveryQuerySchema.optional()}),
  z.object({operation:z.literal('search.query'),query:discoveryQuerySchema.optional(),kind:z.enum(['ALL','STUDY','RUN','SAVED_ANALYSIS']).default('ALL')}),
- z.object({operation:z.literal('study.edit'),slug,displayName:z.string().trim().min(1).max(200),intent:z.string().max(4000),expectedVersion:z.number().int().positive()}),
- z.object({operation:z.literal('study.permissions'),slug}),
+ z.object({operation:z.literal('study.edit'),slug:studySlugSchema,displayName:z.string().trim().min(1).max(200),intent:z.string().max(4000),expectedVersion:z.number().int().positive()}),
+ z.object({operation:z.literal('study.permissions'),slug:studySlugSchema}),
  z.object({operation:z.literal('run.preview'),input:runCreationRequestSchema}),
  z.object({operation:z.literal('run.create.preview'),input:runCreationRequestSchema,fingerprint:z.string().min(1),command:z.object({commandId:z.string().min(1)})}),
  z.object({operation:z.literal('study.readiness'),slug,pin:z.string().min(1)}),
@@ -52,7 +56,7 @@ export const requestSchema = z.discriminatedUnion('operation', [
  z.object({operation:z.literal('measurement.save'),runId:z.string().min(1),record:subjectMeasurementResultSetSchema,command:executionCommandSchema}),
   z.object({ operation: z.literal('execution.load'), runId: z.string().min(1) }),
   z.object({ operation: z.literal('execution.save'), runId: z.string().min(1), records: z.array(executionEvidenceSchema), command: executionCommandSchema }),
-  z.object({ operation: z.literal('study.load'), slug }),
+  z.object({ operation: z.literal('study.load'), slug:studySlugSchema }),
   z.object({ operation: z.literal('run.create'), slug, commandId: z.uuid() }),
   z.object({ operation: z.literal('run.created'), slug, runNumber: z.number().int().positive().optional() }),
   z.object({ operation: z.literal('run.get'), runId: z.string().min(1) }),
@@ -90,6 +94,9 @@ export async function dispatchRepository(app: import('@/src/application/dxt-appl
       case 'study.save': await app.repositories.study.saveSetup(input.setup,input.command);return (null);
       case 'analysis.list': return (await app.savedAnalyses.list());
       case 'analysis.load': return (await app.savedAnalyses.getState(input.id));
+      case 'study.creation.options':
+      case 'study.create':
+      case 'study.identity':
       case 'dashboard.query':
       case 'run.summaries':
       case 'search.query':
@@ -113,7 +120,7 @@ export async function dispatchRepository(app: import('@/src/application/dxt-appl
       case 'execution.load': return (await app.executions.load(input.runId));
       case 'execution.save': return (await app.executions.save(input.runId, input.records, input.command));
       case 'study.load': {
-        const setup = await app.studies.load(input.slug);
+        const setup = await app.studies.load(input.slug as import('@/src/features/experiment-series/run-entry-model').SeriesSlug);
         if (!setup) throw new ApplicationError('NOT_FOUND', 'Study Setup is not persisted.');
         return (setup);
       }
