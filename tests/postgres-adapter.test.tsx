@@ -1,3 +1,4 @@
+import { studyCreationContract } from './postgres-study-creation-contract';
 import {ProductionHome} from '@/src/features/experiment-home/production-home';
 import {dashboardAuthorizationContract} from './postgres-dashboard-authorization-contract';
 import {SavedAnalysisSharingControl} from '@/src/features/analysis/sharing-control';
@@ -67,6 +68,7 @@ async function withDatabase() {
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/011_authorization_configuration.sql'), 'utf8'));
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/012_authorization_saved_analysis.sql'), 'utf8'));
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/013_authorization_discovery.sql'), 'utf8'));
+  await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/014_study_creation_grant.sql'), 'utf8'));
   await seedProductionSlice(database, configurationRepository);
   await provisionMeasurementReferences(database, definitions);
   await provisionReasoningContexts(database,lifecycleAuthoringProfiles);
@@ -298,4 +300,10 @@ void test('Production Home uses scoped projections without fixture counts or nam
  const html=renderToStaticMarkup(<ProductionHome studies={[]} dashboard={{counts:{studies:0,runs:0,activeRuns:0,thisWeek:0,needReview:0,measurements:0,savedAnalyses:0},continueWorking:null,recent:[],calendar:[],calendarTotal:0,groups:[],diagnostics:{principalId:'viewer',projection:'dashboard.query',scope:{kind:'MY'},policyVersion:'organization-discovery-v5'}}}/>);
  assert.match(html,/No personal experiment work/);assert.match(html,/No accessible Studies/);
  assert.ok(!html.includes('DTS Improvement'));assert.ok(!html.includes('Run 18'));
+});
+
+void test('Study creation: explicit scoped grants, exact references, atomic writes and authoritative read-back', async () => {
+  const state = await withDatabase();
+  try { await studyCreationContract(state.database); }
+  finally { await state.database.close(); await rm(state.directory, { recursive: true, force: true }); }
 });

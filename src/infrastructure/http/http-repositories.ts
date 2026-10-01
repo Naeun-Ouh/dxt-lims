@@ -69,3 +69,9 @@ export const httpConfigurationAuthoring:ConfigurationAuthoringBoundary={load:()=
 export const loadStudyPermissions=(slug:string)=>request<import('@/src/application/authorization').StudyPermissions>({operation:'study.permissions',slug});
 
 export const loadRunSummaries=(query:Partial<import('@/src/application/discovery').DiscoveryQuery>)=>request<import('@/src/application/discovery').DiscoveryPage<import('@/src/application/discovery').RunSummary>>({operation:'run.summaries',query});
+
+export const httpStudyCreation: import('@/src/application/study-creation').StudyCreationRepository = {
+  options: () => request({ operation: 'study.creation.options' }),
+  create: (input, commandId) => request({ operation: 'study.create', input, commandId }),
+  get: slug => request({ operation: 'study.identity', slug }),
+};

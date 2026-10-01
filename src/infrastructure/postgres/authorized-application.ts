@@ -1,3 +1,4 @@
+import { PostgresStudyCreation } from './study-creation';
 import {scopedDashboard,scopedStudyList,scopedRunSummaries,scopedSearch} from './scoped-discovery';
 import {accessibleSavedAnalysisIds} from './saved-analysis-authorization';
 import {authorizeConfigurationMutation, configurationPermissions, requireReadableConfigurationReferences} from './configuration-authorization';
@@ -22,12 +23,26 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
  return database.transaction(async sql=>{
   await sql.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
   // Pilot-scale stable policy snapshot. Revocation/transfer DML waits until this command completes.
-  await sql.query('LOCK TABLE auth_principal,auth_org_unit,auth_membership,study_access,study_module_access,study_access_grant,configuration_access_scope,configuration_access_grant IN SHARE MODE');
+  // Creation inserts access rows: serialize before taking the repeatable-read snapshot,
+  // avoiding a SHARE-to-ROW-EXCLUSIVE lock-upgrade deadlock between creators.
+  const policyLock = raw.operation === 'study.create' ? 'SHARE ROW EXCLUSIVE' : 'SHARE';
+  await sql.query(`LOCK TABLE auth_principal,auth_org_unit,auth_membership,study_access,study_module_access,study_access_grant,configuration_access_scope,configuration_access_grant,study_creation_grant IN ${policyLock} MODE`);
   const principal=await resolvePrincipal(sql,principalId), policy=new PostgresAuthorization(sql);
   const input=structuredClone(raw), op=text(input.operation);
   if(op.startsWith('analysis.'))return savedAnalysisOperation(sql,principal,input);
   if(op==='dashboard.query')return scopedDashboard(sql,principal,input.query);
   if(op==='study.list')return scopedStudyList(sql,principal,input.query);
+  const studyCreation = new PostgresStudyCreation(sql, principal.principalId);
+  if(op==='study.creation.options')return studyCreation.options();
+  if(op==='study.create') {
+   try { return await studyCreation.create(input.input as import('@/src/application/study-creation').StudyCreateInput,text(input.commandId)); }
+   catch(error) {
+    if(error && typeof error==='object' && 'code' in error && error.code==='40001')
+     throw new ApplicationError('CONFLICT','Study creation changed concurrently. Retry the same request.');
+    throw error;
+   }
+  }
+  if(op==='study.identity')return studyCreation.get(text(input.slug));
   if(op==='run.summaries')return scopedRunSummaries(sql,principal,input.query);
   if(op==='search.query')return scopedSearch(sql,principal,input.query,text(input.kind)||'ALL');
   const study=async(slug:string,action:StudyAction)=>{

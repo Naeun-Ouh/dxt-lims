@@ -77,10 +77,10 @@ void test('Readiness and missing Existing Run selection still block creation/rev
   );
   assert.match(existing, /<button[^>]*disabled=""[^>]*>Review Inheritance/);
 });
-void test('Study creation does not pretend a missing authoring boundary exists', () => {
+void test('Study creation denies users without explicit creation grants', () => {
   const html = render(<CreateStudy />);
   assert.match(html, /<button[^>]*disabled=""[^>]*>Create Study/);
-  assert.match(html, /This form is not saved/);
+  assert.match(html, /explicit department grant/);
   assert.doesNotMatch(html, /DTS Improvement|D035|4\.4/);
 });
 void test('Study filters only narrow the provided authorized list and never manufacture metadata', () => {
