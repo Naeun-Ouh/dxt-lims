@@ -1,6 +1,13 @@
 import { useLocale } from '@/src/shared/i18n/locale';
 import { canGovern } from './permissions';
-import { useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import { createPackageValidation } from './package-validation';
 import { Check, CircleAlert } from 'lucide-react';
 import { Badge } from '@/src/shared/ui/workspace';
 import type { ConfigurationPackageVersion } from '@/src/domain/reference';
@@ -50,12 +57,67 @@ export function PackageView({
     source: ConfigurationPackageVersion;
     version: number;
   } | null>(null);
-  const [validated, setValidated] = useState<string | null>(() => {
-    if (!initialValidation || !packages.some((p) => p.id === selectedId))
-      return null;
-    void studioCommands.validatePackageVersion(selectedId);
-    return selectedId;
+  const canValidate =
+    !!selected &&
+    canGovern(application, 'canViewConfiguration', selected.scope);
+  const repositoryRevision = studioRepository.getRevision();
+  /* oxlint-disable react/react-compiler -- Repository facade is mutable; exact snapshot identity intentionally invalidates view-local validation. */
+  const validationSession = useMemo(
+    () =>
+      createPackageValidation(selected?.id ?? '', (id) => {
+        if (!canValidate)
+          throw new Error(
+            'You do not have permission to validate this package.',
+          );
+        if (
+          application.repositories.configuration !== studioRepository ||
+          studioRepository.getRevision() !== repositoryRevision
+        )
+          throw new Error(
+            'Configuration changed. Validate the current version again.',
+          );
+        return studioCommands.validatePackageVersion(id);
+      }),
+    [
+      selected?.id,
+      application,
+      studioRepository,
+      repositoryRevision,
+      studioCommands,
+      canValidate,
+    ],
+  );
+  /* oxlint-enable react/react-compiler */
+  const validation = useSyncExternalStore(
+    validationSession.subscribe,
+    validationSession.getSnapshot,
+    validationSession.getSnapshot,
+  );
+  const initialRequest = useRef({
+    id: selectedId,
+    requested: initialValidation,
+    consumed: false,
   });
+  useEffect(() => {
+    const request = initialRequest.current;
+    if (request.consumed || !request.requested) return;
+    request.consumed = true;
+    if (selected?.id === request.id && canValidate)
+      void validationSession.run();
+  }, [validationSession, selected?.id, canValidate]);
+  const passed = validation.status === 'PASSED';
+  const validating = validation.status === 'VALIDATING';
+  const validationStatus = (
+    <output aria-live="polite" aria-busy={validating}>
+      <strong>
+        {t('Validation')}: {t(validation.status)}
+      </strong>
+      {validation.error && <p role="alert">{t(validation.error)}</p>}
+      {!canValidate && (
+        <p>{t('You do not have permission to validate this package.')}</p>
+      )}
+    </output>
+  );
   const [notice, setNotice] = useState<Notice>(null);
   const [inspectorOpen, setInspectorOpen] = useState(
     initialInspectorOpen || initialValidation,
@@ -126,7 +188,6 @@ export function PackageView({
       refresh();
       onSelect(id);
       setDraft(null);
-      setValidated(null);
       setNotice({
         tone: 'success',
         text: `Package v${draft.version} assembled as immutable DRAFT.`,
@@ -135,22 +196,13 @@ export function PackageView({
       setNotice({ tone: 'error', text: (error as Error).message });
     }
   };
-  const validate = async () => {
-    try {
-      await studioCommands.validatePackageVersion(selected.id);
-      setValidated(selected.id);
-      setNotice({
-        tone: 'success',
-        text: `Package v${selected.version} passed every activation check.`,
-      });
-    } catch (error) {
-      setValidated(null);
-      setNotice({ tone: 'error', text: (error as Error).message });
-    }
+  const validate = () => {
+    setNotice(null);
+    void validationSession.run();
   };
   const activate = async () => {
     try {
-      if (validated !== selected.id)
+      if (validationSession.getSnapshot().status !== 'PASSED')
         throw new Error(
           'Validate this exact package version before activation.',
         );
@@ -205,12 +257,14 @@ export function PackageView({
           </div>
           <div className="rs-toolbar-actions">
             <button onClick={() => setReview(false)}>{t('Cancel')}</button>
-            <button onClick={validate}>{t('Validate exact version')}</button>
+            <button disabled={validating || !canValidate} onClick={validate}>
+              {t('Validate exact version')}
+            </button>
             <button
               className="rs-primary"
               disabled={
                 selected.status === 'ACTIVE' ||
-                validated !== selected.id ||
+                !passed ||
                 !canGovern(
                   application,
                   'canActivatePackageVersion',
@@ -224,6 +278,7 @@ export function PackageView({
           </div>
         </header>
         {notice && <NoticeBox notice={notice} />}
+        {validationStatus}
         <section className="catalog-card">
           <h2>{t('Included Definitions')}</h2>
           <div className="rs-table-scroll">
@@ -308,15 +363,8 @@ export function PackageView({
             <h2>{t('Readiness Checks')}</h2>
             <ul className="rs-checklist">
               {validationChecks.map((c) => (
-                <li
-                  key={t(c)}
-                  className={validated === selected.id ? 'passed' : ''}
-                >
-                  {validated === selected.id ? (
-                    <Check size={14} />
-                  ) : (
-                    <CircleAlert size={14} />
-                  )}{' '}
+                <li key={t(c)} className={passed ? 'passed' : ''}>
+                  {passed ? <Check size={14} /> : <CircleAlert size={14} />}{' '}
                   {t(c)}
                 </li>
               ))}
@@ -378,7 +426,11 @@ export function PackageView({
           >
             {t('Assemble Version')}
           </button>
-          <button className="rs-primary" onClick={validate}>
+          <button
+            className="rs-primary"
+            disabled={validating || !canValidate}
+            onClick={validate}
+          >
             {t('Validate')}
           </button>
         </div>
@@ -386,6 +438,7 @@ export function PackageView({
       <div className="rs-content-grid inspector-optional">
         <div className="rs-grid-pane">
           {notice && <NoticeBox notice={notice} />}
+          {validationStatus}
           <div className="rs-filterbar">
             <label>
               <input
@@ -433,7 +486,6 @@ export function PackageView({
                       className={selected.id === pkg.id ? 'selected' : ''}
                       onClick={() => {
                         onSelect(pkg.id);
-                        setValidated(null);
                         setNotice(null);
                         setInspectorOpen(true);
                       }}
@@ -579,34 +631,27 @@ export function PackageView({
               <div className="rs-section-head">
                 <h3>
                   {t(
-                    notice?.tone === 'error'
+                    validation.status === 'FAILED'
                       ? 'Not Ready to Activate'
-                      : validated === selected.id
+                      : passed
                         ? 'Ready to Activate'
                         : 'Activation Readiness',
                   )}
                 </h3>
-                <span>{validated === selected.id ? 'READY' : 'VALIDATE'}</span>
+                <span>{t(validation.status)}</span>
               </div>
               <ul className="rs-checklist">
                 {validationChecks.map((item) => (
-                  <li
-                    key={t(item)}
-                    className={validated === selected.id ? 'passed' : ''}
-                  >
-                    {validated === selected.id ? (
-                      <Check size={14} />
-                    ) : (
-                      <CircleAlert size={14} />
-                    )}{' '}
+                  <li key={t(item)} className={passed ? 'passed' : ''}>
+                    {passed ? <Check size={14} /> : <CircleAlert size={14} />}{' '}
                     {t(item)}
                   </li>
                 ))}
               </ul>
-              {notice?.tone === 'error' && (
-                <div className="rs-validation-error">
+              {validation.error && (
+                <div className="rs-validation-error" role="alert">
                   <strong>{t('Activation blocked')}</strong>
-                  <code>{notice.text}</code>
+                  <code>{t(validation.error)}</code>
                 </div>
               )}
             </div>
@@ -654,7 +699,7 @@ export function PackageView({
                 <button
                   className="rs-primary"
                   disabled={
-                    validated !== selected.id ||
+                    !passed ||
                     !canGovern(
                       application,
                       'canActivatePackageVersion',
@@ -667,7 +712,9 @@ export function PackageView({
                   {selected.version}
                 </button>
               )}
-              <button onClick={validate}>{t('Validate exact version')}</button>
+              <button disabled={validating || !canValidate} onClick={validate}>
+                {t('Validate exact version')}
+              </button>
             </div>
           </div>
         </InspectorDrawer>

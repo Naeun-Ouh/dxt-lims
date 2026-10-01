@@ -321,5 +321,18 @@
   "Optional next Run change": "Optional next Run change",
   "Next Run creation was not confirmed. Reload before retrying.": "Next Run creation was not confirmed. Reload before retrying.",
   "Evaluation save was not confirmed. Reload before retrying.": "Evaluation save was not confirmed. Reload before retrying.",
-  "Run Conclusion save was not confirmed. Reload before retrying.": "Run Conclusion save was not confirmed. Reload before retrying."
+  "Run Conclusion save was not confirmed. Reload before retrying.": "Run Conclusion save was not confirmed. Reload before retrying.",
+  "NOT VALIDATED": "NOT VALIDATED",
+  "VALIDATING": "VALIDATING",
+  "PASSED": "PASSED",
+  "FAILED": "FAILED",
+  "Package validation failed.": "Package validation failed.",
+  "Validation did not return the selected exact package version.": "Validation did not return the selected exact package version.",
+  "You do not have permission to validate this package.": "You do not have permission to validate this package.",
+  "Reference resolution": "Reference resolution",
+  "Applicability conflict checks": "Applicability conflict checks",
+  "Grain resolution": "Grain resolution",
+  "Editor key registration": "Editor key registration",
+  "Package graph completeness": "Package graph completeness",
+  "Configuration changed. Validate the current version again.": "Configuration changed. Validate the current version again."
 }

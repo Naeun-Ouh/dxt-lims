@@ -380,11 +380,11 @@ export function packageAssembly(source: ConfigurationPackageVersion) {
 }
 
 export const validationChecks = [
-  'References resolved',
-  'Applicability conflicts: none',
-  'Grain resolution valid',
-  'Editor keys registered',
-  'Package graph complete',
+  'Reference resolution',
+  'Applicability conflict checks',
+  'Grain resolution',
+  'Editor key registration',
+  'Package graph completeness',
 ] as const;
 
 export function validateRuleCandidate(
