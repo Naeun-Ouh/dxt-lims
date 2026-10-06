@@ -5,7 +5,7 @@ import pg from 'pg';
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error('DATABASE_URL is required.');
 /* Migration 001 remains checksum-locked. Apply incremental migrations in order. */
-const migrations = ['001_production_adapter_slice_1', '002_actual_execution', '003_measurement', '004_evaluation_decision', '005_saved_analysis', '006_configuration_study_authoring', '007_run_plan_authoring', '008_study_reasoning_adoption', '009_authorization_study_run', '010_authorization_scientific', '011_authorization_configuration', '012_authorization_saved_analysis', '013_authorization_discovery', '014_study_creation_grant'];
+const migrations = ['001_production_adapter_slice_1', '002_actual_execution', '003_measurement', '004_evaluation_decision', '005_saved_analysis', '006_configuration_study_authoring', '007_run_plan_authoring', '008_study_reasoning_adoption', '009_authorization_study_run', '010_authorization_scientific', '011_authorization_configuration', '012_authorization_saved_analysis', '013_authorization_discovery', '014_study_creation_grant', '015_study_initial_reasoning'];
 const pool = new pg.Pool({ connectionString, max: 1 });
 const client = await pool.connect();
 try {

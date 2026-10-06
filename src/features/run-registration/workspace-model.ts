@@ -109,6 +109,8 @@ export function isFocusOperation(model: ExperimentWorkspaceModel, id: string) {
   );
 }
 export type ExperimentWorkspaceModel = {
+  /** Projection-only: new persisted Studies display only explicitly authored assignments. */
+  explicitAssignments?: boolean;
   scopeRanges?: ExperimentScopeRange[];
   manualFocus?: string[];
   snapshot: RunPlanningSnapshot;

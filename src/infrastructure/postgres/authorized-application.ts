@@ -1,3 +1,4 @@
+import { readBootstrap, saveBootstrap, initializeReasoning } from './study-bootstrap';
 import { PostgresStudyCreation } from './study-creation';
 import {scopedDashboard,scopedStudyList,scopedRunSummaries,scopedSearch} from './scoped-discovery';
 import {accessibleSavedAnalysisIds} from './saved-analysis-authorization';
@@ -50,6 +51,73 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
    if(!r)throw new ApplicationError('NOT_FOUND','Resource unavailable or access denied.');
    await policy.require(principal,action,r.study_id);return r.study_id;
   };
+    if (
+      [
+        'study.bootstrap.load',
+        'study.bootstrap.save',
+        'study.reasoning.initialize',
+      ].includes(op)
+    ) {
+      const slug = text(input.slug),
+        action =
+          op === 'study.bootstrap.save'
+            ? 'EDIT_STUDY_SETUP'
+            : op === 'study.reasoning.initialize'
+              ? 'MANAGE_REASONING_CONTEXT'
+              : 'VIEW_STUDY';
+      const studyId = await study(slug, action);
+      const permissions = await policy.permissions(principal, studyId);
+      const canReason =
+        (await policy.authorize(principal, 'MANAGE_REASONING_CONTEXT', studyId))
+          .effect === 'ALLOW';
+      const commandId = text(input.commandId);
+      const scopedCommand = `bootstrap:${createHash('sha256')
+        .update(JSON.stringify([principalId, op, commandId]))
+        .digest('hex')}`;
+      if (op !== 'study.bootstrap.load' && !commandId)
+        throw new ApplicationError(
+          'VALIDATION',
+          'Command identity is required.',
+        );
+      try {
+        if (op === 'study.reasoning.initialize')
+          return await initializeReasoning(
+            sql,
+            slug,
+            principalId,
+            input.input,
+            scopedCommand,
+          );
+        const state =
+          op === 'study.bootstrap.save'
+            ? await saveBootstrap(
+                sql,
+                slug,
+                principalId,
+                input.input,
+                scopedCommand,
+              )
+            : await readBootstrap(sql, slug, principalId);
+        return {
+          ...state,
+          canEditSetup: permissions.canEditStudySetup && !state.closed,
+          canInitializeReasoning: canReason && !state.closed,
+          canCreateRun: permissions.canCreateRun,
+        };
+      } catch (error) {
+        if (
+          error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === '40001'
+        )
+          throw new ApplicationError(
+            'CONFLICT',
+            'Study changed concurrently. Retry the same request.',
+          );
+        throw error;
+      }
+    }
   const run=async(id:string,action:StudyAction)=>{
    const r=(await sql.query<{study_id:string}>('SELECT study_id FROM experiment_run WHERE run_domain_id=$1',[id])).rows[0];
    if(!r)throw new ApplicationError('NOT_FOUND','Resource unavailable or access denied.');
