@@ -647,3 +647,67 @@
 .study-create-fields:disabled { opacity: .7; }
 .study-create-final .entry-field select { max-width: 100%; min-width: 0; }
 .study-create-final .entry-study-form dd { overflow-wrap: anywhere; margin: 4px 0 16px; }
+
+/* Bounded Study bootstrap, using the existing entry shell and action hierarchy. */
+.study-bootstrap {
+  margin: 16px 24px;
+  padding: 20px;
+  border: 1px solid #dbe3eb;
+  background: white;
+  font-size: 13px;
+}
+.study-bootstrap fieldset {
+  min-width: 0;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #dbe3eb;
+}
+.study-bootstrap legend {
+  font-weight: 600;
+}
+.study-bootstrap label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.study-bootstrap textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+.study-bootstrap input,
+.study-bootstrap select,
+.study-bootstrap textarea {
+  border: 1px solid #c6d4df;
+  padding: 8px;
+  font: inherit;
+}
+.study-bootstrap input[type='checkbox'] {
+  width: auto;
+}
+.bootstrap-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  margin: 12px 0;
+}
+.bootstrap-controls label {
+  min-width: 120px;
+  max-width: 100%;
+}
+.bootstrap-operation {
+  padding: 12px;
+  margin: 12px 0;
+  background: #f7f9fb;
+}
+.study-bootstrap .entry-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.study-bootstrap [role='alert'] {
+  color: #a32222;
+}
+.study-bootstrap [role='status'] {
+  color: #166534;
+}

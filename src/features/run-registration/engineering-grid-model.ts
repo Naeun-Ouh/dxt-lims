@@ -114,7 +114,9 @@ export function projectEngineeringGridRows(
     const variables = resolvedVariableDefinitions(
       model,
       operation.sourceOperationId,
-    ).map((definition) => {
+    ).filter(definition => !model.explicitAssignments || model.snapshot.assignments.some(a =>
+      a.processStepId === operation.sourceOperationId && a.kind === definition.assignmentKind && a.referenceId === definition.assignmentReferenceId
+    )).map((definition) => {
       const assignment = assignmentFor(model, operation, definition);
       const values =
         operation.id === operation.sourceOperationId

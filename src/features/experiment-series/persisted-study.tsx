@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { StudyBootstrap } from './study-bootstrap';
 import type { StudyIdentity } from '@/src/application/study-creation';
 import { useLocale } from '@/src/shared/i18n/locale';
 import { EntryShell } from './entry-shell';
@@ -48,12 +49,8 @@ export function PersistedStudy({ study }: { study: StudyIdentity }) {
             <dt>{t('Revision')}</dt>
             <dd>{study.setupRevision}</dd>
           </dl>
-          <p>
-            {t(
-              'New Studies have no default Subjects or Operations. Run preparation is not available until these are configured.',
-            )}
-          </p>
         </section>
+        <StudyBootstrap slug={study.slug} />
       </main>
     </EntryShell>
   );
