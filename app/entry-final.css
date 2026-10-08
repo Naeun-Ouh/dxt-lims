@@ -674,15 +674,42 @@
   width: 100%;
   box-sizing: border-box;
 }
-.study-bootstrap input,
+.study-bootstrap input:not([type='checkbox']),
 .study-bootstrap select,
 .study-bootstrap textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  height: auto;
   border: 1px solid #c6d4df;
   padding: 8px;
   font: inherit;
 }
+.study-bootstrap select {
+  padding-right: 30px;
+}
+.study-bootstrap textarea {
+  min-height: 76px;
+}
 .study-bootstrap input[type='checkbox'] {
-  width: auto;
+  box-sizing: border-box;
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  align-self: center;
+  justify-self: start;
+}
+.study-bootstrap label:has(> input[type='checkbox']) {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 8px;
+}
+.study-bootstrap label:has(> input[type='checkbox']) > small {
+  grid-column: 2;
 }
 .bootstrap-controls {
   display: flex;
@@ -691,9 +718,19 @@
   align-items: end;
   margin: 12px 0;
 }
-.bootstrap-controls label {
-  min-width: 120px;
+.study-bootstrap .bootstrap-controls label {
+  flex: 1 1 160px;
+  min-width: 0;
   max-width: 100%;
+}
+.study-bootstrap .bootstrap-controls > strong {
+  flex: 1 1 240px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.study-bootstrap .entry-button {
+  min-height: 38px;
+  height: auto;
 }
 .bootstrap-operation {
   padding: 12px;
