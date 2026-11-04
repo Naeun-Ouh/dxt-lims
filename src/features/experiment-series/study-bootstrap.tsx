@@ -1,7 +1,8 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from '@/src/shared/i18n/locale';
+import { translate } from '@/src/shared/i18n/messages';
 import { httpStudyBootstrap as api } from '@/src/infrastructure/http/http-repositories';
 import {
   initialReasoningSchema,
@@ -9,9 +10,17 @@ import {
   type StudyBootstrapState,
 } from '@/src/application/study-bootstrap';
 import type { AuthoritativeRunPreview } from '@/src/application/run-creation';
+import {
+  initialTargetBlockers,
+  setupInputProblems,
+} from './study-bootstrap-feedback';
 
 export function StudyBootstrap({ slug }: { slug: string }) {
   const { t } = useLocale();
+  const feedbackId = useId();
+  const [action, setAction] = useState<'setup' | 'reasoning' | 'run' | null>(
+    null,
+  );
   const [state, setState] = useState<StudyBootstrapState | null>(null);
   const [subjects, setSubjects] = useState('');
   const [operations, setOperations] = useState<
@@ -89,9 +98,13 @@ export function StudyBootstrap({ slug }: { slug: string }) {
       active = false;
     };
   }, [slug]);
-  async function execute(work: () => Promise<void>) {
+  async function execute(
+    work: () => Promise<void>,
+    scope: 'setup' | 'reasoning' | 'run' = 'run',
+  ) {
     if (pending.current) return;
     pending.current = true;
+    setAction(scope);
     setBusy(true);
     setError('');
     setNotice('');
@@ -131,6 +144,18 @@ export function StudyBootstrap({ slug }: { slug: string }) {
       )}
     </label>
   );
+  const feedback = (scope: 'setup' | 'reasoning' | 'run') => (
+    <div id={`${feedbackId}-${scope}`} aria-live="polite" aria-atomic="true">
+      {action === scope &&
+        (error ? (
+          <p role="alert">
+            {t('Action not completed.')} {t(error)}
+          </p>
+        ) : (
+          <output>{busy ? t('Request in progress…') : t(notice)}</output>
+        ))}
+    </div>
+  );
   if (!state)
     return (
       <section className="study-bootstrap" aria-label={t('Experiment Setup')}>
@@ -145,6 +170,7 @@ export function StudyBootstrap({ slug }: { slug: string }) {
   );
   const parameter = parameters.find((p) => p.id === target.parameter);
   const readOnly = busy || !state.canEditSetup;
+  const targetBlockers = initialTargetBlockers(state, busy, dirty);
   return (
     <section className="study-bootstrap" aria-label={t('Experiment Setup')}>
       <h2>{t('Experiment Setup')}</h2>
@@ -157,8 +183,7 @@ export function StudyBootstrap({ slug }: { slug: string }) {
         {t('Scientific readiness')}: {t(state.readiness.status)}{' '}
         {state.readiness.missing.map((m) => t(m)).join(' · ')}
       </p>
-      {error && <p role="alert">{t(error)}</p>}
-      {notice && <output>{t(notice)}</output>}
+      {!action && error && <p role="alert">{t(error)}</p>}
       {dirty && <p>{t('Save Setup before continuing.')}</p>}
       <fieldset disabled={readOnly}>
         <legend>{t('Subjects and ordered Operations')}</legend>
@@ -414,6 +439,7 @@ export function StudyBootstrap({ slug }: { slug: string }) {
         <div className="entry-actions">
           <button
             className="entry-button primary"
+            aria-describedby={`${feedbackId}-setup`}
             onClick={() =>
               execute(async () => {
                 const input: BootstrapSetupInput = {
@@ -427,15 +453,28 @@ export function StudyBootstrap({ slug }: { slug: string }) {
                     }),
                   operations,
                 };
-                hydrate(await api.save(slug, input, command('setup', input)));
+                const problems = setupInputProblems(input);
+                if (problems.length)
+                  throw new Error(
+                    translate('en', problems[0].key, problems[0].values),
+                  );
+                const saved = await api.save(
+                  slug,
+                  input,
+                  command('setup', input),
+                );
+                hydrate(saved);
                 setPreview(null);
-                setNotice('Setup saved.');
-              })
+                setNotice(
+                  `Setup saved. Revision ${saved.setup.revision}. Initial Target prerequisites are listed below.`,
+                );
+              }, 'setup')
             }
           >
             {t('Save Setup')}
           </button>
         </div>
+        {feedback('setup')}
       </fieldset>
       {!state.canEditSetup && <p>{t('Setup is read-only.')}</p>}
       {state.readiness.contextId && (
@@ -464,14 +503,19 @@ export function StudyBootstrap({ slug }: { slug: string }) {
       )}
       {!state.readiness.contextId && (
         <fieldset
-          disabled={
-            busy ||
-            dirty ||
-            !state.canInitializeReasoning ||
-            !!state.structuralMissing.length
-          }
+          disabled={targetBlockers.length > 0}
+          aria-describedby={`${feedbackId}-target-reasons`}
         >
           <legend>{t('Initial Target context')}</legend>
+          <div id={`${feedbackId}-target-reasons`} aria-live="polite">
+            {targetBlockers.length > 0 && (
+              <ul>
+                {targetBlockers.map((reason) => (
+                  <li key={reason.key}>{t(reason.key, reason.values)}</li>
+                ))}
+              </ul>
+            )}
+          </div>
           <p>
             {t(
               'Enter scientific Target values explicitly. Confirmation is immutable for this package.',
@@ -594,17 +638,10 @@ export function StudyBootstrap({ slug }: { slug: string }) {
               </select>,
             )}
           </div>
-          {(!state.catalog.evaluations.length ||
-            !state.catalog.nextActionTypes.some((p) => p.active)) && (
-            <p>
-              {t(
-                'Exact reasoning references are missing from this package. Configuration must be prepared before confirmation.',
-              )}
-            </p>
-          )}
           <div className="entry-actions">
             <button
               className="entry-button primary"
+              aria-describedby={`${feedbackId}-target-reasons ${feedbackId}-reasoning`}
               onClick={() =>
                 execute(async () => {
                   if (
@@ -656,7 +693,7 @@ export function StudyBootstrap({ slug }: { slug: string }) {
                   );
                   hydrate(await api.load(slug));
                   setNotice('Initial Target context confirmed.');
-                })
+                }, 'reasoning')
               }
             >
               {t('Confirm initial Target context')}
@@ -664,13 +701,7 @@ export function StudyBootstrap({ slug }: { slug: string }) {
           </div>
         </fieldset>
       )}
-      {!state.canInitializeReasoning && !state.closed && (
-        <p>
-          {t(
-            'Explicit reasoning permission is required. Contact the responsible administrator.',
-          )}
-        </p>
-      )}
+      {feedback('reasoning')}
       <div className="entry-actions">
         <button
           className="entry-button"
@@ -689,6 +720,7 @@ export function StudyBootstrap({ slug }: { slug: string }) {
           {t('Preview first Run')}
         </button>
       </div>
+      {feedback('run')}
       {preview && (
         <section>
           <h3>{t('Review first Run')}</h3>

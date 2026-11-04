@@ -407,5 +407,21 @@
   "Existing Runs": "Existing Runs",
   "Select": "Select",
   "Add Operation": "Add Operation",
-  "Required supporting parameters": "Required supporting parameters"
+  "Required supporting parameters": "Required supporting parameters",
+  "Setup not saved: enter at least one Subject ID.": "Setup not saved: enter at least one Subject ID.",
+  "Setup not saved: add at least one Operation.": "Setup not saved: add at least one Operation.",
+  "Setup not saved: check field {0}.": "Setup not saved: check field {0}.",
+  "A request is in progress. Wait for it to finish before entering the initial Target.": "A request is in progress. Wait for it to finish before entering the initial Target.",
+  "Initial Target is unavailable while Setup has unsaved changes. Save Setup successfully first; correct any displayed save error.": "Initial Target is unavailable while Setup has unsaved changes. Save Setup successfully first; correct any displayed save error.",
+  "Initial Target authoring is closed after a reasoning context or Run exists. Use the existing reasoning/adoption process for later changes.": "Initial Target authoring is closed after a reasoning context or Run exists. Use the existing reasoning/adoption process for later changes.",
+  "Initial Target requires explicit reasoning permission. Ask the responsible administrator for MANAGE_REASONING_CONTEXT.": "Initial Target requires explicit reasoning permission. Ask the responsible administrator for MANAGE_REASONING_CONTEXT.",
+  "Initial Target is unavailable because the saved Setup has no Measurement plan. Add a Measurement Operation, select its point and parameters, then save Setup.": "Initial Target is unavailable because the saved Setup has no Measurement plan. Add a Measurement Operation, select its point and parameters, then save Setup.",
+  "Initial Target is unavailable because the saved Setup has no Subjects. Enter Subject IDs and save Setup.": "Initial Target is unavailable because the saved Setup has no Subjects. Enter Subject IDs and save Setup.",
+  "Initial Target is unavailable because the saved Setup has no Operations. Add Operations and save Setup.": "Initial Target is unavailable because the saved Setup has no Operations. Add Operations and save Setup.",
+  "Initial Target requires saved Setup prerequisites: {0}. Complete them and save Setup.": "Initial Target requires saved Setup prerequisites: {0}. Complete them and save Setup.",
+  "No numeric Target parameter is available in the saved Measurement plan. Select an eligible numeric measurement parameter and save Setup; ask the configuration administrator if none is available.": "No numeric Target parameter is available in the saved Measurement plan. Select an eligible numeric measurement parameter and save Setup; ask the configuration administrator if none is available.",
+  "Exact Evaluation or active Next Action references are unavailable. Ask the configuration administrator to prepare eligible exact references before confirming a Target.": "Exact Evaluation or active Next Action references are unavailable. Ask the configuration administrator to prepare eligible exact references before confirming a Target.",
+  "Action not completed.": "Action not completed.",
+  "Request in progress…": "Request in progress…",
+  "Setup saved. Revision {0}. Initial Target prerequisites are listed below.": "Setup saved. Revision {0}. Initial Target prerequisites are listed below."
 }
