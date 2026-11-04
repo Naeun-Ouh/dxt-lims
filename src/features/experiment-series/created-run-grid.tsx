@@ -13,9 +13,11 @@ import { useDxtApplication } from '@/src/application/dxt-application-provider';
 export default function CreatedRunGrid({
   seriesSlug,
   runNumber,
+  explicitAssignments = false,
 }: {
   seriesSlug: SeriesSlug;
   runNumber?: number;
+  explicitAssignments?: boolean;
 }) {
   const { t } = useLocale();
   const { application } = useDxtApplication();
@@ -36,9 +38,10 @@ export default function CreatedRunGrid({
     const workspace = createExperimentWorkspace(snapshot, configuration);
     return {
       ...workspace,
+      explicitAssignments,
       subjects: snapshot.subjects,
     };
-  }, [configuration, snapshot]);
+  }, [configuration, snapshot, explicitAssignments]);
   if (!hydrated) return <main className="loading-state">{t("Loading Run…")}</main>;
   if (error || !model) return <main role="alert">{t("Saved Run could not be loaded.")}</main>;
   return (

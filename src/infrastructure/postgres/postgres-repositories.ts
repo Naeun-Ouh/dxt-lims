@@ -78,7 +78,7 @@ function persistenceError(message: string, cause: unknown) {
   return new ApplicationError('PERSISTENCE', message, { cause });
 }
 
-async function readSetup(session: SqlSession, seriesSlug: SeriesSlug): Promise<StudySetupSnapshot | null> {
+export async function readSetup(session: SqlSession, seriesSlug: SeriesSlug): Promise<StudySetupSnapshot | null> {
   const root = await session.query<{
     setup_version_id: string; series_slug: SeriesSlug; series_domain_id: string;
     configuration_package_version_id: string; experiment_type_profile_version_id: string;
@@ -339,8 +339,8 @@ async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPl
   return runId;
 }
 
-async function materializePersistedStudy(session: SqlSession, slug: SeriesSlug, number: number) {
-  const setup = await readSetup(session, slug);
+async function materializePersistedStudy(session: SqlSession, slug: string, number: number) {
+  const setup = await readSetup(session, slug as SeriesSlug);
   if (!setup) throw new ApplicationError('NOT_FOUND', 'Study Setup is not persisted.');
   await hydrateConfigurationPackages(session, [setup.configurationPackageVersionId]);
   const result = await session.query<{ study_id: string; display_name: string; experiment_type: string; intent: string;
@@ -360,7 +360,7 @@ async function materializePersistedStudy(session: SqlSession, slug: SeriesSlug, 
     subjects: subjects.rows.map((x) => ({ id: x.subject_domain_id, type: x.subject_kind, displayLabel: x.display_label })),
     steps: [], assignments: [], measurements: [], subjectOperationIds: {}, delta: { sourceLabel: 'Study Default', items: [], unchangedCount: 0 },
   };
-  const snapshot = createRunFromEntry(slug, 'STUDY_DEFAULT', setup, number, context);
+  const snapshot = createRunFromEntry(slug as SeriesSlug, 'STUDY_DEFAULT', setup, number, context);
   // Display IDs stay compatible; relational PKs remain independent UUIDs.
   return { ...snapshot, createdAt: context.createdAt };
 }

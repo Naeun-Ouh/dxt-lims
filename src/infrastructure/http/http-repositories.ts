@@ -75,3 +75,47 @@ export const httpStudyCreation: import('@/src/application/study-creation').Study
   create: (input, commandId) => request({ operation: 'study.create', input, commandId }),
   get: slug => request({ operation: 'study.identity', slug }),
 };
+
+export const httpStudyBootstrap = {
+  load: (slug: string) =>
+    request<import('@/src/application/study-bootstrap').StudyBootstrapState>({
+      operation: 'study.bootstrap.load',
+      slug,
+    }),
+  save: (
+    slug: string,
+    input: import('@/src/application/study-bootstrap').BootstrapSetupInput,
+    commandId: string,
+  ) =>
+    request<import('@/src/application/study-bootstrap').StudyBootstrapState>({
+      operation: 'study.bootstrap.save',
+      slug,
+      input,
+      commandId,
+    }),
+  initialize: (
+    slug: string,
+    input: import('@/src/application/study-bootstrap').InitialReasoningInput,
+    commandId: string,
+  ) =>
+    request({
+      operation: 'study.reasoning.initialize',
+      slug,
+      input,
+      commandId,
+    }),
+  preview: (slug: string) =>
+    request<import('@/src/application/run-creation').AuthoritativeRunPreview>({
+      operation: 'run.preview',
+      input: { seriesSlug: slug, source: 'STUDY_DEFAULT' },
+    }),
+  create: (slug: string, fingerprint: string, commandId: string) =>
+    request<
+      import('@/src/features/run-registration/planning-model').RunPlanningSnapshot
+    >({
+      operation: 'run.create.preview',
+      input: { seriesSlug: slug, source: 'STUDY_DEFAULT' },
+      fingerprint,
+      command: { commandId },
+    }),
+};
