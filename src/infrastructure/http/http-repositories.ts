@@ -4,15 +4,29 @@ import type { ApplicationRepositories } from '@/src/application/repository-ports
 import { ApplicationError } from '@/src/application/repository-ports';
 import { unsupportedRepositories } from '@/src/infrastructure/postgres/unsupported-repositories';
 
+export function requestFailureMessage(body: unknown) {
+  const op = (body as {operation?:string})?.operation ?? '';
+  return op === 'study.bootstrap.save' ? 'Could not save Setup. Check your entered values and try again.'
+    : op === 'study.reasoning.initialize' ? 'Could not save Evaluation Criteria. Check the Target values and selected references, then try again.'
+    : op.startsWith('run.create') || op === 'run.preview' ? 'Could not create or preview the Run. Check that Setup is saved and execution conditions are complete, then try again.'
+    : 'Could not complete this action. Check your input and try again.';
+}
 async function request<T>(body: unknown): Promise<T> {
-  const response = await fetch('/api/repository', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  const value = await response.json();
+  let response: Response;
+  let value: unknown;
+  try {
+    response = await fetch('/api/repository', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    value = await response.json();
+  } catch { throw new ApplicationError('PERSISTENCE',requestFailureMessage(body)); }
   if (!response.ok) {
-    const error = z.object({ code: z.enum(['NOT_FOUND', 'CONFLICT', 'VALIDATION', 'PERSISTENCE', 'FORBIDDEN']).optional(), error: z.string() }).safeParse(value);
-    throw new ApplicationError(error.success ? error.data.code ?? 'PERSISTENCE' : 'PERSISTENCE', error.success ? error.data.error : 'Repository request failed.');
+    const error = z.object({ code:z.enum(['NOT_FOUND','CONFLICT','VALIDATION','PERSISTENCE','FORBIDDEN']).optional(), error:z.string() }).safeParse(value);
+    const code = error.success ? error.data.code ?? 'PERSISTENCE' : 'PERSISTENCE';
+    const message = error.success && code !== 'PERSISTENCE' && !/repository|adapter|database|API|reasoning context/i.test(error.data.error) ? error.data.error : requestFailureMessage(body);
+    throw new ApplicationError(code,message);
   }
   return value as T;
 }
+
 export function createHttpRepositories(configuration: ApplicationRepositories['configuration']): ApplicationRepositories {
   const unsupported = async (): Promise<never> => { throw new ApplicationError('VALIDATION', 'This command is outside Production Adapter Slices 1–3.'); };
   return {

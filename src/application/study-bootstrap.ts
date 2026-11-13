@@ -1,3 +1,4 @@
+import type { ReadinessLayer } from './execution-readiness';
 import { z } from 'zod';
 import {
   measurementPointSchema,
@@ -46,7 +47,7 @@ export const initialReasoningSchema = z
     packageVersionId: identity,
     targetBindings: targetBindingsSchema,
     evaluationIds: z.array(identity).min(1),
-    nextActionIds: z.array(identity).min(1),
+    nextActionIds: z.array(identity),
     confirmed: z.literal(true),
   })
   .strict();
@@ -63,6 +64,8 @@ export type StudyBootstrapState = {
   catalog: ReferenceCatalog;
   structuralMissing: string[];
   readiness: StudyReadiness;
+  executionReadiness: ReadinessLayer;
+  measurementReadiness: ReadinessLayer;
   canEditSetup: boolean;
   canInitializeReasoning: boolean;
   canCreateRun: boolean;

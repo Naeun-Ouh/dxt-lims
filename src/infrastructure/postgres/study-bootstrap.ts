@@ -17,7 +17,8 @@ import {
 } from '@/src/features/experiment-series/study-setup-model';
 import type { SeriesSlug } from '@/src/features/experiment-series/run-entry-model';
 import type { SqlSession } from './sql-database';
-import { readSetup } from './postgres-repositories';
+import { executionReadiness } from '@/src/application/execution-readiness';
+import { readSetup, materializePersistedStudy } from './postgres-repositories';
 import { hydrateConfigurationPackages } from './configuration-hydrator';
 import { readConfigurationAuthoring } from './postgres-configuration-authoring';
 import { readMeasurementCatalog } from './measurement-references';
@@ -214,10 +215,8 @@ export async function readBootstrap(
   const structuralMissing = [
     ...(!subjects.length ? ['Subjects'] : []),
     ...(!c.setup.operations.length ? ['Operations'] : []),
-    ...(!c.setup.operations.some((o) => o.measurements.length)
-      ? ['Measurement plan']
-      : []),
   ];
+  const layers = subjects.length ? executionReadiness(await materializePersistedStudy(sql, slug, 0), c.configuration, c.catalog) : {execution: {status:'NOT_READY' as const, missing:['Add and save at least one Subject.']}, measurement: {status:'NOT_CONFIGURED' as const, missing:[]}};
   const runNumbers = (
     await sql.query<{ run_number: number }>(
       'SELECT run_number FROM experiment_run WHERE study_id=$1 ORDER BY run_number',
@@ -232,6 +231,8 @@ export async function readBootstrap(
     catalog: c.catalog,
     closed: c.closed,
     structuralMissing,
+    executionReadiness: layers.execution,
+    measurementReadiness: layers.measurement,
     readiness: await studyReadiness(
       sql,
       slug,
@@ -416,7 +417,7 @@ export async function initializeReasoning(
   if (input.packageVersionId !== c.setup.configurationPackageVersionId)
     fail('Exact Study package is required.');
   const state = await readBootstrap(sql, slug, principalId);
-  if (state.structuralMissing.length)
+  if (state.executionReadiness.status !== 'READY')
     fail('Complete structural Setup before confirming Target context.');
   const catalog: ReferenceCatalog = {
     ...c.catalog,

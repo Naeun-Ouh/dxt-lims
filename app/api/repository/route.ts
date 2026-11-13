@@ -83,7 +83,7 @@ export async function handleRepositoryRequest(request:Request,execute:typeof pro
   } catch (error) {
     if (error instanceof z.ZodError) return response({error:'Invalid repository request.'},400);
     if (error instanceof ApplicationError) return response({error:error.message,code:error.code},error.code==='FORBIDDEN'?403:error.code==='NOT_FOUND'?404:409);
-    return response({error:'Production repository request failed.'},503);
+    return response({error:'Could not complete this action. Check your input and try again.',code:'PERSISTENCE'},503);
   }
 }
 export async function dispatchRepository(app: import('@/src/application/dxt-application').DxtApplication, raw:Record<string,unknown>):Promise<unknown>{

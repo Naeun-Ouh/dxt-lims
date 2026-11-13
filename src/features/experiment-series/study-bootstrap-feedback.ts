@@ -40,11 +40,11 @@ export function initialTargetBlockers(
     });
   if (state.closed)
     reasons.push({
-      key: 'Initial Target authoring is closed after a reasoning context or Run exists. Use the existing reasoning/adoption process for later changes.',
+      key: 'Initial Evaluation Criteria are already confirmed or a Run exists. Keep the saved criteria; contact the Study manager for later changes.',
     });
   else if (!state.canInitializeReasoning)
     reasons.push({
-      key: 'Initial Target requires explicit reasoning permission. Ask the responsible administrator for MANAGE_REASONING_CONTEXT.',
+      key: 'You do not have permission to set Evaluation Criteria. Ask the Study manager for access.',
     });
   for (const missing of state.structuralMissing) {
     reasons.push({
@@ -59,6 +59,10 @@ export function initialTargetBlockers(
       values: [missing],
     });
   }
+  if (state.executionReadiness?.status === 'NOT_READY')
+    reasons.push({
+      key: 'Complete and save the required execution conditions before confirming optional Evaluation Criteria.',
+    });
   if (!state.structuralMissing.length) {
     const plans = state.setup.operations.flatMap((op) => op.measurements);
     if (
@@ -72,12 +76,54 @@ export function initialTargetBlockers(
         key: 'No numeric Target parameter is available in the saved Measurement plan. Select an eligible numeric measurement parameter and save Setup; ask the configuration administrator if none is available.',
       });
   }
-  if (
-    !state.catalog.evaluations.length ||
-    !state.catalog.nextActionTypes.some((p) => p.active)
-  )
+  if (!state.catalog.evaluations.length)
     reasons.push({
-      key: 'Exact Evaluation or active Next Action references are unavailable. Ask the configuration administrator to prepare eligible exact references before confirming a Target.',
+      key: 'Evaluation references are unavailable. Ask the configuration administrator to prepare eligible references before confirming a Target.',
     });
   return reasons;
+}
+
+/** Do not pass transport, storage or internal identifiers into researcher-facing errors. */
+export function bootstrapActionError(
+  error: unknown,
+  scope: 'setup' | 'reasoning' | 'run' | 'load',
+): string {
+  const e = error as { code?: string; message?: string };
+  if (e?.code === 'FORBIDDEN')
+    return 'You do not have permission for this action. Ask the Study manager for access.';
+  if (e?.code === 'NOT_FOUND')
+    return 'This Study or its selected configuration is unavailable. Check your access with the Study manager.';
+  if (e?.code === 'CONFLICT')
+    return 'The Study has changed. Keep your entered values and review the latest saved state before retrying.';
+  const known: Record<string, string> = {
+    'Duplicate Subject identity.':
+      'Subject IDs must be unique. Check the repeated IDs and save again.',
+    'Measurement point and parameters are required.':
+      'Select a Measurement point and parameters for the selected Measurement Operation, then save again.',
+    'Measurement parameter or point is incompatible.':
+      'Select compatible Measurement parameters and a point, including required supporting parameters.',
+    'Assignment is not applicable.':
+      'Select a condition available for this Operation and try again.',
+    'Operation is not eligible for this exact configuration.':
+      'Select an Operation available in the selected configuration and try again.',
+    'Enter explicit Target values.': 'Enter explicit Target values.',
+    'Check required Setup and Target fields.':
+      'Check the Target parameter, point, rule, values and Evaluation reference.',
+    'Setup not saved: enter at least one Subject ID.':
+      'Setup not saved: enter at least one Subject ID.',
+    'Setup not saved: add at least one Operation.':
+      'Setup not saved: add at least one Operation.',
+    'Complete and save the required execution conditions before creating a Run.':
+      'Complete and save the required execution conditions before creating a Run.',
+  };
+  return (
+    known[e?.message ?? ''] ??
+    {
+      setup: 'Could not save Setup. Check your entered values and try again.',
+      reasoning:
+        'Could not save Evaluation Criteria. Check the Target values and selected references, then try again.',
+      run: 'Could not create or preview the Run. Check that Setup is saved and execution conditions are complete, then try again.',
+      load: 'Could not load this Study. Check your connection and try again.',
+    }[scope]
+  );
 }

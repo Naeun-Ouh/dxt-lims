@@ -184,9 +184,6 @@ export async function studyBootstrapContract(db: SqlDatabase) {
     const process = empty.options.find(
       (o) => o.operation.role === 'PROCESS' && o.operation.items.length,
     )!;
-    const assignment = process.operation.items.find(
-      (i) => i.editor === 'NUMBER',
-    )!;
     const input: BootstrapSetupInput = {
       expectedRevision: 1,
       subjects: [{ id: `TEST-${domain}-01`, displayLabel: 'Test subject' }],
@@ -195,15 +192,11 @@ export async function studyBootstrapContract(db: SqlDatabase) {
           optionId: process.id,
           point: null,
           parameterIds: [],
-          items: assignment
-            ? [
-                {
-                  applicabilityId: assignment.applicabilityId,
-                  value: assignment.value,
-                  intentRole: 'FIXED',
-                },
-              ]
-            : [],
+          items: process.operation.items.map((i) => ({
+            applicabilityId: i.applicabilityId,
+            value: i.value,
+            intentRole: 'FIXED' as const,
+          })),
         },
         {
           optionId: measurement.id,
@@ -254,7 +247,7 @@ export async function studyBootstrapContract(db: SqlDatabase) {
       packageVersionId: pkg.id,
       confirmed: true,
       evaluationIds: [evaluation.id],
-      nextActionIds: [pkg.nextActionTypeRevisionIds[0]],
+      nextActionIds: [],
       targetBindings: [
         {
           target: {
@@ -283,19 +276,111 @@ export async function studyBootstrapContract(db: SqlDatabase) {
         call(p, init),
         /not permitted|capability|access|available/i,
       );
+    const withoutTarget = (await owner({
+      operation: 'run.preview',
+      input: { seriesSlug: slug, source: 'STUDY_DEFAULT' },
+    })) as AuthoritativeRunPreview;
+    assert.equal(
+      withoutTarget.readiness.status,
+      'READY',
+      'Target and Next Action do not gate execution',
+    );
+    assert.equal(saved.executionReadiness.status, 'READY');
+    assert.equal(saved.measurementReadiness.status, 'READY');
+    // Independent process-only Study: no Measurement plan, Target, Evaluation or Next Action.
+    const exploratorySlug = `bootstrap-${domain}-exploratory`;
+    const exploratoryIdentity = (await owner({
+      operation: 'study.create',
+      commandId: randomUUID(),
+      input: {
+        slug: exploratorySlug,
+        name: 'TEST ONLY exploratory',
+        intent: 'Isolated exploratory test',
+        departmentId: 'bootstrap-dept',
+        packageVersionId: pkg.id,
+        experimentTypeProfileVersionId: selected.experimentTypeProfileVersionId,
+        subjectTypeRevisionId: selected.subjectTypeRevisionId,
+        areaDefinitionRevisionId: selected.areaDefinitionRevisionId,
+      },
+    })) as StudyIdentity;
+    const exploratorySave = {
+      operation: 'study.bootstrap.save',
+      slug: exploratorySlug,
+      input: { ...input, operations: [input.operations[0]] },
+      commandId: randomUUID(),
+    };
+    const incomplete = (await owner({
+      ...exploratorySave,
+      commandId: randomUUID(),
+      input: {
+        ...exploratorySave.input,
+        operations: [{ ...input.operations[0], items: [] }],
+      },
+    })) as StudyBootstrapState;
+    assert.equal(
+      incomplete.executionReadiness.status,
+      'NOT_READY',
+      'required exact assignments gate execution',
+    );
+    const incompletePreview = (await owner({
+      operation: 'run.preview',
+      input: { seriesSlug: exploratorySlug, source: 'STUDY_DEFAULT' },
+    })) as AuthoritativeRunPreview;
+    assert.equal(incompletePreview.readiness.status, 'NOT_READY');
     await assert.rejects(
       owner({
-        operation: 'run.preview',
-        input: { seriesSlug: slug, source: 'STUDY_DEFAULT' },
-      }).then(async (p) =>
-        owner({
-          operation: 'run.create.preview',
-          input: { seriesSlug: slug, source: 'STUDY_DEFAULT' },
-          fingerprint: (p as AuthoritativeRunPreview).fingerprint,
-          command: { commandId: randomUUID() },
-        }),
-      ),
-      /not ready/i,
+        operation: 'run.create.preview',
+        input: { seriesSlug: exploratorySlug, source: 'STUDY_DEFAULT' },
+        fingerprint: incompletePreview.fingerprint,
+        command: { commandId: randomUUID() },
+      }),
+      /required execution conditions/,
+    );
+    assert.equal(
+      (
+        await db.query('SELECT run_id FROM experiment_run WHERE study_id=$1', [
+          exploratoryIdentity.id,
+        ])
+      ).rowCount,
+      0,
+    );
+    exploratorySave.input.expectedRevision = 2;
+    const exploratory = (await owner(exploratorySave)) as StudyBootstrapState;
+    assert.equal(exploratory.executionReadiness.status, 'READY');
+    assert.equal(exploratory.measurementReadiness.status, 'NOT_CONFIGURED');
+    assert.equal(exploratory.readiness.status, 'NOT_READY');
+    const ep = (await owner({
+      operation: 'run.preview',
+      input: { seriesSlug: exploratorySlug, source: 'STUDY_DEFAULT' },
+    })) as AuthoritativeRunPreview;
+    const create = {
+      operation: 'run.create.preview',
+      input: { seriesSlug: exploratorySlug, source: 'STUDY_DEFAULT' },
+      fingerprint: ep.fingerprint,
+      command: { commandId: randomUUID() },
+    };
+    await assert.rejects(call('bootstrap-reader', create));
+    const er = (await owner(create)) as RunPlanningSnapshot;
+    assert.equal(er.runNumber, 1);
+    assert.equal(er.measurements.length, 0);
+    assert.equal(er.configurationPackageVersionId, pkg.id);
+    assert.deepEqual(await owner(create), er, 'retry preserves Run identity');
+    assert.deepEqual(
+      await owner({
+        operation: 'run.created',
+        slug: exploratorySlug,
+        runNumber: 1,
+      }),
+      er,
+    );
+    assert.equal(
+      (
+        await db.query('SELECT id FROM reasoning_context WHERE study_id=$1', [
+          exploratoryIdentity.id,
+        ])
+      ).rowCount,
+      0,
+      'no automatic Target/context',
     );
     await db.query(
       "INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) VALUES($1,$2,'bootstrap-reasoner','MANAGE_REASONING_CONTEXT','bootstrap-owner')",

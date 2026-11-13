@@ -18,7 +18,7 @@ void test('Korean is default and each translation preserves interpolation slots'
   assert.match(renderToStaticMarkup(<LocaleSwitch />), /lang="ko" aria-pressed="true"/);
 });
 void test('canonical terminology and scientific interpolation remain separate', () => {
-  assert.equal(translate('ko', 'Intentionally Varied'), '의도적 변경');
+  assert.equal(translate('ko', 'Intentionally Varied'), '실험 변수');
   assert.equal(translate('ko', 'Save Plan'), '계획 저장');
   assert.equal(translate('en', 'Save Plan'), 'Save Plan');
   for (const value of ['W01', 'PHO7814.01', 'EXP-03', '37.5 mJ/cm²', 'condition-energy-v1']) {

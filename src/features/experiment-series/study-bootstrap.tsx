@@ -12,6 +12,7 @@ import {
 import type { AuthoritativeRunPreview } from '@/src/application/run-creation';
 import {
   initialTargetBlockers,
+  bootstrapActionError,
   setupInputProblems,
 } from './study-bootstrap-feedback';
 
@@ -36,7 +37,6 @@ export function StudyBootstrap({ slug }: { slug: string }) {
     lower: '',
     upper: '',
     evaluation: '',
-    nextAction: '',
   });
   const [dirty, setDirty] = useState(false);
   const [preview, setPreview] = useState<AuthoritativeRunPreview | null>(null);
@@ -92,7 +92,7 @@ export function StudyBootstrap({ slug }: { slug: string }) {
         if (active) hydrate(s);
       })
       .catch((e) => {
-        if (active) setError(e.message);
+        if (active) setError(bootstrapActionError(e, 'load'));
       });
     return () => {
       active = false;
@@ -111,7 +111,7 @@ export function StudyBootstrap({ slug }: { slug: string }) {
     try {
       await work();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Repository request failed.');
+      setError(bootstrapActionError(e, scope));
     } finally {
       setBusy(false);
       pending.current = false;
@@ -175,13 +175,28 @@ export function StudyBootstrap({ slug }: { slug: string }) {
     <section className="study-bootstrap" aria-label={t('Experiment Setup')}>
       <h2>{t('Experiment Setup')}</h2>
       <p>
-        {t('Structural Setup')}:{' '}
-        {t(state.structuralMissing.length ? 'Incomplete' : 'Complete')}{' '}
-        {state.structuralMissing.map((m) => t(m)).join(' · ')}
+        {t(
+          'Execution Readiness allows the first Run. Target and Evaluation Criteria are optional.',
+        )}
       </p>
       <p>
-        {t('Scientific readiness')}: {t(state.readiness.status)}{' '}
-        {state.readiness.missing.map((m) => t(m)).join(' · ')}
+        {t('Execution Readiness')}: {t(state.executionReadiness.status)}{' '}
+        {state.executionReadiness.missing
+          .map((m) => {
+            const [key, ...values] = m.split('|');
+            return t(key, values);
+          })
+          .join(' · ')}
+      </p>
+      <p>
+        {t('Measurement Readiness')}: {t(state.measurementReadiness.status)} ·{' '}
+        {t('Evaluation Readiness')}:{' '}
+        {t(
+          state.readiness.status === 'READY'
+            ? 'READY'
+            : 'Optional — not configured',
+        )}{' '}
+        · {t('Continuation: after result interpretation')}
       </p>
       {!action && error && <p role="alert">{t(error)}</p>}
       {dirty && <p>{t('Save Setup before continuing.')}</p>}
@@ -465,9 +480,7 @@ export function StudyBootstrap({ slug }: { slug: string }) {
                 );
                 hydrate(saved);
                 setPreview(null);
-                setNotice(
-                  `Setup saved. Revision ${saved.setup.revision}. Initial Target prerequisites are listed below.`,
-                );
+                setNotice(`Setup saved. Revision ${saved.setup.revision}.`);
               }, 'setup')
             }
           >
@@ -477,231 +490,225 @@ export function StudyBootstrap({ slug }: { slug: string }) {
         {feedback('setup')}
       </fieldset>
       {!state.canEditSetup && <p>{t('Setup is read-only.')}</p>}
-      {state.readiness.contextId && (
-        <section>
-          <h3>{t('Initial Target context')}</h3>
-          {state.readiness.proposals
-            .find((p) => p.id === state.readiness.contextId)
-            ?.context.targetBindings.map((b) => (
-              <p key={b.target.id}>
-                {state.catalog.parameters.find(
-                  (p) => p.id === b.target.parameterDefinitionId,
-                )?.name ?? b.target.parameterDefinitionId}{' '}
-                · {b.measurementPoint} · {b.aggregationMethod} ·{' '}
-                {b.target.operator} ·{' '}
-                {b.target.operator === 'BETWEEN'
-                  ? `${b.target.lowerBound} – ${b.target.upperBound}`
-                  : b.target.threshold}{' '}
-                {
-                  state.catalog.units.find(
-                    (u) => u.id === b.target.unitDefinitionId,
-                  )?.symbol
-                }
-              </p>
-            ))}
-        </section>
-      )}
-      {!state.readiness.contextId && (
-        <fieldset
-          disabled={targetBlockers.length > 0}
-          aria-describedby={`${feedbackId}-target-reasons`}
-        >
-          <legend>{t('Initial Target context')}</legend>
-          <div id={`${feedbackId}-target-reasons`} aria-live="polite">
-            {targetBlockers.length > 0 && (
-              <ul>
-                {targetBlockers.map((reason) => (
-                  <li key={reason.key}>{t(reason.key, reason.values)}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <p>
-            {t(
-              'Enter scientific Target values explicitly. Confirmation is immutable for this package.',
-            )}
-          </p>
-          <div className="bootstrap-controls">
-            {field(
-              'parameter',
-              'Parameter',
-              <select
-                value={target.parameter}
-                onChange={(e) =>
-                  setTarget({ ...target, parameter: e.target.value, point: '' })
-                }
-              >
-                <option value="">{t('Select')}</option>
-                {parameters.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ·{' '}
-                    {state.catalog.units.find((u) => u.id === p.unitId)?.symbol}
-                  </option>
-                ))}
-              </select>,
-            )}
-            {field(
-              'point',
-              'Measurement point',
-              <select
-                value={target.point}
-                onChange={(e) =>
-                  setTarget({ ...target, point: e.target.value })
-                }
-              >
-                <option value="">{t('Select')}</option>
-                {[
-                  ...new Set(
-                    plans
-                      .filter((m) =>
-                        m.parameterDefinitionIds.includes(target.parameter),
-                      )
-                      .map((m) => m.point),
-                  ),
-                ].map((p) => (
-                  <option key={p}>{p}</option>
-                ))}
-              </select>,
-            )}
-            {field(
-              'aggregation',
-              'Aggregation',
-              <select
-                value={target.aggregation}
-                onChange={(e) =>
-                  setTarget({ ...target, aggregation: e.target.value })
-                }
-              >
-                <option value="">{t('Select')}</option>
-                {['MEAN', 'MIN', 'MAX', 'MEDIAN', 'THREE_SIGMA'].map((p) => (
-                  <option key={p}>{p}</option>
-                ))}
-              </select>,
-            )}
-            {field(
-              'operator',
-              'Target rule',
-              <select
-                value={target.operator}
-                onChange={(e) =>
-                  setTarget({ ...target, operator: e.target.value })
-                }
-              >
-                <option value="">{t('Select')}</option>
-                {['GTE', 'LTE', 'EQ', 'BETWEEN'].map((p) => (
-                  <option key={p}>{p}</option>
-                ))}
-              </select>,
-            )}
-            {target.operator === 'BETWEEN' ? (
-              <>
-                {field('lower', 'Lower bound')}
-                {field('upper', 'Upper bound')}
-              </>
-            ) : (
-              field('threshold', 'Threshold')
-            )}
-            {field(
-              'evaluation',
-              'Evaluation reference',
-              <select
-                value={target.evaluation}
-                onChange={(e) =>
-                  setTarget({ ...target, evaluation: e.target.value })
-                }
-              >
-                <option value="">{t('Select')}</option>
-                {state.catalog.evaluations.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>,
-            )}
-            {field(
-              'nextAction',
-              'Next Action reference',
-              <select
-                value={target.nextAction}
-                onChange={(e) =>
-                  setTarget({ ...target, nextAction: e.target.value })
-                }
-              >
-                <option value="">{t('Select')}</option>
-                {state.catalog.nextActionTypes
-                  .filter((p) => p.active)
-                  .map((p) => (
+      <details>
+        <summary>{t('Evaluation Criteria (optional)')}</summary>
+        {state.readiness.contextId && (
+          <section>
+            <h3>{t('Evaluation Criteria (optional)')}</h3>
+            {state.readiness.proposals
+              .find((p) => p.id === state.readiness.contextId)
+              ?.context.targetBindings.map((b) => (
+                <p key={b.target.id}>
+                  {state.catalog.parameters.find(
+                    (p) => p.id === b.target.parameterDefinitionId,
+                  )?.name ?? b.target.parameterDefinitionId}{' '}
+                  · {b.measurementPoint} · {b.aggregationMethod} ·{' '}
+                  {b.target.operator} ·{' '}
+                  {b.target.operator === 'BETWEEN'
+                    ? `${b.target.lowerBound} – ${b.target.upperBound}`
+                    : b.target.threshold}{' '}
+                  {
+                    state.catalog.units.find(
+                      (u) => u.id === b.target.unitDefinitionId,
+                    )?.symbol
+                  }
+                </p>
+              ))}
+          </section>
+        )}
+        {!state.readiness.contextId && (
+          <fieldset
+            disabled={targetBlockers.length > 0}
+            aria-describedby={`${feedbackId}-target-reasons`}
+          >
+            <legend>{t('Evaluation Criteria (optional)')}</legend>
+            <div id={`${feedbackId}-target-reasons`} aria-live="polite">
+              {targetBlockers.length > 0 && (
+                <ul>
+                  {targetBlockers.map((reason) => (
+                    <li key={reason.key}>{t(reason.key, reason.values)}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <p>
+              {t(
+                'Enter scientific Target values explicitly. Confirmation is immutable for this package.',
+              )}
+            </p>
+            <div className="bootstrap-controls">
+              {field(
+                'parameter',
+                'Parameter',
+                <select
+                  value={target.parameter}
+                  onChange={(e) =>
+                    setTarget({
+                      ...target,
+                      parameter: e.target.value,
+                      point: '',
+                    })
+                  }
+                >
+                  <option value="">{t('Select')}</option>
+                  {parameters.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ·{' '}
+                      {
+                        state.catalog.units.find((u) => u.id === p.unitId)
+                          ?.symbol
+                      }
+                    </option>
+                  ))}
+                </select>,
+              )}
+              {field(
+                'point',
+                'Measurement point',
+                <select
+                  value={target.point}
+                  onChange={(e) =>
+                    setTarget({ ...target, point: e.target.value })
+                  }
+                >
+                  <option value="">{t('Select')}</option>
+                  {[
+                    ...new Set(
+                      plans
+                        .filter((m) =>
+                          m.parameterDefinitionIds.includes(target.parameter),
+                        )
+                        .map((m) => m.point),
+                    ),
+                  ].map((p) => (
+                    <option key={p}>{p}</option>
+                  ))}
+                </select>,
+              )}
+              {field(
+                'aggregation',
+                'Aggregation',
+                <select
+                  value={target.aggregation}
+                  onChange={(e) =>
+                    setTarget({ ...target, aggregation: e.target.value })
+                  }
+                >
+                  <option value="">{t('Select')}</option>
+                  {['MEAN', 'MIN', 'MAX', 'MEDIAN', 'THREE_SIGMA'].map((p) => (
+                    <option key={p}>{p}</option>
+                  ))}
+                </select>,
+              )}
+              {field(
+                'operator',
+                'Target rule',
+                <select
+                  value={target.operator}
+                  onChange={(e) =>
+                    setTarget({ ...target, operator: e.target.value })
+                  }
+                >
+                  <option value="">{t('Select')}</option>
+                  {['GTE', 'LTE', 'EQ', 'BETWEEN'].map((p) => (
+                    <option key={p}>{p}</option>
+                  ))}
+                </select>,
+              )}
+              {target.operator === 'BETWEEN' ? (
+                <>
+                  {field('lower', 'Lower bound')}
+                  {field('upper', 'Upper bound')}
+                </>
+              ) : (
+                field('threshold', 'Threshold')
+              )}
+              {field(
+                'evaluation',
+                'Evaluation reference',
+                <select
+                  value={target.evaluation}
+                  onChange={(e) =>
+                    setTarget({ ...target, evaluation: e.target.value })
+                  }
+                >
+                  <option value="">{t('Select')}</option>
+                  {state.catalog.evaluations.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
                     </option>
                   ))}
-              </select>,
-            )}
-          </div>
-          <div className="entry-actions">
-            <button
-              className="entry-button primary"
-              aria-describedby={`${feedbackId}-target-reasons ${feedbackId}-reasoning`}
-              onClick={() =>
-                execute(async () => {
-                  if (
-                    !parameter ||
-                    !target.operator ||
-                    (target.operator === 'BETWEEN'
-                      ? target.lower === '' || target.upper === ''
-                      : target.threshold === '')
-                  )
-                    throw new Error('Enter explicit Target values.');
-                  const parsed = initialReasoningSchema.safeParse({
-                    packageVersionId: state.setup.configurationPackageVersionId,
-                    confirmed: true,
-                    evaluationIds: [target.evaluation],
-                    nextActionIds: [target.nextAction],
-                    targetBindings: [
-                      {
-                        target: {
-                          id: `${state.setup.seriesId}-target-1`,
-                          parameterDefinitionId: target.parameter,
-                          unitDefinitionId: parameter.unitId,
-                          operator: target.operator,
-                          threshold:
-                            target.operator === 'BETWEEN'
-                              ? null
-                              : Number(target.threshold),
-                          lowerBound:
-                            target.operator === 'BETWEEN'
-                              ? Number(target.lower)
-                              : null,
-                          upperBound:
-                            target.operator === 'BETWEEN'
-                              ? Number(target.upper)
-                              : null,
+                </select>,
+              )}
+            </div>
+            <div className="entry-actions">
+              <button
+                className="entry-button primary"
+                aria-describedby={`${feedbackId}-target-reasons ${feedbackId}-reasoning`}
+                onClick={() =>
+                  execute(async () => {
+                    if (
+                      !parameter ||
+                      !target.operator ||
+                      (target.operator === 'BETWEEN'
+                        ? target.lower === '' || target.upper === ''
+                        : target.threshold === '')
+                    )
+                      throw new Error('Enter explicit Target values.');
+                    const parsed = initialReasoningSchema.safeParse({
+                      packageVersionId:
+                        state.setup.configurationPackageVersionId,
+                      confirmed: true,
+                      evaluationIds: [target.evaluation],
+                      nextActionIds: [],
+                      targetBindings: [
+                        {
+                          target: {
+                            id: `${state.setup.seriesId}-target-1`,
+                            parameterDefinitionId: target.parameter,
+                            unitDefinitionId: parameter.unitId,
+                            operator: target.operator,
+                            threshold:
+                              target.operator === 'BETWEEN'
+                                ? null
+                                : Number(target.threshold),
+                            lowerBound:
+                              target.operator === 'BETWEEN'
+                                ? Number(target.lower)
+                                : null,
+                            upperBound:
+                              target.operator === 'BETWEEN'
+                                ? Number(target.upper)
+                                : null,
+                          },
+                          measurementPoint: target.point,
+                          resultGrain: 'SUBJECT_SUMMARY',
+                          aggregationMethod: target.aggregation,
                         },
-                        measurementPoint: target.point,
-                        resultGrain: 'SUBJECT_SUMMARY',
-                        aggregationMethod: target.aggregation,
-                      },
-                    ],
-                  });
-                  if (!parsed.success)
-                    throw new Error('Check required Setup and Target fields.');
-                  const input = parsed.data;
-                  await api.initialize(
-                    slug,
-                    input,
-                    command('reasoning', input),
-                  );
-                  hydrate(await api.load(slug));
-                  setNotice('Initial Target context confirmed.');
-                }, 'reasoning')
-              }
-            >
-              {t('Confirm initial Target context')}
-            </button>
-          </div>
-        </fieldset>
-      )}
-      {feedback('reasoning')}
+                      ],
+                    });
+                    if (!parsed.success)
+                      throw new Error(
+                        'Check required Setup and Target fields.',
+                      );
+                    const input = parsed.data;
+                    await api.initialize(
+                      slug,
+                      input,
+                      command('reasoning', input),
+                    );
+                    hydrate(await api.load(slug));
+                    setNotice('Evaluation Criteria confirmed.');
+                  }, 'reasoning')
+                }
+              >
+                {t('Confirm Evaluation Criteria')}
+              </button>
+            </div>
+          </fieldset>
+        )}
+        {feedback('reasoning')}
+      </details>
       <div className="entry-actions">
         <button
           className="entry-button"
@@ -710,7 +717,7 @@ export function StudyBootstrap({ slug }: { slug: string }) {
             dirty ||
             !!state.runNumbers.length ||
             !state.canCreateRun ||
-            state.readiness.status !== 'READY' ||
+            state.executionReadiness.status !== 'READY' ||
             !!state.structuralMissing.length
           }
           onClick={() =>
@@ -720,6 +727,13 @@ export function StudyBootstrap({ slug }: { slug: string }) {
           {t('Preview first Run')}
         </button>
       </div>
+      {!state.canCreateRun && (
+        <p>
+          {t(
+            'You do not have permission to create Runs. Ask the Study manager for access.',
+          )}
+        </p>
+      )}
       {feedback('run')}
       {preview && (
         <section>
@@ -740,7 +754,13 @@ export function StudyBootstrap({ slug }: { slug: string }) {
           <div className="entry-actions">
             <button
               className="entry-button primary"
-              disabled={busy || created !== null}
+              disabled={
+                busy ||
+                dirty ||
+                !state.canCreateRun ||
+                created !== null ||
+                preview.readiness.status !== 'READY'
+              }
               onClick={() =>
                 execute(async () => {
                   const run = await api.create(

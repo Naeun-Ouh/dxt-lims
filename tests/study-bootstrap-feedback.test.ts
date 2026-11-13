@@ -120,12 +120,12 @@ void test('Busy, unsaved/failed-save state, permission and closure remain distin
   s.canInitializeReasoning = false;
   assert.match(
     initialTargetBlockers(s, false, false)[0].key,
-    /MANAGE_REASONING_CONTEXT/,
+    /permission to set Evaluation Criteria/,
   );
   s.closed = true;
   assert.match(
     initialTargetBlockers(s, false, false)[0].key,
-    /authoring is closed/,
+    /already confirmed/,
   );
   assert.ok(
     !initialTargetBlockers(s, false, false).some((r) =>
@@ -147,7 +147,7 @@ void test('Unavailable exact references block Target with remediation, without c
   assert.equal(JSON.stringify(s), before);
 });
 
-void test('All prerequisite explanations translate in KO/EN, and VARIED terminology is unchanged', () => {
+void test('All prerequisite explanations translate in KO/EN, and VARIED values retain their semantics with the approved label', () => {
   const s = state();
   s.canInitializeReasoning = false;
   s.structuralMissing = [
@@ -171,6 +171,6 @@ void test('All prerequisite explanations translate in KO/EN, and VARIED terminol
     assert.match(translate('ko', key, values), /[가-힣]/);
     assert.ok(translate('en', key, values).length);
   }
-  assert.equal(translate('ko', 'Intentionally Varied'), '의도적 변경');
-  assert.equal(translate('ko', 'VARIED'), '의도적 변경');
+  assert.equal(translate('ko', 'Intentionally Varied'), '실험 변수');
+  assert.equal(translate('ko', 'VARIED'), '실험 변수');
 });

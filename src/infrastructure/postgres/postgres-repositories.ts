@@ -1,5 +1,7 @@
+import { readMeasurementCatalog } from './measurement-references';
+import { executionReadiness } from '@/src/application/execution-readiness';
 import { runCreationRequestSchema,type RunCreationRequest,type AuthoritativeRunPreview } from '@/src/application/run-creation';
-import { studyReadiness,confirmStudyReasoning,requireStudyReadiness } from './reasoning-context';
+import { studyReadiness,confirmStudyReasoning } from './reasoning-context';
 import {resolveConfigurationApplicability} from '@/src/domain/reference';
 import {validatePlanEdit} from '@/src/application/plan-authoring';
 import {planLockReason} from './plan-lock';
@@ -339,7 +341,7 @@ async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPl
   return runId;
 }
 
-async function materializePersistedStudy(session: SqlSession, slug: string, number: number) {
+export async function materializePersistedStudy(session: SqlSession, slug: string, number: number) {
   const setup = await readSetup(session, slug as SeriesSlug);
   if (!setup) throw new ApplicationError('NOT_FOUND', 'Study Setup is not persisted.');
   await hydrateConfigurationPackages(session, [setup.configurationPackageVersionId]);
@@ -365,6 +367,13 @@ async function materializePersistedStudy(session: SqlSession, slug: string, numb
   return { ...snapshot, createdAt: context.createdAt };
 }
 
+/** Bounded bootstrap policy: legacy seeded workspaces retain their existing contract. */
+async function creationReadiness(session:SqlSession,slug:string,snapshot:RunPlanningSnapshot) {
+  const bootstrap=await session.query(`SELECT 1 FROM study s JOIN study_setup_command_receipt r USING(study_id) WHERE s.series_slug=$1 AND r.command_id LIKE 'study-create:%' LIMIT 1`,[slug]);
+  if(!bootstrap.rowCount)return studyReadiness(session,slug,snapshot.configurationPackageVersionId);
+  return executionReadiness(snapshot,await hydrateConfigurationPackages(session,[snapshot.configurationPackageVersionId]),await readMeasurementCatalog(session,snapshot.configurationPackageVersionId)).execution;
+}
+
 async function previewPersistedCreation(session:SqlSession,raw:RunCreationRequest):Promise<AuthoritativeRunPreview>{
   const request=runCreationRequestSchema.parse(raw);
   const study=(await session.query<StudyRow>('SELECT study_id,series_slug FROM study WHERE series_slug=$1',[request.seriesSlug])).rows[0];
@@ -386,7 +395,7 @@ async function previewPersistedCreation(session:SqlSession,raw:RunCreationReques
     if(request.source==='EXISTING_RUN')snapshot={...snapshot,provenance:{kind:'EXISTING_CONFIGURATION',label:`Existing Run #${previous.runNumber}`,sourceId:previous.id},assignments:snapshot.assignments.map(a=>({...a,provenance:'EXISTING_CONFIGURATION'}))};
   }
   await hydrateConfigurationPackages(session,[snapshot.configurationPackageVersionId]);
-  const readiness=await studyReadiness(session,request.seriesSlug,snapshot.configurationPackageVersionId);
+  const readiness=await creationReadiness(session,request.seriesSlug,snapshot);
   return {snapshot,fingerprint:hash(comparableStudyData(snapshot)),readiness:{status:readiness.status,missing:readiness.missing}};
 }
 
@@ -454,7 +463,8 @@ export class PostgresRunRepository implements RunRepository {
             ? createNextRunPreview(previous!, `run-${randomUUID()}-${allocated}`, preview!.changed.map(c=>({assignmentId:c.assignmentId,after:c.after}))).snapshot
             : request;
         const snapshot = renumberSnapshot(input, allocated);
-        await requireStudyReadiness(session,study.series_slug,snapshot.configurationPackageVersionId);
+        const execution=await creationReadiness(session,study.series_slug,snapshot);
+        if(execution.status!=='READY')throw new ApplicationError('VALIDATION', 'contextId' in execution ? 'Study lifecycle not ready. Review the saved Study criteria.' : 'Complete and save the required execution conditions before creating a Run.');
         await session.query('UPDATE study SET next_run_number = $2, aggregate_version = aggregate_version + 1 WHERE study_id = $1', [study.study_id, allocated + 1]);
         const runId = await insertSnapshot(session, study, snapshot);
         await session.query(`UPDATE idempotency_record SET status = 'SUCCEEDED', result_run_id = $2, completed_at = now()

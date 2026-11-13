@@ -40,6 +40,6 @@ export function reasoningPrerequisites(context:StudyReasoningContext, measuremen
     if(t.operator==='BETWEEN' ? t.lowerBound===null||t.upperBound===null||t.lowerBound>t.upperBound : t.threshold===null)missing.push(`Target rule: ${t.id}`);
   }
   if(!context.catalog.evaluations.length)missing.push('Evaluation references');
-  if(!context.catalog.nextActionTypes.some(t=>t.active))missing.push('Next Action references');
+
   return missing;
 }
