@@ -263,7 +263,7 @@ function RunDraftPage({
                               ]?.includes(step.id),
                             )
                             .map((s) => s.displayLabel)
-                            .join(', ') || t('Not Participating')}
+                            .join(', ') || t('Operation does not apply')}
                         </td>
                         <td>
                           {preview.snapshot.assignments
@@ -271,7 +271,7 @@ function RunDraftPage({
                             .map((a) => (
                               <div key={a.id}>
                                 {a.label}: {a.value} ·{' '}
-                                {a.subjectId ?? t('All participating Subjects')}{' '}
+                                {a.subjectId ? `${t('Subject-specific planned value')} · ${a.subjectId}` : t('Common planned value')}{' '}
                                 · {t(a.intentRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed')}
                               </div>
                             ))}

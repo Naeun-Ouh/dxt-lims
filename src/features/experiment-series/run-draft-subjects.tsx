@@ -144,7 +144,7 @@ export function RunDraftSubjects({
       </DxtGridFrame>
       <small>
         {t(
-          'New Subjects are not automatically included in existing Operations. Select participation in the grid below.',
+          'Existing Operations do not automatically apply to new Subjects. Choose Operation application in the grid below.',
         )}
       </small>
     </fieldset>

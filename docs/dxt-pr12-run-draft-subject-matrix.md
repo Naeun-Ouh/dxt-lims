@@ -50,3 +50,16 @@ UI inspection using existing AGENT data:
 Inspect whether the meaning of each Subject object is clear; add/remove a draft object; identify participation and conditions in the same Operation; compare common versus individual scopes; collapse attributes and scroll Subject columns; reorder an Operation and check attached values. Do not report a human pass from these agent checks. Broader first-Run Human UAT remains pending.
 
 Remaining: human usability acceptance; source master display-name completeness. Missing display names are not replaced by technical IDs.
+
+## Wording-only Human UAT follow-up
+
+Implements Product/Architecture decision [7041220375](https://github.com/Naeun-Ouh/dxt-lims/pull/12#issuecomment-7041220375).
+
+- Draft/Measurement-plan/Preview terminology: 공정 적용, 적용/미적용. Explicit helper: 이 실험 대상이 해당 공정을 수행하는지 지정합니다. 미적용은 결과 누락이 아니라 해당 공정의 대상이 아님을 의미합니다.
+- Common assignment → 공통 계획값; Subject-specific assignment → 대상별 계획값, including Add actions, coexistence helper and Preview. These are planned conditions, with no Actual/history implication.
+- Dedicated authoring labels avoid relabeling existing Actual/evidence projections. Internal participation fields, enum values, scope/order, callbacks, readiness and persistence remain unchanged.
+- Existing grouped child rows/background/indentation and attribute collapse retained; no additional expand/collapse behavior or redesign.
+- No condition-range schema or editor added. Min/max/unit/options/precision/requiredness belong to future condition master/reference metadata; existing metadata consumption stays unchanged.
+- Validation: 5 existing matrix invariant tests (extended terminology assertions) + 4 localization tests PASS; TypeScript, changed-file lint, diff whitespace PASS. Browser KO 1440px, EN 720px, intact controls/no page overflow, execution-ready read-only Preview with planned terminology. No scientific write/Create action. Full backend/native suites not repeated for wording-only changes; the earlier 335-test/native result belongs to the preceding revision.
+- Isolated wording preview: http://127.0.0.1:3240/runs/new?series=agent-run-draft-specimen&from=previous-run . Existing 3239 environment/input preserved.
+- Human retest required; agent checks are not acceptance. PR remains unmerged.

@@ -47,7 +47,7 @@ export function RunDraftEditor({
         <div className="draft-flow-actions">
           <p>
             {t(
-              'Choose participation on each Operation row. Edit conditions directly below it; Subjects remain in the same columns.',
+              'Choose which Subjects each Operation applies to. Edit planned conditions directly below it; Subjects remain in the same columns.',
             )}
           </p>
           <button
@@ -95,10 +95,15 @@ export function RunDraftEditor({
           </button>
           <small>
             {t(
-              'Common values apply to participating Subjects. Individual values keep their own scope. Preview verifies the plan.',
+              'Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. Preview verifies the plan.',
             )}
           </small>
         </div>
+        <p>
+          {t(
+            'Specify whether this Subject will perform the Operation. Not applicable means the Subject is not assigned to this Operation, not that a result is Missing.',
+          )}
+        </p>
         <DxtGridFrame
           label={t('Operation and Subject matrix')}
           className="draft-matrix-scroll"
@@ -142,8 +147,8 @@ export function RunDraftEditor({
                   )}
                 <th scope="col">{t('Actions')}</th>
                 <th scope="col" className="matrix-common">
-                  {t('Common assignment')}
-                  <small>{t('All participating Subjects')}</small>
+                  {t('Common planned value')}
+                  <small>{t('All Subjects this Operation applies to')}</small>
                 </th>
                 {draft.subjects.map((s) => (
                   <th scope="col" key={s.id} className="matrix-subject">
@@ -179,8 +184,8 @@ export function RunDraftEditor({
                       <th scope="row">
                         <DxtCellText>{option.operation.label}</DxtCellText>
                         <small>
-                          {t('Operation participation')} ·{' '}
-                          {op.subjectIds.length}/{draft.subjects.length}
+                          {t('Operation application')} · {op.subjectIds.length}/
+                          {draft.subjects.length}
                         </small>
                       </th>
                       {attributes && (
@@ -261,7 +266,7 @@ export function RunDraftEditor({
                       </td>
                       <td
                         className="matrix-common"
-                        aria-label={t('Operation participation')}
+                        aria-label={t('Operation application')}
                       >
                         <div className="draft-bulk-actions">
                           <button
@@ -291,7 +296,7 @@ export function RunDraftEditor({
                             <input
                               type="checkbox"
                               checked={op.subjectIds.includes(subject.id)}
-                              aria-label={`${index + 1}. ${option.operation.label} · ${subject.id} · ${t('Operation participation')}`}
+                              aria-label={`${index + 1}. ${option.operation.label} · ${subject.id} · ${t('Operation application')}`}
                               onChange={(e) =>
                                 participation(
                                   e.target.checked
@@ -304,8 +309,8 @@ export function RunDraftEditor({
                             />
                             {t(
                               op.subjectIds.includes(subject.id)
-                                ? 'Participating'
-                                : 'Not Participating',
+                                ? 'Operation applies'
+                                : 'Operation does not apply',
                             )}
                           </label>
                         </td>
@@ -361,7 +366,7 @@ export function RunDraftEditor({
                                       ? op.subjectIds.includes(subjectId)
                                       : op.subjectIds.length > 0
                                   }
-                                  label={`${index + 1}. ${option.operation.label} · ${def.label} · ${subjectId ?? t('Common assignment')}`}
+                                  label={`${index + 1}. ${option.operation.label} · ${def.label} · ${subjectId ?? t('Common planned value')}`}
                                   onChange={(items) => change(index, { items })}
                                 />
                               </td>

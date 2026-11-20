@@ -26,7 +26,7 @@ export function RunDraftConditionCell({
 }) {
   const { t } = useLocale();
   if (!participating && subjectId)
-    return <DxtStatus>{t('Not Participating')}</DxtStatus>;
+    return <DxtStatus>{t('Operation does not apply')}</DxtStatus>;
   const matches = items.flatMap((item, index) =>
     item.applicabilityId === def.applicabilityId && item.subjectId === subjectId
       ? [{ item, index }]
@@ -69,6 +69,7 @@ export function RunDraftConditionCell({
         const invalid = status !== 'Value format valid';
         return (
           <div key={index}>
+            {subjectId && <small>{t('Subject-specific planned value')}</small>}
             {def.editor === 'BOOLEAN' || def.options.length ? (
               <select
                 aria-label={`${label} · ${t('Value')}`}
@@ -142,7 +143,7 @@ export function RunDraftConditionCell({
         <>
           {common.length ? (
             <div className="draft-common-reference">
-              <small>{t('Common assignment')}</small>
+              <small>{t('Common planned value')}</small>
               {common.map((item, index) => (
                 <div key={index}>
                   {item.value || t('Missing')} {def.unit}
@@ -160,7 +161,7 @@ export function RunDraftConditionCell({
             <DxtStatus tone={subjectId && required ? 'warning' : 'neutral'}>
               {t(
                 !participating
-                  ? 'Not Participating'
+                  ? 'Operation does not apply'
                   : subjectId && required
                     ? 'Missing'
                     : 'Not entered',
@@ -173,13 +174,17 @@ export function RunDraftConditionCell({
             aria-label={`${label} · ${t('Add condition value')}`}
             onClick={add}
           >
-            {t(subjectId ? 'Add individual value' : 'Add common value')}
+            {t(
+              subjectId
+                ? 'Add subject-specific planned value'
+                : 'Add common planned value',
+            )}
           </button>
         </>
       )}
       {!!matches.length && !!common.length && (
         <small>
-          {t('Individual and common assignments are both recorded.')}
+          {t('Subject-specific and common planned values are both configured.')}
         </small>
       )}
     </div>

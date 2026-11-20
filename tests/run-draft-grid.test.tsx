@@ -100,7 +100,7 @@ void test('required/optional metadata shows missing participation coverage witho
   assert.match(render(value), /Missing/);
   value.operations[0].subjectIds = [];
   value.operations[0].items = [];
-  assert.match(render(value), /Not Participating/);
+  assert.match(render(value), /Not applicable/);
   assert.doesNotMatch(render(value), />Missing</);
 });
 void test('KO/EN format feedback preserves literal values, units and persisted role', () => {
@@ -271,10 +271,23 @@ void test('Unified matrix renders objects and scoped assignments without changin
   assert.doesNotMatch(html, /textarea/);
   assert.match(html, /Add Subject/);
   assert.match(html, /Process Flow &amp; Conditions/);
-  assert.match(html, /Common assignment/);
-  assert.match(html, /Individual and common assignments are both recorded/);
-  assert.match(html, /Not Participating/);
+  assert.match(html, /Common planned value/);
+  assert.match(
+    html,
+    /Subject-specific and common planned values are both configured/,
+  );
+  assert.match(html, /Not applicable/);
   assert.match(html, /value="30"/);
   assert.match(html, /value="25"/);
+  const korean = render(value, 'ko');
+  for (const label of [
+    '공정 적용',
+    '미적용',
+    '공통 계획값',
+    '대상별 계획값',
+    '미적용은 결과 누락이 아니라',
+  ])
+    assert.ok(korean.includes(label));
+  assert.doesNotMatch(korean, /미참여|참여 여부|개별값|공통값|기록되어/);
   assert.equal(JSON.stringify(value), before);
 });

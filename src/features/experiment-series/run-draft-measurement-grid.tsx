@@ -94,7 +94,7 @@ export function RunDraftMeasurementGrid({
                         >
                           <DxtCellText>{`${index + 1}. ${option.operation.label}`}</DxtCellText>
                           <small>
-                            {t('{0} participating · {1} not participating', [
+                            {t('{0} applicable · {1} not applicable', [
                               op.subjectIds.length,
                               draft.subjects.length - op.subjectIds.length,
                             ])}
