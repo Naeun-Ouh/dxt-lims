@@ -498,5 +498,21 @@
   "Retry": "Retry",
   "Select all": "Select all",
   "Technical details": "Technical details",
-  "No Study Default is configured. Author this draft or choose Blank.": "No Study Default is configured. Author this draft or choose Blank."
+  "No Study Default is configured. Author this draft or choose Blank.": "No Study Default is configured. Author this draft or choose Blank.",
+  "Run starting point": "Run starting point",
+  "Operation master lookup": "Operation master lookup",
+  "Search Operations available in this Study’s reference version. Select in the order you want to add them.": "Search Operations available in this Study’s reference version. Select in the order you want to add them.",
+  "Search Operations": "Search Operations",
+  "Operation name, ID, equipment or condition": "Operation name, ID, equipment or condition",
+  "Operation type": "Operation type",
+  "{0} Operations found · {1} selected": "{0} Operations found · {1} selected",
+  "Selection order {0}": "Selection order {0}",
+  "No Operations match. Try another search or type.": "No Operations match. Try another search or type.",
+  "No Operations are available in this reference version.": "No Operations are available in this reference version.",
+  "Added Operations can be reordered in the draft. Condition values are entered there.": "Added Operations can be reordered in the draft. Condition values are entered there.",
+  "Add {0} Operations": "Add {0} Operations",
+  "Select Operations from reference data, then arrange the execution order below.": "Select Operations from reference data, then arrange the execution order below.",
+  "Move down": "Move down",
+  "Process Operation": "Process Operation",
+  "All Operation types": "All types"
 }

@@ -1359,5 +1359,21 @@
   "Retry": "다시 시도",
   "Select all": "전체 선택",
   "Technical details": "기술 상세",
-  "No Study Default is configured. Author this draft or choose Blank.": "스터디 기본 설정이 없습니다. 이 초안을 직접 작성하거나 빈 계획을 선택하세요."
+  "No Study Default is configured. Author this draft or choose Blank.": "스터디 기본 설정이 없습니다. 이 초안을 직접 작성하거나 빈 계획을 선택하세요.",
+  "Run starting point": "실험 차수 시작 방식",
+  "Operation master lookup": "공정 기준정보 조회",
+  "Search Operations available in this Study’s reference version. Select in the order you want to add them.": "이 스터디의 기준정보 버전에 포함된 공정을 조회합니다. 추가할 순서대로 선택해 주세요.",
+  "Search Operations": "공정 검색",
+  "Operation name, ID, equipment or condition": "공정명, ID, 장비 또는 조건 검색",
+  "Operation type": "공정 유형",
+  "{0} Operations found · {1} selected": "검색 결과 {0}개 · {1}개 선택",
+  "Selection order {0}": "선택 순서 {0}",
+  "No Operations match. Try another search or type.": "검색 결과가 없습니다. 검색어 또는 공정 유형을 변경해 주세요.",
+  "No Operations are available in this reference version.": "이 기준정보 버전에서 선택할 수 있는 공정이 없습니다.",
+  "Added Operations can be reordered in the draft. Condition values are entered there.": "추가 후 초안에서 공정 순서를 조정하고 조건값을 입력할 수 있습니다.",
+  "Add {0} Operations": "공정 {0}개 추가",
+  "Select Operations from reference data, then arrange the execution order below.": "기준정보에서 공정을 선택한 뒤 아래에서 실행 순서를 조정하세요.",
+  "Move down": "아래로 이동",
+  "Process Operation": "실행 공정",
+  "All Operation types": "전체"
 }

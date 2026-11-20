@@ -124,7 +124,7 @@ function RunDraftPage({
         </header>
         <section className="study-bootstrap run-draft">
           <fieldset disabled={busy}>
-            <legend>{t('Choose creation source')}</legend>
+            <legend>{t('Run starting point')}</legend>
             <div className="draft-source-buttons">
               {(['BLANK', 'STUDY_DEFAULT', 'PREVIOUS_RUN'] as const).map(
                 (value) => (

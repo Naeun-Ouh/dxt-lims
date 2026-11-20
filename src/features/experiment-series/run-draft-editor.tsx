@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { OperationMasterPicker } from './operation-master-picker';
 import type { RunDraft } from '@/src/application/run-draft';
 import type { BootstrapOperationOption } from '@/src/application/study-bootstrap';
 import type { ReferenceCatalog } from '@/src/domain/reference';
@@ -24,7 +25,7 @@ export function RunDraftEditor({
       )
       .join('\n'),
   );
-  const [optionId, setOptionId] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
   const change = (
     index: number,
     patch: Partial<RunDraft['operations'][number]>,
@@ -74,43 +75,41 @@ export function RunDraftEditor({
         <legend>
           2. {t('Process Flow')} · 3. {t('Conditions')}
         </legend>
-        <div className="bootstrap-controls">
-          <label>
-            {t('Operation')}
-            <select
-              value={optionId}
-              onChange={(e) => setOptionId(e.target.value)}
-            >
-              <option value="">{t('Select')}</option>
-              {options.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.operation.label} · {o.operation.context?.equipmentLabel}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="draft-flow-actions">
+          <p>
+            {t(
+              'Select Operations from reference data, then arrange the execution order below.',
+            )}
+          </p>
           <button
+            type="button"
             className="entry-button"
-            disabled={!optionId}
-            onClick={() =>
+            onClick={() => setPickerOpen(true)}
+          >
+            {t('Operation master lookup')}
+          </button>
+        </div>
+        {pickerOpen && (
+          <OperationMasterPicker
+            options={options}
+            onClose={() => setPickerOpen(false)}
+            onAdd={(ids) =>
               onChange({
                 ...draft,
                 operations: [
                   ...draft.operations,
-                  {
+                  ...ids.map((optionId) => ({
                     optionId,
                     subjectIds: draft.subjects.map((s) => s.id),
                     items: [],
                     parameterIds: [],
                     point: null,
-                  },
+                  })),
                 ],
               })
             }
-          >
-            {t('Add Operation')}
-          </button>
-        </div>
+          />
+        )}
         {draft.operations.map((op, index) => {
           const option = options.find((o) => o.id === op.optionId)!;
           const participation = (ids: string[]) =>
@@ -139,6 +138,21 @@ export function RunDraftEditor({
                   }}
                 >
                   {t('Move up')}
+                </button>
+                <button
+                  type="button"
+                  className="entry-button"
+                  disabled={index === draft.operations.length - 1}
+                  onClick={() => {
+                    const rows = [...draft.operations];
+                    [rows[index], rows[index + 1]] = [
+                      rows[index + 1],
+                      rows[index],
+                    ];
+                    onChange({ ...draft, operations: rows });
+                  }}
+                >
+                  {t('Move down')}
                 </button>
                 <button
                   className="entry-button"
