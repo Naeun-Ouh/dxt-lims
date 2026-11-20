@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { DxtGridFrame, DxtStatus, DxtCellText } from '@/src/shared/ui/dxt-grid';
 import { RunDraftMeasurementGrid } from './run-draft-measurement-grid';
-import { RunDraftConditionsGrid } from './run-draft-conditions-grid';
+import { RunDraftSubjects } from './run-draft-subjects';
+import { RunDraftConditionCell } from './run-draft-condition-cell';
 import { OperationMasterPicker } from './operation-master-picker';
 import type { RunDraft } from '@/src/application/run-draft';
 import type { BootstrapOperationOption } from '@/src/application/study-bootstrap';
@@ -21,14 +22,8 @@ export function RunDraftEditor({
   onChange: (draft: RunDraft) => void;
 }) {
   const { t } = useLocale();
-  const [subjectText, setSubjectText] = useState(() =>
-    draft.subjects
-      .map((s) =>
-        s.id === s.displayLabel ? s.id : `${s.id} | ${s.displayLabel}`,
-      )
-      .join('\n'),
-  );
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [attributes, setAttributes] = useState(true);
   const change = (
     index: number,
     patch: Partial<RunDraft['operations'][number]>,
@@ -39,47 +34,20 @@ export function RunDraftEditor({
         i === index ? { ...op, ...patch } : op,
       ),
     });
+  const leftColumns = attributes ? 7 : 3;
+  const leftWidth = attributes ? 644 : 304;
+  const displayName = (id?: string | null, label?: string) =>
+    catalog.resources.find((r) => r.id === id)?.name ||
+    (label && label !== id ? label : id ? t('Display name unavailable') : '—');
   return (
     <>
-      <fieldset>
-        <legend>1. {t('Subjects')}</legend>
-        <label>
-          {t('Subjects — one ID per line; optional ID | label')}
-          <textarea
-            rows={3}
-            value={subjectText}
-            onChange={(e) => {
-              setSubjectText(e.target.value);
-              const subjects = e.target.value
-                .split('\n')
-                .filter((s) => s.trim())
-                .map((line) => {
-                  const [id, label] = line.split('|').map((s) => s.trim());
-                  return { id, displayLabel: label || id };
-                });
-              const ids = new Set(subjects.map((s) => s.id));
-              onChange({
-                ...draft,
-                subjects,
-                operations: draft.operations.map((op) => ({
-                  ...op,
-                  subjectIds: op.subjectIds.filter((id) => ids.has(id)),
-                  items: op.items.filter(
-                    (i) => !i.subjectId || ids.has(i.subjectId),
-                  ),
-                })),
-              });
-            }}
-          />
-        </label>
-        <p>{t('Draft Subject count: {0}', [String(draft.subjects.length)])}</p>
-      </fieldset>
+      <RunDraftSubjects draft={draft} onChange={onChange} />
       <fieldset className="draft-grid-section">
-        <legend>2. {t('Process Flow')}</legend>
+        <legend>2. {t('Process Flow & Conditions')}</legend>
         <div className="draft-flow-actions">
           <p>
             {t(
-              'Select Operations from reference data, then arrange the execution order below.',
+              'Choose participation on each Operation row. Edit conditions directly below it; Subjects remain in the same columns.',
             )}
           </p>
           <button
@@ -112,23 +80,75 @@ export function RunDraftEditor({
             }
           />
         )}
-        <DxtGridFrame label={t('Ordered Operations')}>
-          <table className="dxt-grid draft-operation-table">
+        <div className="draft-flow-actions">
+          <button
+            type="button"
+            className="entry-button"
+            aria-expanded={attributes}
+            onClick={() => setAttributes(!attributes)}
+          >
+            {t(
+              attributes
+                ? 'Hide Operation attributes'
+                : 'Show Operation attributes',
+            )}
+          </button>
+          <small>
+            {t(
+              'Common values apply to participating Subjects. Individual values keep their own scope. Preview verifies the plan.',
+            )}
+          </small>
+        </div>
+        <DxtGridFrame
+          label={t('Operation and Subject matrix')}
+          className="draft-matrix-scroll"
+        >
+          <table
+            className={`dxt-grid draft-matrix ${attributes ? 'with-attributes' : ''}`}
+            style={{ width: leftWidth + 190 * (draft.subjects.length + 1) }}
+          >
+            <colgroup>
+              <col style={{ width: 44 }} />
+              <col style={{ width: 166 }} />
+              {attributes && (
+                <>
+                  <col style={{ width: 90 }} />
+                  <col style={{ width: 80 }} />
+                  <col style={{ width: 90 }} />
+                  <col style={{ width: 80 }} />
+                </>
+              )}
+              <col style={{ width: 94 }} />
+              <col style={{ width: 190 }} />
+              {draft.subjects.map((s) => (
+                <col key={s.id} style={{ width: 190 }} />
+              ))}
+            </colgroup>
             <thead>
               <tr>
-                {[
-                  'Order',
-                  'Operation',
-                  'Operation type',
-                  'Area',
-                  'Equipment',
-                  'Module',
-                  'Condition summary',
-                  'Move',
-                  'Remove',
-                ].map((key) => (
-                  <th scope="col" key={key}>
-                    {t(key)}
+                <th scope="col" aria-label={t('Order')}>
+                  #
+                </th>
+                <th scope="col">
+                  {t('Operation')} / {t('Condition name')}
+                </th>
+                {attributes &&
+                  ['Operation type', 'Area', 'Equipment', 'Module'].map(
+                    (key) => (
+                      <th scope="col" key={key}>
+                        {t(key)}
+                      </th>
+                    ),
+                  )}
+                <th scope="col">{t('Actions')}</th>
+                <th scope="col" className="matrix-common">
+                  {t('Common assignment')}
+                  <small>{t('All participating Subjects')}</small>
+                </th>
+                {draft.subjects.map((s) => (
+                  <th scope="col" key={s.id} className="matrix-subject">
+                    <DxtCellText>{s.displayLabel}</DxtCellText>
+                    {s.displayLabel !== s.id && <small>{s.id}</small>}
                   </th>
                 ))}
               </tr>
@@ -137,13 +157,6 @@ export function RunDraftEditor({
               {draft.operations.map((op, index) => {
                 const option = options.find((o) => o.id === op.optionId)!;
                 const context = option.operation.context;
-                const displayName = (id?: string | null, label?: string) =>
-                  catalog.resources.find((r) => r.id === id)?.name ||
-                  (label && label !== id
-                    ? label
-                    : id
-                      ? t('Display name unavailable')
-                      : '—');
                 const participation = (ids: string[]) =>
                   change(index, {
                     subjectIds: ids,
@@ -160,165 +173,208 @@ export function RunDraftEditor({
                   onChange({ ...draft, operations });
                 };
                 return (
-                  <tr key={index}>
-                    <td>{index + 1}</td>
-                    <th scope="row">
-                      <strong>
+                  <Fragment key={index}>
+                    <tr className="matrix-operation">
+                      <td>{index + 1}</td>
+                      <th scope="row">
                         <DxtCellText>{option.operation.label}</DxtCellText>
-                      </strong>
-                      <details className="draft-participation">
-                        <summary>
+                        <small>
                           {t('Operation participation')} ·{' '}
                           {op.subjectIds.length}/{draft.subjects.length}
-                        </summary>
+                        </small>
+                      </th>
+                      {attributes && (
+                        <>
+                          <td>
+                            <DxtStatus>
+                              {t(
+                                option.operation.role === 'MEASUREMENT'
+                                  ? 'Measurement'
+                                  : 'Process Operation',
+                              )}
+                            </DxtStatus>
+                          </td>
+                          <td>
+                            <DxtCellText>
+                              {catalog.areas.find(
+                                (a) =>
+                                  a.id === context?.areaDefinitionRevisionId,
+                              )?.name ||
+                                displayName(
+                                  context?.areaDefinitionRevisionId,
+                                  context?.areaLabel,
+                                )}
+                            </DxtCellText>
+                          </td>
+                          <td>
+                            <DxtCellText>
+                              {displayName(
+                                context?.equipmentReferenceId,
+                                context?.equipmentLabel,
+                              )}
+                            </DxtCellText>
+                          </td>
+                          <td>
+                            <DxtCellText>
+                              {displayName(
+                                context?.moduleReferenceId,
+                                context?.moduleLabel,
+                              )}
+                            </DxtCellText>
+                          </td>
+                        </>
+                      )}
+                      <td>
                         <div className="draft-grid-actions">
+                          {[-1, 1].map((offset) => (
+                            <button
+                              key={offset}
+                              type="button"
+                              className="entry-button dxt-action-text"
+                              disabled={
+                                offset === -1
+                                  ? !index
+                                  : index === draft.operations.length - 1
+                              }
+                              aria-label={`${index + 1}. ${option.operation.label} · ${t(offset === -1 ? 'Move up' : 'Move down')}`}
+                              onClick={() => move(offset)}
+                            >
+                              {offset === -1 ? '↑' : '↓'}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          className="entry-button dxt-action-danger"
+                          aria-label={`${index + 1}. ${option.operation.label} · ${t('Remove')}`}
+                          onClick={() =>
+                            onChange({
+                              ...draft,
+                              operations: draft.operations.filter(
+                                (_, i) => i !== index,
+                              ),
+                            })
+                          }
+                        >
+                          {t('Remove')}
+                        </button>
+                      </td>
+                      <td
+                        className="matrix-common"
+                        aria-label={t('Operation participation')}
+                      >
+                        <div className="draft-bulk-actions">
                           <button
                             type="button"
-                            className="entry-button"
+                            className="entry-button dxt-action-text"
                             onClick={() =>
-                              participation(
-                                draft.subjects.map((subject) => subject.id),
-                              )
+                              participation(draft.subjects.map((s) => s.id))
                             }
                           >
                             {t('Select all')}
                           </button>
                           <button
                             type="button"
-                            className="entry-button"
+                            className="entry-button dxt-action-text"
                             onClick={() => participation([])}
                           >
                             {t('Clear selection')}
                           </button>
                         </div>
-                        <div className="draft-subjects">
-                          {draft.subjects.map((subject, si) => (
-                            <label key={`${subject.id}-${si}`}>
-                              <input
-                                type="checkbox"
-                                checked={op.subjectIds.includes(subject.id)}
-                                onChange={(event) =>
-                                  participation(
-                                    event.target.checked
-                                      ? [...op.subjectIds, subject.id]
-                                      : op.subjectIds.filter(
-                                          (id) => id !== subject.id,
-                                        ),
-                                  )
-                                }
-                              />
-                              {subject.displayLabel}
-                              {!op.subjectIds.includes(subject.id) && (
-                                <small>{t('Not Participating')}</small>
+                      </td>
+                      {draft.subjects.map((subject) => (
+                        <td
+                          key={subject.id}
+                          className={`matrix-subject ${op.subjectIds.includes(subject.id) ? '' : 'matrix-na'}`}
+                        >
+                          <label className="matrix-participation">
+                            <input
+                              type="checkbox"
+                              checked={op.subjectIds.includes(subject.id)}
+                              aria-label={`${index + 1}. ${option.operation.label} · ${subject.id} · ${t('Operation participation')}`}
+                              onChange={(e) =>
+                                participation(
+                                  e.target.checked
+                                    ? [...op.subjectIds, subject.id]
+                                    : op.subjectIds.filter(
+                                        (id) => id !== subject.id,
+                                      ),
+                                )
+                              }
+                            />
+                            {t(
+                              op.subjectIds.includes(subject.id)
+                                ? 'Participating'
+                                : 'Not Participating',
+                            )}
+                          </label>
+                        </td>
+                      ))}
+                    </tr>
+                    {option.operation.role === 'PROCESS' &&
+                      option.operation.items.map((def) => (
+                        <tr
+                          key={def.applicabilityId}
+                          className="matrix-condition"
+                        >
+                          <td aria-label={t('Condition name')}>↳</td>
+                          <th scope="row" colSpan={leftColumns - 1}>
+                            <span>↳ {def.label}</span>{' '}
+                            <span className="matrix-unit">
+                              {def.unit || '—'}
+                            </span>
+                            <small>
+                              {t(
+                                option.conditionRequirements?.[
+                                  def.applicabilityId
+                                ] === undefined
+                                  ? 'Requiredness checked in Preview'
+                                  : option.conditionRequirements[
+                                        def.applicabilityId
+                                      ]
+                                    ? 'Required'
+                                    : 'Optional',
                               )}
-                            </label>
-                          ))}
-                        </div>
-                        {!draft.subjects.length && (
-                          <p>{t('Add Subjects to choose participation.')}</p>
-                        )}
-                      </details>
-                    </th>
-                    <td>
-                      <DxtStatus
-                        tone={
-                          option.operation.role === 'MEASUREMENT'
-                            ? 'info'
-                            : 'neutral'
-                        }
-                      >
-                        {t(
-                          option.operation.role === 'MEASUREMENT'
-                            ? 'Measurement'
-                            : 'Process Operation',
-                        )}
-                      </DxtStatus>
-                    </td>
-                    <td>
-                      <DxtCellText>
-                        {catalog.areas.find(
-                          (area) =>
-                            area.id === context?.areaDefinitionRevisionId,
-                        )?.name ||
-                          displayName(
-                            context?.areaDefinitionRevisionId,
-                            context?.areaLabel,
-                          )}
-                      </DxtCellText>
-                    </td>
-                    <td>
-                      <DxtCellText>
-                        {displayName(
-                          context?.equipmentReferenceId,
-                          context?.equipmentLabel,
-                        )}
-                      </DxtCellText>
-                    </td>
-                    <td>
-                      <DxtCellText>
-                        {displayName(
-                          context?.moduleReferenceId,
-                          context?.moduleLabel,
-                        )}
-                      </DxtCellText>
-                    </td>
-                    <td>
-                      <DxtCellText>
-                        {option.operation.items
-                          .map((def) => def.label)
-                          .join(' · ') || '—'}
-                      </DxtCellText>
-                      <small>
-                        {t('{0} condition rows', [op.items.length])}
-                      </small>
-                    </td>
-                    <td>
-                      <div className="draft-grid-actions">
-                        <button
-                          type="button"
-                          className="entry-button dxt-action-text"
-                          disabled={!index}
-                          aria-label={`${index + 1}. ${option.operation.label} · ${t('Move up')}`}
-                          title={t('Move up')}
-                          onClick={() => move(-1)}
-                        >
-                          <span aria-hidden="true">↑</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="entry-button dxt-action-text"
-                          disabled={index === draft.operations.length - 1}
-                          aria-label={`${index + 1}. ${option.operation.label} · ${t('Move down')}`}
-                          title={t('Move down')}
-                          onClick={() => move(1)}
-                        >
-                          <span aria-hidden="true">↓</span>
-                        </button>
-                      </div>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="entry-button dxt-action-danger"
-                        aria-label={`${index + 1}. ${option.operation.label} · ${t('Remove')}`}
-                        onClick={() =>
-                          onChange({
-                            ...draft,
-                            operations: draft.operations.filter(
-                              (_, i) => i !== index,
+                            </small>
+                          </th>
+                          {[null, ...draft.subjects.map((s) => s.id)].map(
+                            (subjectId) => (
+                              <td
+                                key={JSON.stringify(subjectId)}
+                                className={
+                                  subjectId
+                                    ? `matrix-subject ${op.subjectIds.includes(subjectId) ? '' : 'matrix-na'}`
+                                    : 'matrix-common'
+                                }
+                              >
+                                <RunDraftConditionCell
+                                  def={def}
+                                  items={op.items}
+                                  subjectId={subjectId}
+                                  required={
+                                    option.conditionRequirements?.[
+                                      def.applicabilityId
+                                    ]
+                                  }
+                                  participating={
+                                    subjectId
+                                      ? op.subjectIds.includes(subjectId)
+                                      : op.subjectIds.length > 0
+                                  }
+                                  label={`${index + 1}. ${option.operation.label} · ${def.label} · ${subjectId ?? t('Common assignment')}`}
+                                  onChange={(items) => change(index, { items })}
+                                />
+                              </td>
                             ),
-                          })
-                        }
-                      >
-                        {t('Remove')}
-                      </button>
-                    </td>
-                  </tr>
+                          )}
+                        </tr>
+                      ))}
+                  </Fragment>
                 );
               })}
               {!draft.operations.length && (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={leftColumns + 1 + draft.subjects.length}>
                     {t(
                       'Add Operations for this Run. Study defaults are optional.',
                     )}
@@ -329,7 +385,6 @@ export function RunDraftEditor({
           </table>
         </DxtGridFrame>
       </fieldset>
-      <RunDraftConditionsGrid draft={draft} options={options} change={change} />
       <RunDraftMeasurementGrid
         draft={draft}
         options={options}

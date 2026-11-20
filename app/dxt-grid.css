@@ -241,8 +241,151 @@
   }
 }
 
-.dxt-density .entry-button:disabled { color: #89939e; border-color: var(--dxt-border); background: var(--dxt-disabled); cursor: not-allowed; }
+.dxt-density .entry-button:disabled {
+  color: #89939e;
+  border-color: var(--dxt-border);
+  background: var(--dxt-disabled);
+  cursor: not-allowed;
+}
 
-.dxt-density .dxt-grid .entry-button { white-space: nowrap; }
+.dxt-density .dxt-grid .entry-button {
+  white-space: nowrap;
+}
 
-.dxt-grid .draft-grid-actions { flex-wrap: nowrap; }
+.dxt-grid .draft-grid-actions {
+  flex-wrap: nowrap;
+}
+
+/* One table keeps Operation and Subject rows aligned during horizontal scrolling. */
+.draft-subject-add {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.draft-subject-add label {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.draft-subject-table th:last-child {
+  width: 90px;
+}
+.draft-matrix-scroll {
+  max-height: 640px;
+}
+.draft-matrix {
+  min-width: 100%;
+}
+.draft-matrix :is(th, td) {
+  box-sizing: border-box;
+  border-right: 1px solid var(--dxt-border);
+}
+.draft-matrix .matrix-operation {
+  background: #eaf0f5;
+}
+.draft-matrix .matrix-operation :is(th, td) {
+  vertical-align: middle;
+}
+.draft-matrix .matrix-subject {
+  background: #fff;
+}
+.draft-matrix .matrix-na {
+  background: #f1f3f5;
+  color: var(--dxt-muted);
+}
+.draft-matrix .matrix-common {
+  border-left: 2px solid #9db4c5;
+  background: #f6f9fc;
+}
+.draft-matrix .matrix-condition th {
+  background: #fafbfd;
+  vertical-align: middle;
+}
+.draft-matrix .matrix-unit {
+  font-weight: 400;
+  color: var(--dxt-muted);
+}
+.draft-matrix .matrix-participation {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 400;
+}
+.draft-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+}
+.draft-condition-cell {
+  display: grid;
+  gap: 6px;
+}
+.draft-condition-cell input,
+.draft-condition-cell select {
+  width: 100%;
+  min-width: 0;
+}
+.draft-cell-role {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.draft-cell-role select {
+  flex: 1;
+}
+.draft-common-reference {
+  min-height: 54px;
+}
+/* Frozen reference block; compact mode frees space for more Subject columns. */
+@media (min-width: 1100px) {
+  .draft-matrix :is(th, td):nth-child(1) {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix :is(th, td):nth-child(2) {
+    position: sticky;
+    left: 44px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix .matrix-operation td:nth-child(3),
+  .draft-matrix thead th:nth-child(3) {
+    position: sticky;
+    left: 210px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix.with-attributes .matrix-operation td:nth-child(4),
+  .draft-matrix.with-attributes thead th:nth-child(4) {
+    position: sticky;
+    left: 300px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix.with-attributes .matrix-operation td:nth-child(5),
+  .draft-matrix.with-attributes thead th:nth-child(5) {
+    position: sticky;
+    left: 380px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix.with-attributes .matrix-operation td:nth-child(6),
+  .draft-matrix.with-attributes thead th:nth-child(6) {
+    position: sticky;
+    left: 470px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix.with-attributes .matrix-operation td:nth-child(7),
+  .draft-matrix.with-attributes thead th:nth-child(7) {
+    position: sticky;
+    left: 550px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix thead th:nth-child(-n + 3),
+  .draft-matrix.with-attributes thead th:nth-child(-n + 7) {
+    z-index: 4;
+  }
+}

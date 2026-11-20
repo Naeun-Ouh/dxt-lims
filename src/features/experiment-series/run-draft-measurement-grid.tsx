@@ -35,7 +35,7 @@ export function RunDraftMeasurementGrid({
   if (!rows.length) return null;
   return (
     <fieldset className="draft-grid-section">
-      <legend>4. {t('Measurement Plan')}</legend>
+      <legend>3. {t('Measurement Plan')}</legend>
       <p>
         {t(
           'Select a point and parameters for each Measurement Operation. Process-only Runs need no Measurement plan.',

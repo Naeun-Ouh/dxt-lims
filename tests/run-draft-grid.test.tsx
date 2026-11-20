@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LocaleProvider } from '@/src/shared/i18n/locale';
-import { RunDraftConditionsGrid } from '@/src/features/experiment-series/run-draft-conditions-grid';
+import { RunDraftEditor } from '@/src/features/experiment-series/run-draft-editor';
+import { removeDraftSubject } from '@/src/features/experiment-series/run-draft-subjects';
 import { RunDraftMeasurementGrid } from '@/src/features/experiment-series/run-draft-measurement-grid';
 import type { RunDraft } from '@/src/application/run-draft';
 import type { BootstrapOperationOption } from '@/src/application/study-bootstrap';
@@ -57,10 +58,25 @@ const noWrite = () => {
 const render = (value: RunDraft, locale: 'en' | 'ko' = 'en') =>
   renderToStaticMarkup(
     <LocaleProvider initialLocale={locale} persist={false}>
-      <RunDraftConditionsGrid
+      <RunDraftEditor
         draft={value}
         options={[option]}
-        change={noWrite}
+        onChange={noWrite}
+        catalog={referenceCatalogSchema.parse({
+          units: [],
+          conditions: [],
+          properties: [],
+          measurements: [],
+          evaluations: [],
+          evaluationCriteria: [],
+          components: [],
+          materialCategories: [],
+          experimentTypes: [],
+          areas: [],
+          operations: [],
+          measurementOperations: [],
+          parameters: [],
+        })}
       />
     </LocaleProvider>,
   );
@@ -81,10 +97,7 @@ void test('required/optional metadata shows missing participation coverage witho
       subjectId: 'S1',
     },
   ];
-  assert.match(
-    render(value),
-    /Required value missing for some participating Subjects/,
-  );
+  assert.match(render(value), /Missing/);
   value.operations[0].subjectIds = [];
   value.operations[0].items = [];
   assert.match(render(value), /Not Participating/);
@@ -199,4 +212,69 @@ void test('Measurement grid exposes supporting prerequisites and never adds them
     </LocaleProvider>,
   );
   assert.equal(processOnly, '');
+});
+
+void test('Subject removal prunes only its participation and scoped conditions', () => {
+  const value = draft();
+  value.operations[0].items = [
+    {
+      applicabilityId: 'required',
+      value: '25',
+      intentRole: 'VARIED',
+      subjectId: null,
+    },
+    {
+      applicabilityId: 'required',
+      value: '30',
+      intentRole: 'FIXED',
+      subjectId: 'S1',
+    },
+    {
+      applicabilityId: 'required',
+      value: '35',
+      intentRole: 'VARIED',
+      subjectId: 'S2',
+    },
+  ];
+  const before = structuredClone(value);
+  const next = removeDraftSubject(value, 'S1');
+  assert.deepEqual(value, before);
+  assert.deepEqual(
+    next.subjects.map((s) => s.id),
+    ['S2'],
+  );
+  assert.deepEqual(next.operations[0].subjectIds, ['S2']);
+  assert.deepEqual(next.operations[0].items, [
+    before.operations[0].items[0],
+    before.operations[0].items[2],
+  ]);
+});
+void test('Unified matrix renders objects and scoped assignments without changing scope or value order', () => {
+  const value = draft();
+  value.operations[0].items = [
+    {
+      applicabilityId: 'required',
+      value: '30',
+      intentRole: 'VARIED',
+      subjectId: 'S1',
+    },
+    {
+      applicabilityId: 'required',
+      value: '25',
+      intentRole: 'FIXED',
+      subjectId: null,
+    },
+  ];
+  value.operations[0].subjectIds = ['S1'];
+  const before = JSON.stringify(value);
+  const html = render(value);
+  assert.doesNotMatch(html, /textarea/);
+  assert.match(html, /Add Subject/);
+  assert.match(html, /Process Flow &amp; Conditions/);
+  assert.match(html, /Common assignment/);
+  assert.match(html, /Individual and common assignments are both recorded/);
+  assert.match(html, /Not Participating/);
+  assert.match(html, /value="30"/);
+  assert.match(html, /value="25"/);
+  assert.equal(JSON.stringify(value), before);
 });
