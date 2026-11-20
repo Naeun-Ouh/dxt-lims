@@ -101,7 +101,8 @@ export class PostgresStudyCreation implements StudyCreationRepository {
                   areaDefinitionRevisionId: area.id,
                   experimentType: experiment.code,
                   area: area.code,
-                  label: `${pkg.id} · ${profile.code} · ${area.code} · ${subject.label}`,
+                  label: `${experiment.name} · ${area.name} · ${subject.label} · v${pkg.version}`,
+                  subjectLabel: subject.label,
                 });
             }
           }

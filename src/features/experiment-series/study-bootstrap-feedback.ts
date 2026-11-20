@@ -91,11 +91,27 @@ export function bootstrapActionError(
   const e = error as { code?: string; message?: string };
   if (e?.code === 'FORBIDDEN')
     return 'You do not have permission for this action. Ask the Study manager for access.';
+  if (
+    e?.code === 'NOT_FOUND' &&
+    e.message === 'A persisted source Run in this Study is required.'
+  )
+    return 'No previous Run is available. Choose Blank or Study Default.';
   if (e?.code === 'NOT_FOUND')
     return 'This Study or its selected configuration is unavailable. Check your access with the Study manager.';
   if (e?.code === 'CONFLICT')
     return 'The Study has changed. Keep your entered values and review the latest saved state before retrying.';
   const known: Record<string, string> = {
+    'This source contains unscoped conditions. Choose another source.':
+      'This source contains unscoped conditions. Choose another source.',
+    'Check Operation participation.': 'Check Operation participation.',
+    'Conditions must belong to participating Subjects.':
+      'Conditions must belong to participating Subjects.',
+    'Duplicate assignment.':
+      'Each condition may have only one value per Subject or one common value.',
+    'A persisted source Run in this Study is required.':
+      'No previous Run is available. Choose Blank or Study Default.',
+    'This source contains position-specific conditions.':
+      'This source contains position-specific conditions. Choose another source.',
     'Duplicate Subject identity.':
       'Subject IDs must be unique. Check the repeated IDs and save again.',
     'Measurement point and parameters are required.':

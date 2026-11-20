@@ -1,3 +1,5 @@
+import { draftFromSnapshot } from '@/src/application/run-draft';
+import { runDraftContract } from './postgres-run-draft-contract';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { authorizedOperation } from '@/src/infrastructure/postgres/authorized-application';
@@ -135,6 +137,16 @@ export async function studyBootstrapContract(db: SqlDatabase) {
     )!;
     assert.ok(selected);
     const slug = `bootstrap-${domain}-study`;
+    await runDraftContract(db, call, {
+      slug: `draft-${domain}`,
+      name: 'TEST ONLY',
+      intent: 'Test',
+      departmentId: 'bootstrap-dept',
+      packageVersionId: pkg.id,
+      experimentTypeProfileVersionId: selected.experimentTypeProfileVersionId,
+      subjectTypeRevisionId: selected.subjectTypeRevisionId,
+      areaDefinitionRevisionId: selected.areaDefinitionRevisionId,
+    });
     const identity = (await owner({
       operation: 'study.create',
       commandId: randomUUID(),
@@ -278,13 +290,16 @@ export async function studyBootstrapContract(db: SqlDatabase) {
       );
     const withoutTarget = (await owner({
       operation: 'run.preview',
-      input: { seriesSlug: slug, source: 'STUDY_DEFAULT' },
+      input: { seriesSlug: slug, source: 'STUDY_DEFAULT', includeDraftOptions:true },
     })) as AuthoritativeRunPreview;
     assert.equal(
       withoutTarget.readiness.status,
       'READY',
       'Target and Next Action do not gate execution',
     );
+    const copiedDefault = await owner({operation:'run.preview',input:{seriesSlug:slug,source:'STUDY_DEFAULT',sourceFingerprint:withoutTarget.sourceFingerprint,draft:draftFromSnapshot(withoutTarget.snapshot,withoutTarget.options!)}}) as AuthoritativeRunPreview;
+    assert.equal(copiedDefault.readiness.status,'READY');
+    assert.equal((await load()).setup.revision,2,'draft source copying does not save Study Setup');
     assert.equal(saved.executionReadiness.status, 'READY');
     assert.equal(saved.measurementReadiness.status, 'READY');
     // Independent process-only Study: no Measurement plan, Target, Evaluation or Next Action.
@@ -520,12 +535,12 @@ export async function studyBootstrapContract(db: SqlDatabase) {
     await assert.rejects(
       call('bootstrap-reader', {
         operation: 'run.preview',
-        input: { seriesSlug: slug, source: 'STUDY_DEFAULT' },
+        input: { seriesSlug: slug, source: 'STUDY_DEFAULT', includeDraftOptions:true },
       }),
     );
     const preview = (await owner({
       operation: 'run.preview',
-      input: { seriesSlug: slug, source: 'STUDY_DEFAULT' },
+      input: { seriesSlug: slug, source: 'STUDY_DEFAULT', includeDraftOptions:true },
     })) as AuthoritativeRunPreview;
     assert.equal(
       preview.snapshot.subjects[0].type,
@@ -534,7 +549,7 @@ export async function studyBootstrapContract(db: SqlDatabase) {
     assert.equal(preview.snapshot.subjects[0].id, `TEST-${domain}-01`);
     const run = (await owner({
       operation: 'run.create.preview',
-      input: { seriesSlug: slug, source: 'STUDY_DEFAULT' },
+      input: { seriesSlug: slug, source: 'STUDY_DEFAULT', includeDraftOptions:true },
       fingerprint: preview.fingerprint,
       command: { commandId: randomUUID() },
     })) as RunPlanningSnapshot;

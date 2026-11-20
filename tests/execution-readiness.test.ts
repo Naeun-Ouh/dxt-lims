@@ -94,6 +94,16 @@ void test('Researcher errors are actionable and never expose raw technical failu
     bootstrapActionError({ message: 'Duplicate Subject identity.' }, 'setup'),
     /unique/,
   );
+  assert.equal(
+    bootstrapActionError(
+      {
+        code: 'NOT_FOUND',
+        message: 'A persisted source Run in this Study is required.',
+      },
+      'run',
+    ),
+    'No previous Run is available. Choose Blank or Study Default.',
+  );
   const response = await handleRepositoryRequest(
     new Request('http://test/api/repository', {
       method: 'POST',

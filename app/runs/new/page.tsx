@@ -1,5 +1,6 @@
 import { productionRequest } from '@/src/infrastructure/postgres/server-composition';
-import { PersistedStudy } from '@/src/features/experiment-series/persisted-study';
+import { ProductionRunEntry } from '@/src/features/experiment-series/production-run-entry';
+import type { SeriesSlug } from '@/src/features/experiment-series/run-entry-model';
 import { LocalizedText } from '@/src/shared/i18n/text';
 import type { StudyIdentity } from '@/src/application/study-creation';
 import CreateRunEntry from '@/src/features/experiment-series/create-run-entry';
@@ -23,9 +24,30 @@ export default async function Page({
     ].includes(query.series)
   ) {
     let study: StudyIdentity | undefined;
-    try { study = await productionRequest({ operation: 'study.identity', slug: query.series }) as StudyIdentity; }
-    catch { /* The resource boundary fails closed. */ }
-    return study ? <PersistedStudy study={study} /> : <main role="alert"><LocalizedText>Resource unavailable or access denied.</LocalizedText></main>;
+    try {
+      study = (await productionRequest({
+        operation: 'study.identity',
+        slug: query.series,
+      })) as StudyIdentity;
+    } catch {
+      /* The resource boundary fails closed. */
+    }
+    return study ? (
+      <ProductionRunEntry
+        seriesSlug={study.slug as SeriesSlug}
+        initialSource={
+          query.from === 'study-default'
+            ? 'STUDY_DEFAULT'
+            : query.from === 'previous-run'
+              ? 'PREVIOUS_RUN'
+              : 'BLANK'
+        }
+      />
+    ) : (
+      <main role="alert">
+        <LocalizedText>Resource unavailable or access denied.</LocalizedText>
+      </main>
+    );
   }
   const seriesSlug =
     query.series === 'adhesion-material-optimization'
@@ -34,7 +56,11 @@ export default async function Page({
         ? 'cmp-stability'
         : 'dts-improvement';
   const initialSource =
-    query.from === 'study-default' ? 'STUDY_DEFAULT' : 'PREVIOUS_RUN';
+    query.from === 'study-default'
+      ? 'STUDY_DEFAULT'
+      : query.from === 'blank'
+        ? 'BLANK'
+        : 'PREVIOUS_RUN';
   return (
     <CreateRunEntry
       seriesSlug={seriesSlug}

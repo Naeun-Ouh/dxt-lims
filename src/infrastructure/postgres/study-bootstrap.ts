@@ -70,119 +70,8 @@ export async function bootstrapContext(
       'FORBIDDEN',
       'Exact configuration is unavailable.',
     );
-  const configuration = await hydrateConfigurationPackages(sql, [
-    setup.configurationPackageVersionId,
-  ]);
-  const registry = configuration.getConfigurationRegistry(),
-    pkg = registry.packages[0];
-  const source = await readConfigurationAuthoring(sql, {
-    principalId,
-    packageIds: [pkg.id],
-  });
-  const measurement = await readMeasurementCatalog(sql, pkg.id);
-  const ids = new Set(pkg.definitionRevisionIds);
-  const catalog = referenceCatalogSchema.parse(
-    Object.fromEntries(
-      Object.entries(source.catalog).map(([kind, items]) => [
-        kind,
-        items.filter((item) =>
-          kind === 'nextActionTypes'
-            ? pkg.nextActionTypeRevisionIds.includes(item.id)
-            : ids.has(item.id),
-        ),
-      ]),
-    ),
-  );
-  // Measurement references are already resolved and immutable for this exact package.
-  for (const kind of [
-    'parameters',
-    'units',
-    'measurementOperations',
-    'coordinateDefinitions',
-    'coordinateSets',
-  ] as const)
-    Object.assign(catalog, { [kind]: measurement[kind] });
-  const profile = registry.experimentTypeProfiles.find(
-    (p) => p.id === setup.experimentTypeProfileVersionId,
-  );
-  const subject = registry.subjectTypes.find(
-    (p) => p.id === setup.subjectTypeRevisionId,
-  );
-  if (
-    !profile ||
-    !subject ||
-    !profile.subjectTypeRevisionIds.includes(subject.id) ||
-    !['WAFER', 'SPECIMEN'].includes(subject.code)
-  )
-    fail('Exact Study profile is incompatible.');
-  const eligible = new Set(
-    registry.departmentAreaProfiles
-      .filter(
-        (p) =>
-          profile.departmentAreaProfileVersionIds.includes(p.id) &&
-          p.subjectTypeRevisionIds.includes(subject.id),
-      )
-      .flatMap((p) => p.operationDefinitionRevisionIds),
-  );
-  const options: BootstrapOperationOption[] = [];
-  for (const definition of [
-    ...catalog.operations,
-    ...catalog.measurementOperations,
-  ].filter((d) => eligible.has(d.id) && ids.has(d.id))) {
-    const capabilities = registry.equipmentCapabilityProfiles.filter(
-      (c) =>
-        pkg.equipmentCapabilityProfileVersionIds.includes(c.id) &&
-        c.operationDefinitionRevisionIds.includes(definition.id),
-    );
-    // No equipment is claimed where the package defines none. No fabricated equipment identity.
-    const contexts = capabilities.length
-      ? capabilities.flatMap((c) =>
-          (c.moduleReferenceIds.length ? c.moduleReferenceIds : [null]).map(
-            (module) => ({ equipment: c.equipmentReferenceId, module }),
-          ),
-        )
-      : [{ equipment: '', module: null }];
-    for (const context of contexts) {
-      const id = `option-${hash([definition.id, context]).slice(0, 20)}`;
-      const operation: BootstrapOperationOption['operation'] = {
-        id,
-        label: definition.name,
-        operationDefinitionRevisionId: definition.id,
-        role: definition.operationRole,
-        measurementPoint: null,
-        items: [],
-        measurements: [],
-        context: {
-          areaDefinitionRevisionId: definition.areaDefinitionId,
-          areaLabel:
-            source.catalog.areas.find(
-              (a) => a.id === definition.areaDefinitionId,
-            )?.name ?? definition.areaDefinitionId,
-          equipmentReferenceId: context.equipment,
-          equipmentLabel: context.equipment,
-          moduleReferenceId: context.module,
-          moduleLabel: context.module ?? '',
-        },
-      };
-      operation.items = resolvedStudySetupItems(
-        { ...setup, operations: [operation] },
-        id,
-        configuration,
-      );
-      options.push({
-        id,
-        operation,
-        parameterIds:
-          definition.operationRole === 'MEASUREMENT'
-            ? catalog.parameters
-                .filter(
-                  (p) => p.measurementOperationDefinitionId === definition.id,
-                )
-                .map((p) => p.id)
-            : [],
-      });
-    }
-  }
+  const { configuration, catalog, options, subjectKind } =
+    await executionOptions(sql, setup, principalId);
   const counts = (
     await sql.query<{ closed: boolean }>(
       `SELECT EXISTS(SELECT 1 FROM experiment_run WHERE study_id=$1) OR EXISTS(SELECT 1 FROM reasoning_context WHERE study_id=$1) AS closed`,
@@ -195,7 +84,7 @@ export async function bootstrapContext(
     configuration,
     catalog,
     options,
-    subjectKind: subject.code as 'WAFER' | 'SPECIMEN',
+    subjectKind,
     closed: counts.closed,
   };
 }
@@ -216,7 +105,19 @@ export async function readBootstrap(
     ...(!subjects.length ? ['Subjects'] : []),
     ...(!c.setup.operations.length ? ['Operations'] : []),
   ];
-  const layers = subjects.length ? executionReadiness(await materializePersistedStudy(sql, slug, 0), c.configuration, c.catalog) : {execution: {status:'NOT_READY' as const, missing:['Add and save at least one Subject.']}, measurement: {status:'NOT_CONFIGURED' as const, missing:[]}};
+  const layers = subjects.length
+    ? executionReadiness(
+        await materializePersistedStudy(sql, slug, 0),
+        c.configuration,
+        c.catalog,
+      )
+    : {
+        execution: {
+          status: 'NOT_READY' as const,
+          missing: ['Add and save at least one Subject.'],
+        },
+        measurement: { status: 'NOT_CONFIGURED' as const, missing: [] },
+      };
   const runNumbers = (
     await sql.query<{ run_number: number }>(
       'SELECT run_number FROM experiment_run WHERE study_id=$1 ORDER BY run_number',
@@ -470,4 +371,131 @@ export async function initializeReasoning(
       id,
     ])
   ).rows[0];
+}
+
+/** Exact execution choices only. Caller must authorize access to the owning Study/Run. */
+export async function executionOptions(
+  sql: SqlSession,
+  setup: StudySetupSnapshot,
+  principalId?: string,
+) {
+  const configuration = await hydrateConfigurationPackages(sql, [
+    setup.configurationPackageVersionId,
+  ]);
+  const registry = configuration.getConfigurationRegistry(),
+    pkg = registry.packages[0];
+  const source = await readConfigurationAuthoring(
+    sql,
+    principalId ? { principalId, packageIds: [pkg.id] } : undefined,
+  );
+  const measurement = await readMeasurementCatalog(sql, pkg.id);
+  const ids = new Set(pkg.definitionRevisionIds);
+  const catalog = referenceCatalogSchema.parse(
+    Object.fromEntries(
+      Object.entries(source.catalog).map(([kind, items]) => [
+        kind,
+        items.filter((item) =>
+          kind === 'nextActionTypes'
+            ? pkg.nextActionTypeRevisionIds.includes(item.id)
+            : ids.has(item.id),
+        ),
+      ]),
+    ),
+  );
+  // Measurement references are already resolved and immutable for this exact package.
+  for (const kind of [
+    'parameters',
+    'units',
+    'measurementOperations',
+    'coordinateDefinitions',
+    'coordinateSets',
+  ] as const)
+    Object.assign(catalog, { [kind]: measurement[kind] });
+  const profile = registry.experimentTypeProfiles.find(
+    (p) => p.id === setup.experimentTypeProfileVersionId,
+  );
+  const subject = registry.subjectTypes.find(
+    (p) => p.id === setup.subjectTypeRevisionId,
+  );
+  if (
+    !profile ||
+    !subject ||
+    !profile.subjectTypeRevisionIds.includes(subject.id) ||
+    !['WAFER', 'SPECIMEN'].includes(subject.code)
+  )
+    fail('Exact Study profile is incompatible.');
+  const eligible = new Set(
+    registry.departmentAreaProfiles
+      .filter(
+        (p) =>
+          profile.departmentAreaProfileVersionIds.includes(p.id) &&
+          p.subjectTypeRevisionIds.includes(subject.id),
+      )
+      .flatMap((p) => p.operationDefinitionRevisionIds),
+  );
+  const options: BootstrapOperationOption[] = [];
+  for (const definition of [
+    ...catalog.operations,
+    ...catalog.measurementOperations,
+  ].filter((d) => eligible.has(d.id) && ids.has(d.id))) {
+    const capabilities = registry.equipmentCapabilityProfiles.filter(
+      (c) =>
+        pkg.equipmentCapabilityProfileVersionIds.includes(c.id) &&
+        c.operationDefinitionRevisionIds.includes(definition.id),
+    );
+    // No equipment is claimed where the package defines none. No fabricated equipment identity.
+    const contexts = capabilities.length
+      ? capabilities.flatMap((c) =>
+          (c.moduleReferenceIds.length ? c.moduleReferenceIds : [null]).map(
+            (module) => ({ equipment: c.equipmentReferenceId, module }),
+          ),
+        )
+      : [{ equipment: '', module: null }];
+    for (const context of contexts) {
+      const id = `option-${hash([definition.id, context]).slice(0, 20)}`;
+      const operation: BootstrapOperationOption['operation'] = {
+        id,
+        label: definition.name,
+        operationDefinitionRevisionId: definition.id,
+        role: definition.operationRole,
+        measurementPoint: null,
+        items: [],
+        measurements: [],
+        context: {
+          areaDefinitionRevisionId: definition.areaDefinitionId,
+          areaLabel:
+            source.catalog.areas.find(
+              (a) => a.id === definition.areaDefinitionId,
+            )?.name ?? definition.areaDefinitionId,
+          equipmentReferenceId: context.equipment,
+          equipmentLabel: context.equipment,
+          moduleReferenceId: context.module,
+          moduleLabel: context.module ?? '',
+        },
+      };
+      operation.items = resolvedStudySetupItems(
+        { ...setup, operations: [operation] },
+        id,
+        configuration,
+      );
+      options.push({
+        id,
+        operation,
+        parameterIds:
+          definition.operationRole === 'MEASUREMENT'
+            ? catalog.parameters
+                .filter(
+                  (p) => p.measurementOperationDefinitionId === definition.id,
+                )
+                .map((p) => p.id)
+            : [],
+      });
+    }
+  }
+  return {
+    configuration,
+    catalog,
+    options,
+    subjectKind: subject.code as 'WAFER' | 'SPECIMEN',
+  };
 }

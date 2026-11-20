@@ -8,6 +8,7 @@ import {
 } from '@/src/application/study-creation';
 import { CreateStudy } from '@/src/features/experiment-series/create-study';
 import { PersistedStudy } from '@/src/features/experiment-series/persisted-study';
+import { DxtApplicationProvider } from '@/src/application/dxt-application-provider';
 import { LocaleProvider } from '@/src/shared/i18n/locale';
 const input = {
   slug: 'test-study',
@@ -91,11 +92,17 @@ void test('Study creation and persisted identity use KO/EN labels without invent
     const html = renderToStaticMarkup(
       <LocaleProvider initialLocale={locale} persist={false}>
         <CreateStudy options={options} />
-        <PersistedStudy study={saved} />
+        <DxtApplicationProvider>
+          <PersistedStudy study={saved} />
+        </DxtApplicationProvider>
       </LocaleProvider>,
     );
     assert.match(html, /test-study/);
-    assert.match(html, /trusted-id/);
+    assert.match(html, /Entered by researcher/);
+    assert.doesNotMatch(
+      html,
+      /Initial Target|최초 목표 설정|Save Setup|설정 저장/,
+    );
     assert.match(html, /package-exact-v1/);
     assert.match(html, locale === 'ko' ? /스터디 생성/ : /Create Study/);
     assert.doesNotMatch(html, /Lee Seunghyun|DTS Improvement|W01|F-BASE-01/);

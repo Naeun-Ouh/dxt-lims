@@ -748,3 +748,15 @@
 .study-bootstrap [role='status'] {
   color: #166534;
 }
+
+/* Transient execution authoring uses the existing entry shell. */
+.run-draft .draft-content { border: 0; padding: 0; }
+.draft-source-buttons, .draft-subjects { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.study-bootstrap .draft-subjects label { min-width: 100px; padding: 6px; }
+.draft-condition { border-top: 1px solid #dbe3eb; margin-top: 12px; }
+.draft-preview { border-top: 2px solid #2d5f7f; padding-top: 16px; }
+.draft-preview-scroll { overflow-x: auto; }
+.draft-preview table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.draft-preview th, .draft-preview td { padding: 12px; text-align: left; border: 1px solid #dbe3eb; vertical-align: top; }
+.run-draft .entry-button { white-space: normal; }
+@media (max-width: 760px) { .run-draft { margin: 12px 0; padding: 12px; } }
