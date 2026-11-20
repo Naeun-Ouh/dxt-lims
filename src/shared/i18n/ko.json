@@ -1375,5 +1375,22 @@
   "Select Operations from reference data, then arrange the execution order below.": "기준정보에서 공정을 선택한 뒤 아래에서 실행 순서를 조정하세요.",
   "Move down": "아래로 이동",
   "Process Operation": "실행 공정",
-  "All Operation types": "전체"
+  "All Operation types": "전체",
+  "Selection": "선택",
+  "Operation name": "공정명",
+  "Major conditions": "주요 조건",
+  "Measurement capability": "계측 가능 항목",
+  "Display name unavailable": "표시 이름 없음",
+  "Operation search results": "공정 검색 결과",
+  "Open an Operation name for reference details. Selection numbers show the order of addition.": "공정명을 누르면 기준정보 상세를 확인할 수 있습니다. 선택 번호는 추가 순서입니다.",
+  "Select {0}, result {1}": "{0} 선택, 검색 결과 {1}번",
+  "No configured measurement items": "연결된 계측항목 없음",
+  "Operation reference details": "공정 기준정보 상세",
+  "Close details": "상세 닫기",
+  "Operation option ID": "공정 선택 항목 ID",
+  "Operation revision ID": "공정 리비전 ID",
+  "Area reference ID": "영역 참조 ID",
+  "Equipment reference ID": "장비 참조 ID",
+  "Module reference ID": "모듈 참조 ID",
+  "Measurement parameter IDs": "계측항목 ID"
 }

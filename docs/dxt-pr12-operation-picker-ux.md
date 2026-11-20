@@ -35,3 +35,19 @@ These agent-labeled routes are for inspecting the UI. Do not present them as com
 Suggested human observations: Is the starting-point terminology clear? Can the participant find a desired Operation, distinguish equipment variants, select several Operations and understand their order? Does cancellation behave as expected? Record facts separately from interpretations.
 
 Human acceptance: NOT RUN for this revision. PR #12 remains unmerged. Issues #13/#9 remain out of scope.
+
+## Dense table follow-up
+
+The Operation lookup now renders one row per existing Operation option/context, with eight primary columns: selection/order, Operation name, type, area, equipment, module, major conditions and configured measurement items. A sticky table header and internal horizontal/vertical scrolling keep Add/Cancel outside the scrolling region. Rows use 12px text and compact padding.
+
+Operation-name buttons open a secondary detail panel without selecting the row. Option/revision/area/equipment/module/parameter IDs appear there only. Display labels are resolved from the existing exact catalog/context; when the current adapter supplies only a technical ID as a label, the primary cell says “Display name unavailable” rather than fabricating a name. This means some equipment variants currently require opening details to distinguish their IDs. No new master-data endpoint or label mapping was invented.
+
+Agent regression checks on the table revision:
+- Wafer: five options render as five rows, including three distinct Exposure equipment contexts; eight column headers; no technical IDs in primary row text.
+- Opening Exposure details reveals the exact equipment/module IDs without selecting it.
+- Selected Exposure then CD-SEM across a search, filtered both out, and retained two selections. Add preserved their order; downward movement produced CD-SEM then Exposure.
+- Selecting Coating and cancelling left the two draft Operations unchanged.
+- KO desktop (1440px) and EN narrow (720px) inspected; narrow results scroll horizontally while actions remain available.
+- TypeScript, changed-file lint, production build and whitespace checks passed. The earlier 330-test result belongs to the preceding picker revision; this display-only follow-up used browser regression checks and did not repeat backend contracts.
+
+Updated isolated preview: http://127.0.0.1:3235/runs/new?series=agent-run-draft-wafer&from=blank (Specimen uses `series=agent-run-draft-specimen`). Previous servers and stored UAT data remain untouched. No Preview/Create/Save was invoked in agent UI verification. Human acceptance remains NOT RUN for this UI revision; no merge.

@@ -91,6 +91,7 @@ export function RunDraftEditor({
         </div>
         {pickerOpen && (
           <OperationMasterPicker
+            catalog={catalog}
             options={options}
             onClose={() => setPickerOpen(false)}
             onAdd={(ids) =>

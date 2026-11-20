@@ -514,5 +514,22 @@
   "Select Operations from reference data, then arrange the execution order below.": "Select Operations from reference data, then arrange the execution order below.",
   "Move down": "Move down",
   "Process Operation": "Process Operation",
-  "All Operation types": "All types"
+  "All Operation types": "All types",
+  "Selection": "Selection",
+  "Operation name": "Operation name",
+  "Major conditions": "Major conditions",
+  "Measurement capability": "Measurement capability",
+  "Display name unavailable": "Display name unavailable",
+  "Operation search results": "Operation search results",
+  "Open an Operation name for reference details. Selection numbers show the order of addition.": "Open an Operation name for reference details. Selection numbers show the order of addition.",
+  "Select {0}, result {1}": "Select {0}, result {1}",
+  "No configured measurement items": "No configured measurement items",
+  "Operation reference details": "Operation reference details",
+  "Close details": "Close details",
+  "Operation option ID": "Operation option ID",
+  "Operation revision ID": "Operation revision ID",
+  "Area reference ID": "Area reference ID",
+  "Equipment reference ID": "Equipment reference ID",
+  "Module reference ID": "Module reference ID",
+  "Measurement parameter IDs": "Measurement parameter IDs"
 }
