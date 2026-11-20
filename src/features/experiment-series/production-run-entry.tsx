@@ -1,4 +1,5 @@
 'use client';
+import { DxtStatus } from '@/src/shared/ui/dxt-grid';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -122,7 +123,10 @@ function RunDraftPage({
             </p>
           </div>
         </header>
-        <section className="study-bootstrap run-draft">
+        <section
+          className="study-bootstrap run-draft dxt-density"
+          aria-busy={busy}
+        >
           <fieldset disabled={busy}>
             <legend>{t('Run starting point')}</legend>
             <div className="draft-source-buttons">
@@ -130,7 +134,7 @@ function RunDraftPage({
                 (value) => (
                   <button
                     key={value}
-                    className={`entry-button ${source === value ? 'primary' : ''}`}
+                    className={`entry-button ${source === value ? 'dxt-action-selected' : ''}`}
                     aria-pressed={source === value}
                     onClick={() => {
                       if (source === value) return;
@@ -211,7 +215,7 @@ function RunDraftPage({
               />
               <div className="entry-actions">
                 <button
-                  className="entry-button primary"
+                  className="entry-button"
                   onClick={() => void act(false)}
                 >
                   {t('Check readiness and preview')}
@@ -223,7 +227,13 @@ function RunDraftPage({
             <section className="draft-preview" aria-label={t('Run Preview')}>
               <h2>{t('Run Preview')}</h2>
               <output>
-                {t('Execution Readiness')}: {t(preview.readiness.status)}
+                <DxtStatus
+                  tone={
+                    preview.readiness.status === 'READY' ? 'success' : 'warning'
+                  }
+                >
+                  {t('Execution Readiness')}: {t(preview.readiness.status)}
+                </DxtStatus>
               </output>
               <ul>
                 {preview.readiness.missing.map((m, i) => {
@@ -231,8 +241,8 @@ function RunDraftPage({
                   return <li key={i}>{t(key, args)}</li>;
                 })}
               </ul>
-              <div className="draft-preview-scroll">
-                <table>
+              <div className="dxt-grid-scroll draft-preview-scroll">
+                <table className="dxt-grid">
                   <thead>
                     <tr>
                       <th>{t('Operation')}</th>
@@ -262,7 +272,7 @@ function RunDraftPage({
                               <div key={a.id}>
                                 {a.label}: {a.value} ·{' '}
                                 {a.subjectId ?? t('All participating Subjects')}{' '}
-                                · {t(a.intentRole)}
+                                · {t(a.intentRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed')}
                               </div>
                             ))}
                         </td>

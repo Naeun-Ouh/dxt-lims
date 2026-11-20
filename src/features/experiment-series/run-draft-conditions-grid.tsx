@@ -1,5 +1,6 @@
 'use client';
 
+import { DxtGridFrame, DxtStatus, DxtCellText } from '@/src/shared/ui/dxt-grid';
 import type { RunDraft } from '@/src/application/run-draft';
 import type { BootstrapOperationOption } from '@/src/application/study-bootstrap';
 import { validateStudySetupItem } from './study-setup-model';
@@ -49,11 +50,8 @@ export function RunDraftConditionsGrid({
           'Value checks describe the entered format only. Preview checks execution readiness and required conditions.',
         )}
       </p>
-      <section
-        className="draft-grid-scroll"
-        aria-label={t('Run condition values')}
-      >
-        <table className="draft-dense-table draft-conditions-table">
+      <DxtGridFrame label={t('Run condition values')}>
+        <table className="dxt-grid draft-conditions-table">
           <thead>
             <tr>
               {[
@@ -92,12 +90,26 @@ export function RunDraftConditionsGrid({
                     i === itemIndex ? { ...value, ...patch } : value,
                   ),
                 });
+              const required = options.find((o) => o.id === op.optionId)
+                ?.conditionRequirements?.[def.applicabilityId];
+              const uncovered =
+                required === true &&
+                op.subjectIds.some(
+                  (id) =>
+                    !op.items.some(
+                      (value) =>
+                        value.applicabilityId === def.applicabilityId &&
+                        (!value.subjectId || value.subjectId === id),
+                    ),
+                );
               let status = item
                 ? item.value.trim()
                   ? 'Value format valid'
                   : 'Missing'
                 : op.subjectIds.length
-                  ? 'Not entered'
+                  ? required
+                    ? 'Missing'
+                    : 'Not entered'
                   : 'Not Participating';
               if (item?.value.trim()) {
                 try {
@@ -110,12 +122,36 @@ export function RunDraftConditionsGrid({
               return (
                 <tr key={`${index}-${def.applicabilityId}-${itemIndex}`}>
                   <td>
-                    {index + 1}. {operation.label}
+                    <DxtCellText>{`${index + 1}. ${operation.label}`}</DxtCellText>
                   </td>
-                  <th scope="row">{def.label}</th>
+                  <th scope="row">
+                    <DxtCellText>{def.label}</DxtCellText>
+                    <small>
+                      {t(
+                        required === undefined
+                          ? 'Requiredness checked in Preview'
+                          : required
+                            ? 'Required'
+                            : 'Optional',
+                      )}
+                    </small>
+                  </th>
                   <td>
                     {!item ? (
                       '—'
+                    ) : def.editor === 'BOOLEAN' ? (
+                      <select
+                        aria-label={`${label} · ${t('Value')}`}
+                        value={item.value}
+                        aria-invalid={
+                          status === 'Invalid' || status === 'Missing'
+                        }
+                        onChange={(e) => update({ value: e.target.value })}
+                      >
+                        <option value="">{t('Select')}</option>
+                        <option value="true">{t('True')}</option>
+                        <option value="false">{t('False')}</option>
+                      </select>
                     ) : def.options.length ? (
                       <select
                         aria-label={`${label} · ${t('Value')}`}
@@ -134,6 +170,9 @@ export function RunDraftConditionsGrid({
                       </select>
                     ) : (
                       <input
+                        inputMode={
+                          def.editor === 'NUMBER' ? 'decimal' : undefined
+                        }
                         aria-label={`${label} · ${t('Value')}`}
                         value={item.value}
                         aria-invalid={
@@ -198,11 +237,38 @@ export function RunDraftConditionsGrid({
                     </small>
                   </td>
                   <td>
-                    <span
-                      className={`draft-value-status ${status === 'Invalid' || status === 'Missing' ? 'needs-input' : ''}`}
+                    <DxtStatus
+                      tone={
+                        status === 'Invalid' || status === 'Missing'
+                          ? 'error'
+                          : status === 'Value format valid'
+                            ? 'success'
+                            : 'neutral'
+                      }
                     >
                       {t(status)}
-                    </span>
+                    </DxtStatus>
+                    {status === 'Invalid' && (
+                      <small>
+                        {t(
+                          def.editor === 'NUMBER'
+                            ? 'Enter a numeric value.'
+                            : 'Choose a supported value.',
+                        )}
+                      </small>
+                    )}
+                    {status === 'Missing' && (
+                      <small>
+                        {t(required ? 'Enter the required value.' : 'Enter a value or remove an optional assignment.')}
+                      </small>
+                    )}
+                    {uncovered && item && (
+                      <small className="dxt-text-error">
+                        {t(
+                          'Required value missing for some participating Subjects.',
+                        )}
+                      </small>
+                    )}
                   </td>
                   <td>
                     <div className="draft-grid-actions">
@@ -217,7 +283,7 @@ export function RunDraftConditionsGrid({
                       {item && (
                         <button
                           type="button"
-                          className="entry-button"
+                          className="entry-button dxt-action-danger"
                           aria-label={`${label} · ${t('Remove')}`}
                           onClick={() =>
                             change(index, {
@@ -244,7 +310,7 @@ export function RunDraftConditionsGrid({
             )}
           </tbody>
         </table>
-      </section>
+      </DxtGridFrame>
     </fieldset>
   );
 }

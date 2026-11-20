@@ -31,7 +31,7 @@ export async function runDraftContract(
   const preview = (request: RunCreationRequest) =>
     owner({
       operation: 'run.preview',
-      input: {...request,includeDraftOptions:true},
+      input: { ...request, includeDraftOptions: true },
     }) as Promise<AuthoritativeRunPreview>;
   const source = { seriesSlug: study.slug, source: 'BLANK' as const };
   const blank = await preview(source);
@@ -43,6 +43,13 @@ export async function runDraftContract(
   const process = blank.options!.find(
     (o) => o.operation.role === 'PROCESS' && o.operation.items.length,
   )!;
+  assert.ok(
+    process.operation.items.every(
+      (d) =>
+        typeof process.conditionRequirements?.[d.applicabilityId] === 'boolean',
+    ),
+    'exact resolver provides requiredness display metadata',
+  );
   const request: RunCreationRequest = {
     ...source,
     sourceFingerprint: blank.sourceFingerprint,
@@ -208,7 +215,10 @@ export async function runDraftContract(
   assert.equal(run2.steps[1].role, 'PROCESS');
   assert.deepEqual(run2.measurements[0].parameterDefinitionIds, m.parameterIds);
   assert.equal(run2.measurements[0].point, m.point);
-  assert.deepEqual(await owner({operation:'run.created',slug:study.slug,runNumber:2}),run2);
+  assert.deepEqual(
+    await owner({ operation: 'run.created', slug: study.slug, runNumber: 2 }),
+    run2,
+  );
   assert.equal(run2.provenance.sourceId, saved.id);
   assert.deepEqual(
     await owner({ operation: 'run.created', slug: study.slug, runNumber: 1 }),

@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { DxtGridFrame, DxtStatus, DxtCellText } from '@/src/shared/ui/dxt-grid';
+import { RunDraftMeasurementGrid } from './run-draft-measurement-grid';
 import { RunDraftConditionsGrid } from './run-draft-conditions-grid';
 import { OperationMasterPicker } from './operation-master-picker';
 import type { RunDraft } from '@/src/application/run-draft';
@@ -110,11 +112,8 @@ export function RunDraftEditor({
             }
           />
         )}
-        <section
-          className="draft-grid-scroll"
-          aria-label={t('Ordered Operations')}
-        >
-          <table className="draft-dense-table draft-operation-table">
+        <DxtGridFrame label={t('Ordered Operations')}>
+          <table className="dxt-grid draft-operation-table">
             <thead>
               <tr>
                 {[
@@ -164,7 +163,9 @@ export function RunDraftEditor({
                   <tr key={index}>
                     <td>{index + 1}</td>
                     <th scope="row">
-                      <strong>{option.operation.label}</strong>
+                      <strong>
+                        <DxtCellText>{option.operation.label}</DxtCellText>
+                      </strong>
                       <details className="draft-participation">
                         <summary>
                           {t('Operation participation')} ·{' '}
@@ -219,37 +220,54 @@ export function RunDraftEditor({
                       </details>
                     </th>
                     <td>
-                      {t(
-                        option.operation.role === 'MEASUREMENT'
-                          ? 'Measurement'
-                          : 'Process Operation',
-                      )}
-                    </td>
-                    <td>
-                      {catalog.areas.find(
-                        (area) => area.id === context?.areaDefinitionRevisionId,
-                      )?.name ||
-                        displayName(
-                          context?.areaDefinitionRevisionId,
-                          context?.areaLabel,
+                      <DxtStatus
+                        tone={
+                          option.operation.role === 'MEASUREMENT'
+                            ? 'info'
+                            : 'neutral'
+                        }
+                      >
+                        {t(
+                          option.operation.role === 'MEASUREMENT'
+                            ? 'Measurement'
+                            : 'Process Operation',
                         )}
+                      </DxtStatus>
                     </td>
                     <td>
-                      {displayName(
-                        context?.equipmentReferenceId,
-                        context?.equipmentLabel,
-                      )}
+                      <DxtCellText>
+                        {catalog.areas.find(
+                          (area) =>
+                            area.id === context?.areaDefinitionRevisionId,
+                        )?.name ||
+                          displayName(
+                            context?.areaDefinitionRevisionId,
+                            context?.areaLabel,
+                          )}
+                      </DxtCellText>
                     </td>
                     <td>
-                      {displayName(
-                        context?.moduleReferenceId,
-                        context?.moduleLabel,
-                      )}
+                      <DxtCellText>
+                        {displayName(
+                          context?.equipmentReferenceId,
+                          context?.equipmentLabel,
+                        )}
+                      </DxtCellText>
                     </td>
                     <td>
-                      {option.operation.items
-                        .map((def) => def.label)
-                        .join(' · ') || '—'}
+                      <DxtCellText>
+                        {displayName(
+                          context?.moduleReferenceId,
+                          context?.moduleLabel,
+                        )}
+                      </DxtCellText>
+                    </td>
+                    <td>
+                      <DxtCellText>
+                        {option.operation.items
+                          .map((def) => def.label)
+                          .join(' · ') || '—'}
+                      </DxtCellText>
                       <small>
                         {t('{0} condition rows', [op.items.length])}
                       </small>
@@ -258,28 +276,30 @@ export function RunDraftEditor({
                       <div className="draft-grid-actions">
                         <button
                           type="button"
-                          className="entry-button"
+                          className="entry-button dxt-action-text"
                           disabled={!index}
                           aria-label={`${index + 1}. ${option.operation.label} · ${t('Move up')}`}
+                          title={t('Move up')}
                           onClick={() => move(-1)}
                         >
-                          {t('Move up')}
+                          <span aria-hidden="true">↑</span>
                         </button>
                         <button
                           type="button"
-                          className="entry-button"
+                          className="entry-button dxt-action-text"
                           disabled={index === draft.operations.length - 1}
                           aria-label={`${index + 1}. ${option.operation.label} · ${t('Move down')}`}
+                          title={t('Move down')}
                           onClick={() => move(1)}
                         >
-                          {t('Move down')}
+                          <span aria-hidden="true">↓</span>
                         </button>
                       </div>
                     </td>
                     <td>
                       <button
                         type="button"
-                        className="entry-button"
+                        className="entry-button dxt-action-danger"
                         aria-label={`${index + 1}. ${option.operation.label} · ${t('Remove')}`}
                         onClick={() =>
                           onChange({
@@ -307,85 +327,15 @@ export function RunDraftEditor({
               )}
             </tbody>
           </table>
-        </section>
+        </DxtGridFrame>
       </fieldset>
       <RunDraftConditionsGrid draft={draft} options={options} change={change} />
-      {draft.operations.some(
-        (op) =>
-          options.find((option) => option.id === op.optionId)?.operation
-            .role === 'MEASUREMENT',
-      ) && (
-        <fieldset>
-          <legend>4. {t('Measurement Plan')}</legend>
-          {draft.operations.map((op, index) => {
-            const option = options.find((o) => o.id === op.optionId)!;
-            if (option.operation.role !== 'MEASUREMENT') return null;
-            return (
-              <section className="bootstrap-operation" key={index}>
-                <h3>
-                  {index + 1}. {option.operation.label}
-                </h3>
-                <label>
-                  {t('Measurement point')}
-                  <select
-                    value={op.point ?? ''}
-                    onChange={(e) =>
-                      change(index, {
-                        point: (e.target.value || null) as typeof op.point,
-                        parameterIds: [],
-                      })
-                    }
-                  >
-                    <option value="">{t('Select')}</option>
-                    {['PRE', 'INTERMEDIATE', 'POST', 'FINAL', 'CUSTOM'].map(
-                      (p) => (
-                        <option key={p}>{p}</option>
-                      ),
-                    )}
-                  </select>
-                </label>
-                <div className="draft-subjects">
-                  {catalog.parameters
-                    .filter(
-                      (p) =>
-                        option.parameterIds.includes(p.id) &&
-                        (!op.point ||
-                          p.supportedMeasurementPoints.includes(op.point)),
-                    )
-                    .map((p) => (
-                      <label key={p.id}>
-                        <input
-                          type="checkbox"
-                          checked={op.parameterIds.includes(p.id)}
-                          onChange={(e) =>
-                            change(index, {
-                              parameterIds: e.target.checked
-                                ? [...op.parameterIds, p.id]
-                                : op.parameterIds.filter((id) => id !== p.id),
-                            })
-                          }
-                        />
-                        {p.name}
-                        {!!p.requiredSupportingParameterIds.length && (
-                          <small>
-                            {t('Required supporting parameters')}:{' '}
-                            {p.requiredSupportingParameterIds
-                              .map(
-                                (id) =>
-                                  catalog.parameters.find((p) => p.id === id)
-                                    ?.name,
-                              )
-                              .join(', ')}
-                          </small>
-                        )}
-                      </label>
-                    ))}
-                </div>
-              </section>
-            );
-          })}
-        </fieldset>
-      )}
+      <RunDraftMeasurementGrid
+        draft={draft}
+        options={options}
+        catalog={catalog}
+        change={change}
+      />
     </>
   );
 }

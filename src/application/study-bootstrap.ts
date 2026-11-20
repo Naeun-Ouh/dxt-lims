@@ -56,6 +56,8 @@ export type BootstrapOperationOption = {
   id: string;
   operation: StudySetupOperation;
   parameterIds: string[];
+  /** Display metadata from the exact resolver; never trusted as a readiness decision. */
+  conditionRequirements?: Record<string, boolean>;
 };
 export type StudyBootstrapState = {
   setup: StudySetupSnapshot;

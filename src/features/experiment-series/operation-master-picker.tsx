@@ -1,5 +1,6 @@
 'use client';
 
+import { DxtGridFrame, DxtStatus, DxtCellText } from '@/src/shared/ui/dxt-grid';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReferenceCatalog } from '@/src/domain/reference';
 import type { BootstrapOperationOption } from '@/src/application/study-bootstrap';
@@ -104,11 +105,11 @@ export function OperationMasterPicker({
           selected.length,
         ])}
       </p>
-      <section
+      <DxtGridFrame
         className="operation-master-results"
-        aria-label={t('Operation search results')}
+        label={t('Operation search results')}
       >
-        <table className="operation-master-table">
+        <table className="dxt-grid operation-master-table">
           <caption className="operation-master-caption">
             {t(
               'Open an Operation name for reference details. Selection numbers show the order of addition.',
@@ -176,47 +177,64 @@ export function OperationMasterPicker({
                     <button
                       type="button"
                       className="operation-master-detail-trigger"
+                      aria-label={operation.label}
                       aria-expanded={detailId === id}
                       aria-controls={detailPanelId}
                       onClick={() => setDetailId(detailId === id ? null : id)}
                     >
-                      {operation.label}
+                      <DxtCellText>{operation.label}</DxtCellText>
                     </button>
                   </th>
                   <td>
-                    {t(
-                      operation.role === 'MEASUREMENT'
-                        ? 'Measurement'
-                        : 'Process Operation',
-                    )}
-                  </td>
-                  <td>
-                    {areaName ||
-                      displayName(
-                        context?.areaDefinitionRevisionId,
-                        context?.areaLabel,
+                    <DxtStatus
+                      tone={
+                        operation.role === 'MEASUREMENT' ? 'info' : 'neutral'
+                      }
+                    >
+                      {t(
+                        operation.role === 'MEASUREMENT'
+                          ? 'Measurement'
+                          : 'Process Operation',
                       )}
+                    </DxtStatus>
                   </td>
                   <td>
-                    {displayName(
-                      context?.equipmentReferenceId,
-                      context?.equipmentLabel,
-                    )}
+                    <DxtCellText>
+                      {areaName ||
+                        displayName(
+                          context?.areaDefinitionRevisionId,
+                          context?.areaLabel,
+                        )}
+                    </DxtCellText>
                   </td>
                   <td>
-                    {displayName(
-                      context?.moduleReferenceId,
-                      context?.moduleLabel,
-                    )}
+                    <DxtCellText>
+                      {displayName(
+                        context?.equipmentReferenceId,
+                        context?.equipmentLabel,
+                      )}
+                    </DxtCellText>
                   </td>
                   <td>
-                    {operation.items.map((item) => item.label).join(' · ') ||
-                      '—'}
+                    <DxtCellText>
+                      {displayName(
+                        context?.moduleReferenceId,
+                        context?.moduleLabel,
+                      )}
+                    </DxtCellText>
                   </td>
                   <td>
-                    {parameterNames.length
-                      ? parameterNames.join(' · ')
-                      : t('No configured measurement items')}
+                    <DxtCellText>
+                      {operation.items.map((item) => item.label).join(' · ') ||
+                        '—'}
+                    </DxtCellText>
+                  </td>
+                  <td>
+                    <DxtCellText>
+                      {parameterNames.length
+                        ? parameterNames.join(' · ')
+                        : t('No configured measurement items')}
+                    </DxtCellText>
                   </td>
                 </tr>
               );
@@ -234,7 +252,7 @@ export function OperationMasterPicker({
             )}
           </tbody>
         </table>
-      </section>
+      </DxtGridFrame>
       {detail && (
         <section
           id={detailPanelId}
@@ -280,7 +298,7 @@ export function OperationMasterPicker({
         </button>
         <button
           type="button"
-          className="entry-button primary"
+          className="entry-button"
           disabled={!selected.length}
           onClick={() => {
             onAdd(selected);

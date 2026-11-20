@@ -8,6 +8,7 @@ import {
 import { reasoningPrerequisites } from '@/src/application/study-readiness';
 import {
   referenceCatalogSchema,
+  resolveConfigurationApplicability,
   type ReferenceCatalog,
 } from '@/src/domain/reference';
 import {
@@ -478,7 +479,28 @@ export async function executionOptions(
         id,
         configuration,
       );
+      const conditionRequirements =
+        definition.operationRole === 'PROCESS'
+          ? Object.fromEntries(
+              resolveConfigurationApplicability(configuration, {
+                configurationPackageVersionId:
+                  setup.configurationPackageVersionId,
+                experimentTypeProfileVersionId:
+                  setup.experimentTypeProfileVersionId,
+                subjectTypeRevisionId: setup.subjectTypeRevisionId,
+                operationDefinitionRevisionId: definition.id,
+                areaDefinitionRevisionId: definition.areaDefinitionId,
+                equipmentReferenceId: context.equipment,
+                moduleReferenceId: context.module ?? undefined,
+                requestedGrainRevisionId: 'grain-subject-r1',
+              }).map((d) => [
+                d.applicabilityRuleId,
+                d.validationProfile?.required === true,
+              ]),
+            )
+          : {};
       options.push({
+        conditionRequirements,
         id,
         operation,
         parameterIds:

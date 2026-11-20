@@ -3,6 +3,7 @@
 @import 'shadcn/tailwind.css';
 @import './run-plan-final.css';
 @import './entry-final.css';
+@import './dxt-grid.css';
 @import './study-final.css';
 @import './lifecycle-final.css';
 @import './home-final.css';
