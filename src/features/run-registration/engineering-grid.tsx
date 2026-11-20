@@ -101,10 +101,10 @@ export default function EngineeringGrid({
   const baseModel = useMemo(
     () =>
       persistedPlan
-        ? gridPlanningContext(
+        ? { ...gridPlanningContext(
             persistedPlan,
             application.repositories.configuration,
-          )
+          ), explicitAssignments: inputModel.explicitAssignments }
         : {
             ...inputModel,
             configurationRepository: application.repositories.configuration,

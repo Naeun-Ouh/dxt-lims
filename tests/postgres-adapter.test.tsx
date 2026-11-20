@@ -1,3 +1,4 @@
+import { studyBootstrapContract } from './postgres-study-bootstrap-contract';
 import { studyCreationContract } from './postgres-study-creation-contract';
 import {ProductionHome} from '@/src/features/experiment-home/production-home';
 import {dashboardAuthorizationContract} from './postgres-dashboard-authorization-contract';
@@ -69,6 +70,7 @@ async function withDatabase() {
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/012_authorization_saved_analysis.sql'), 'utf8'));
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/013_authorization_discovery.sql'), 'utf8'));
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/014_study_creation_grant.sql'), 'utf8'));
+  await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/015_study_initial_reasoning.sql'), 'utf8'));
   await seedProductionSlice(database, configurationRepository);
   await provisionMeasurementReferences(database, definitions);
   await provisionReasoningContexts(database,lifecycleAuthoringProfiles);
@@ -306,4 +308,14 @@ void test('Study creation: explicit scoped grants, exact references, atomic writ
   const state = await withDatabase();
   try { await studyCreationContract(state.database); }
   finally { await state.database.close(); await rm(state.directory, { recursive: true, force: true }); }
+});
+
+void test('Study bootstrap: generic first Run and initial reasoning authorization/provenance', async () => {
+  const s = await withDatabase();
+  try {
+    await studyBootstrapContract(s.database);
+  } finally {
+    await s.database.close();
+    await rm(s.directory, { recursive: true, force: true });
+  }
 });

@@ -1,5 +1,9 @@
+import { executionOptions } from './study-bootstrap';
+import { materializeRunDraft, draftValueProblems } from '@/src/application/run-draft';
+import { readMeasurementCatalog } from './measurement-references';
+import { executionReadiness } from '@/src/application/execution-readiness';
 import { runCreationRequestSchema,type RunCreationRequest,type AuthoritativeRunPreview } from '@/src/application/run-creation';
-import { studyReadiness,confirmStudyReasoning,requireStudyReadiness } from './reasoning-context';
+import { studyReadiness,confirmStudyReasoning } from './reasoning-context';
 import {resolveConfigurationApplicability} from '@/src/domain/reference';
 import {validatePlanEdit} from '@/src/application/plan-authoring';
 import {planLockReason} from './plan-lock';
@@ -78,7 +82,7 @@ function persistenceError(message: string, cause: unknown) {
   return new ApplicationError('PERSISTENCE', message, { cause });
 }
 
-async function readSetup(session: SqlSession, seriesSlug: SeriesSlug): Promise<StudySetupSnapshot | null> {
+export async function readSetup(session: SqlSession, seriesSlug: SeriesSlug): Promise<StudySetupSnapshot | null> {
   const root = await session.query<{
     setup_version_id: string; series_slug: SeriesSlug; series_domain_id: string;
     configuration_package_version_id: string; experiment_type_profile_version_id: string;
@@ -339,8 +343,8 @@ async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPl
   return runId;
 }
 
-async function materializePersistedStudy(session: SqlSession, slug: SeriesSlug, number: number) {
-  const setup = await readSetup(session, slug);
+export async function materializePersistedStudy(session: SqlSession, slug: string, number: number) {
+  const setup = await readSetup(session, slug as SeriesSlug);
   if (!setup) throw new ApplicationError('NOT_FOUND', 'Study Setup is not persisted.');
   await hydrateConfigurationPackages(session, [setup.configurationPackageVersionId]);
   const result = await session.query<{ study_id: string; display_name: string; experiment_type: string; intent: string;
@@ -349,7 +353,6 @@ async function materializePersistedStudy(session: SqlSession, slug: SeriesSlug, 
   const study = result.rows[0];
   const subjects = await session.query<{ subject_domain_id: string; subject_kind: 'WAFER' | 'SPECIMEN'; display_label: string }>(
     'SELECT * FROM study_subject_default WHERE study_id = $1 ORDER BY ordinal', [study.study_id]);
-  if (!subjects.rowCount) throw new ApplicationError('VALIDATION', 'Study has no persisted default Subjects.');
   const context: RunPlanningSnapshot = {
     id: `run-${study.study_id}-${number}`, configurationPackageVersionId: setup.configurationPackageVersionId,
     experimentTypeProfileVersionId: setup.experimentTypeProfileVersionId, subjectTypeRevisionId: setup.subjectTypeRevisionId,
@@ -360,9 +363,16 @@ async function materializePersistedStudy(session: SqlSession, slug: SeriesSlug, 
     subjects: subjects.rows.map((x) => ({ id: x.subject_domain_id, type: x.subject_kind, displayLabel: x.display_label })),
     steps: [], assignments: [], measurements: [], subjectOperationIds: {}, delta: { sourceLabel: 'Study Default', items: [], unchangedCount: 0 },
   };
-  const snapshot = createRunFromEntry(slug, 'STUDY_DEFAULT', setup, number, context);
+  const snapshot = createRunFromEntry(slug as SeriesSlug, 'STUDY_DEFAULT', setup, number, context);
   // Display IDs stay compatible; relational PKs remain independent UUIDs.
   return { ...snapshot, createdAt: context.createdAt };
+}
+
+/** Bounded bootstrap policy: legacy seeded workspaces retain their existing contract. */
+async function creationReadiness(session:SqlSession,slug:string,snapshot:RunPlanningSnapshot) {
+  const bootstrap=await session.query(`SELECT 1 FROM study s JOIN study_setup_command_receipt r USING(study_id) WHERE s.series_slug=$1 AND r.command_id LIKE 'study-create:%' LIMIT 1`,[slug]);
+  if(!bootstrap.rowCount)return studyReadiness(session,slug,snapshot.configurationPackageVersionId);
+  return executionReadiness(snapshot,await hydrateConfigurationPackages(session,[snapshot.configurationPackageVersionId]),await readMeasurementCatalog(session,snapshot.configurationPackageVersionId)).execution;
 }
 
 async function previewPersistedCreation(session:SqlSession,raw:RunCreationRequest):Promise<AuthoritativeRunPreview>{
@@ -372,7 +382,7 @@ async function previewPersistedCreation(session:SqlSession,raw:RunCreationReques
   let snapshot:RunPlanningSnapshot;
   if(request.source==='STUDY_DEFAULT'||request.source==='BLANK'){
     snapshot=await materializePersistedStudy(session,request.seriesSlug,0);
-    if(request.source==='BLANK')snapshot={...snapshot,steps:[],assignments:[],measurements:[],subjectOperationIds:Object.fromEntries(snapshot.subjects.map(s=>[s.id,[]])),provenance:{kind:'AD_HOC',label:'Blank setup',sourceId:null},delta:{sourceLabel:'Blank setup',items:[],unchangedCount:0}};
+    if(request.source==='BLANK')snapshot={...snapshot,subjects:[],candidateSubjects:undefined,steps:[],assignments:[],measurements:[],subjectOperationIds:{},provenance:{kind:'AD_HOC',label:'Blank setup',sourceId:null},delta:{sourceLabel:'Blank setup',items:[],unchangedCount:0}};
   }else{
     const source=(await session.query<{run_domain_id:string}>(`SELECT run_domain_id FROM experiment_run WHERE study_id=$1 ${request.source==='EXISTING_RUN'?'AND run_domain_id=$2':''} ORDER BY run_number DESC LIMIT 1 FOR SHARE`,request.source==='EXISTING_RUN'?[study.study_id,request.sourceRunId??'']:[study.study_id])).rows[0];
     if(!source)throw new ApplicationError('NOT_FOUND','A persisted source Run in this Study is required.');
@@ -385,9 +395,23 @@ async function previewPersistedCreation(session:SqlSession,raw:RunCreationReques
     snapshot={...createNextRunPreview(previous,`run-${study.study_id}-0`,changes.map(c=>({assignmentId:c.assignmentId,after:c.after}))).snapshot,runNumber:0};
     if(request.source==='EXISTING_RUN')snapshot={...snapshot,provenance:{kind:'EXISTING_CONFIGURATION',label:`Existing Run #${previous.runNumber}`,sourceId:previous.id},assignments:snapshot.assignments.map(a=>({...a,provenance:'EXISTING_CONFIGURATION'}))};
   }
-  await hydrateConfigurationPackages(session,[snapshot.configurationPackageVersionId]);
-  const readiness=await studyReadiness(session,request.seriesSlug,snapshot.configurationPackageVersionId);
-  return {snapshot,fingerprint:hash(comparableStudyData(snapshot)),readiness:{status:readiness.status,missing:readiness.missing}};
+  const sourceFingerprint=hash(comparableStudyData({...snapshot,createdAt:undefined}));
+  if(request.draft && request.sourceFingerprint!==sourceFingerprint)throw new ApplicationError('CONFLICT','Creation source changed. Review a fresh preview before creating.');
+  if(!request.draft && !request.includeDraftOptions){
+    const readiness=request.source==='BLANK' ? {status:'NOT_READY' as const,missing:['Add and save at least one Subject.','Add and save ordered Operations.']} : await creationReadiness(session,request.seriesSlug,snapshot);
+    return {snapshot,sourceFingerprint,fingerprint:hash(comparableStudyData({snapshot:{...snapshot,createdAt:undefined},sourceFingerprint})),readiness:{status:readiness.status,missing:readiness.missing}};
+  }
+  const setup=(await readSetup(session,request.seriesSlug as SeriesSlug))!;
+  const choices=await executionOptions(session,{...setup,configurationPackageVersionId:snapshot.configurationPackageVersionId,experimentTypeProfileVersionId:snapshot.experimentTypeProfileVersionId,subjectTypeRevisionId:snapshot.subjectTypeRevisionId,area:snapshot.area});
+  if(request.draft)snapshot=materializeRunDraft(snapshot,request.draft,choices.options,choices.catalog,choices.subjectKind);
+  const readiness=request.draft || request.source==='BLANK'
+    ? executionReadiness(snapshot,choices.configuration,choices.catalog).execution
+    : await creationReadiness(session,request.seriesSlug,snapshot);
+  if(request.draft){
+    readiness.missing.push(...draftValueProblems(request.draft,choices.options));
+    readiness.status=readiness.missing.length?'NOT_READY':'READY';
+  }
+  return {snapshot,sourceFingerprint,fingerprint:hash(comparableStudyData({snapshot:{...snapshot,createdAt:undefined},sourceFingerprint})),readiness:{status:readiness.status,missing:readiness.missing},options:choices.options,catalog:choices.catalog};
 }
 
 export class PostgresRunRepository implements RunRepository {
@@ -454,7 +478,8 @@ export class PostgresRunRepository implements RunRepository {
             ? createNextRunPreview(previous!, `run-${randomUUID()}-${allocated}`, preview!.changed.map(c=>({assignmentId:c.assignmentId,after:c.after}))).snapshot
             : request;
         const snapshot = renumberSnapshot(input, allocated);
-        await requireStudyReadiness(session,study.series_slug,snapshot.configurationPackageVersionId);
+        const execution='entry' in request && (request.entry.draft || request.entry.source==='BLANK') ? entryPreview!.readiness : await creationReadiness(session,study.series_slug,snapshot);
+        if(execution.status!=='READY')throw new ApplicationError('VALIDATION', 'contextId' in execution ? 'Study lifecycle not ready. Review the saved Study criteria.' : 'Complete and save the required execution conditions before creating a Run.');
         await session.query('UPDATE study SET next_run_number = $2, aggregate_version = aggregate_version + 1 WHERE study_id = $1', [study.study_id, allocated + 1]);
         const runId = await insertSnapshot(session, study, snapshot);
         await session.query(`UPDATE idempotency_record SET status = 'SUCCEEDED', result_run_id = $2, completed_at = now()
