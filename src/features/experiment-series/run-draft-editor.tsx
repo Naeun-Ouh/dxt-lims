@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { RunDraftConditionsGrid } from './run-draft-conditions-grid';
 import { OperationMasterPicker } from './operation-master-picker';
 import type { RunDraft } from '@/src/application/run-draft';
 import type { BootstrapOperationOption } from '@/src/application/study-bootstrap';
@@ -71,10 +72,8 @@ export function RunDraftEditor({
         </label>
         <p>{t('Draft Subject count: {0}', [String(draft.subjects.length)])}</p>
       </fieldset>
-      <fieldset>
-        <legend>
-          2. {t('Process Flow')} · 3. {t('Conditions')}
-        </legend>
+      <fieldset className="draft-grid-section">
+        <legend>2. {t('Process Flow')}</legend>
         <div className="draft-flow-actions">
           <p>
             {t(
@@ -111,313 +110,282 @@ export function RunDraftEditor({
             }
           />
         )}
-        {draft.operations.map((op, index) => {
-          const option = options.find((o) => o.id === op.optionId)!;
-          const participation = (ids: string[]) =>
-            change(index, {
-              subjectIds: ids,
-              items: op.items.filter(
-                (i) => !i.subjectId || ids.includes(i.subjectId),
-              ),
-            });
-          return (
-            <section className="bootstrap-operation" key={index}>
-              <div className="bootstrap-controls">
-                <strong>
-                  {index + 1}. {option.operation.label}
-                </strong>
-                <button
-                  className="entry-button"
-                  disabled={!index}
-                  onClick={() => {
-                    const rows = [...draft.operations];
-                    [rows[index - 1], rows[index]] = [
-                      rows[index],
-                      rows[index - 1],
-                    ];
-                    onChange({ ...draft, operations: rows });
-                  }}
-                >
-                  {t('Move up')}
-                </button>
-                <button
-                  type="button"
-                  className="entry-button"
-                  disabled={index === draft.operations.length - 1}
-                  onClick={() => {
-                    const rows = [...draft.operations];
-                    [rows[index], rows[index + 1]] = [
-                      rows[index + 1],
-                      rows[index],
-                    ];
-                    onChange({ ...draft, operations: rows });
-                  }}
-                >
-                  {t('Move down')}
-                </button>
-                <button
-                  className="entry-button"
-                  onClick={() =>
-                    onChange({
-                      ...draft,
-                      operations: draft.operations.filter(
-                        (_, i) => i !== index,
-                      ),
-                    })
-                  }
-                >
-                  {t('Remove')}
-                </button>
-              </div>
-              <fieldset>
-                <legend>{t('Operation participation')}</legend>
-                <div className="bootstrap-controls">
-                  <button
-                    className="entry-button"
-                    onClick={() =>
-                      participation(draft.subjects.map((s) => s.id))
-                    }
-                  >
-                    {t('Select all')}
-                  </button>
-                  <button
-                    className="entry-button"
-                    onClick={() => participation([])}
-                  >
-                    {t('Clear selection')}
-                  </button>
-                  <span>
-                    {op.subjectIds.length} / {draft.subjects.length}
-                  </span>
-                </div>
-                <div className="draft-subjects">
-                  {draft.subjects.map((s, si) => (
-                    <label key={`${s.id}-${si}`}>
-                      <input
-                        type="checkbox"
-                        checked={op.subjectIds.includes(s.id)}
-                        onChange={(e) =>
-                          participation(
-                            e.target.checked
-                              ? [...op.subjectIds, s.id]
-                              : op.subjectIds.filter((id) => id !== s.id),
-                          )
-                        }
-                      />
-                      {s.displayLabel}
-                      {!op.subjectIds.includes(s.id) && (
-                        <small>{t('Not Participating')}</small>
-                      )}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-              {option.operation.role === 'MEASUREMENT' ? (
-                <>
-                  <h3>4. {t('Measurement Plan')}</h3>
-                  <label>
-                    {t('Measurement point')}
-                    <select
-                      value={op.point ?? ''}
-                      onChange={(e) =>
-                        change(index, {
-                          point: (e.target.value || null) as typeof op.point,
-                          parameterIds: [],
-                        })
-                      }
-                    >
-                      <option value="">{t('Select')}</option>
-                      {['PRE', 'INTERMEDIATE', 'POST', 'FINAL', 'CUSTOM'].map(
-                        (p) => (
-                          <option key={p}>{p}</option>
-                        ),
-                      )}
-                    </select>
-                  </label>
-                  <div className="draft-subjects">
-                    {catalog.parameters
-                      .filter(
-                        (p) =>
-                          option.parameterIds.includes(p.id) &&
-                          (!op.point ||
-                            p.supportedMeasurementPoints.includes(op.point)),
-                      )
-                      .map((p) => (
-                        <label key={p.id}>
-                          <input
-                            type="checkbox"
-                            checked={op.parameterIds.includes(p.id)}
-                            onChange={(e) =>
-                              change(index, {
-                                parameterIds: e.target.checked
-                                  ? [...op.parameterIds, p.id]
-                                  : op.parameterIds.filter((id) => id !== p.id),
-                              })
+        <section
+          className="draft-grid-scroll"
+          aria-label={t('Ordered Operations')}
+        >
+          <table className="draft-dense-table draft-operation-table">
+            <thead>
+              <tr>
+                {[
+                  'Order',
+                  'Operation',
+                  'Operation type',
+                  'Area',
+                  'Equipment',
+                  'Module',
+                  'Condition summary',
+                  'Move',
+                  'Remove',
+                ].map((key) => (
+                  <th scope="col" key={key}>
+                    {t(key)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {draft.operations.map((op, index) => {
+                const option = options.find((o) => o.id === op.optionId)!;
+                const context = option.operation.context;
+                const displayName = (id?: string | null, label?: string) =>
+                  catalog.resources.find((r) => r.id === id)?.name ||
+                  (label && label !== id
+                    ? label
+                    : id
+                      ? t('Display name unavailable')
+                      : '—');
+                const participation = (ids: string[]) =>
+                  change(index, {
+                    subjectIds: ids,
+                    items: op.items.filter(
+                      (item) => !item.subjectId || ids.includes(item.subjectId),
+                    ),
+                  });
+                const move = (offset: number) => {
+                  const operations = [...draft.operations];
+                  [operations[index], operations[index + offset]] = [
+                    operations[index + offset],
+                    operations[index],
+                  ];
+                  onChange({ ...draft, operations });
+                };
+                return (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
+                    <th scope="row">
+                      <strong>{option.operation.label}</strong>
+                      <details className="draft-participation">
+                        <summary>
+                          {t('Operation participation')} ·{' '}
+                          {op.subjectIds.length}/{draft.subjects.length}
+                        </summary>
+                        <div className="draft-grid-actions">
+                          <button
+                            type="button"
+                            className="entry-button"
+                            onClick={() =>
+                              participation(
+                                draft.subjects.map((subject) => subject.id),
+                              )
                             }
-                          />
-                          {p.name}
-                          {!!p.requiredSupportingParameterIds.length && (
-                            <small>
-                              {t('Required supporting parameters')}:{' '}
-                              {p.requiredSupportingParameterIds
-                                .map(
-                                  (id) =>
-                                    catalog.parameters.find((p) => p.id === id)
-                                      ?.name,
-                                )
-                                .join(', ')}
-                            </small>
-                          )}
-                        </label>
-                      ))}
-                  </div>
-                </>
-              ) : (
-                option.operation.items.map((def) => (
-                  <div key={def.applicabilityId} className="draft-condition">
-                    <div className="bootstrap-controls">
-                      <strong>
-                        {def.label} {def.unit}
-                      </strong>
+                          >
+                            {t('Select all')}
+                          </button>
+                          <button
+                            type="button"
+                            className="entry-button"
+                            onClick={() => participation([])}
+                          >
+                            {t('Clear selection')}
+                          </button>
+                        </div>
+                        <div className="draft-subjects">
+                          {draft.subjects.map((subject, si) => (
+                            <label key={`${subject.id}-${si}`}>
+                              <input
+                                type="checkbox"
+                                checked={op.subjectIds.includes(subject.id)}
+                                onChange={(event) =>
+                                  participation(
+                                    event.target.checked
+                                      ? [...op.subjectIds, subject.id]
+                                      : op.subjectIds.filter(
+                                          (id) => id !== subject.id,
+                                        ),
+                                  )
+                                }
+                              />
+                              {subject.displayLabel}
+                              {!op.subjectIds.includes(subject.id) && (
+                                <small>{t('Not Participating')}</small>
+                              )}
+                            </label>
+                          ))}
+                        </div>
+                        {!draft.subjects.length && (
+                          <p>{t('Add Subjects to choose participation.')}</p>
+                        )}
+                      </details>
+                    </th>
+                    <td>
+                      {t(
+                        option.operation.role === 'MEASUREMENT'
+                          ? 'Measurement'
+                          : 'Process Operation',
+                      )}
+                    </td>
+                    <td>
+                      {catalog.areas.find(
+                        (area) => area.id === context?.areaDefinitionRevisionId,
+                      )?.name ||
+                        displayName(
+                          context?.areaDefinitionRevisionId,
+                          context?.areaLabel,
+                        )}
+                    </td>
+                    <td>
+                      {displayName(
+                        context?.equipmentReferenceId,
+                        context?.equipmentLabel,
+                      )}
+                    </td>
+                    <td>
+                      {displayName(
+                        context?.moduleReferenceId,
+                        context?.moduleLabel,
+                      )}
+                    </td>
+                    <td>
+                      {option.operation.items
+                        .map((def) => def.label)
+                        .join(' · ') || '—'}
+                      <small>
+                        {t('{0} condition rows', [op.items.length])}
+                      </small>
+                    </td>
+                    <td>
+                      <div className="draft-grid-actions">
+                        <button
+                          type="button"
+                          className="entry-button"
+                          disabled={!index}
+                          aria-label={`${index + 1}. ${option.operation.label} · ${t('Move up')}`}
+                          onClick={() => move(-1)}
+                        >
+                          {t('Move up')}
+                        </button>
+                        <button
+                          type="button"
+                          className="entry-button"
+                          disabled={index === draft.operations.length - 1}
+                          aria-label={`${index + 1}. ${option.operation.label} · ${t('Move down')}`}
+                          onClick={() => move(1)}
+                        >
+                          {t('Move down')}
+                        </button>
+                      </div>
+                    </td>
+                    <td>
                       <button
+                        type="button"
                         className="entry-button"
+                        aria-label={`${index + 1}. ${option.operation.label} · ${t('Remove')}`}
                         onClick={() =>
-                          change(index, {
-                            items: [
-                              ...op.items,
-                              {
-                                applicabilityId: def.applicabilityId,
-                                value: '',
-                                intentRole: 'FIXED',
-                                subjectId: null,
-                              },
-                            ],
+                          onChange({
+                            ...draft,
+                            operations: draft.operations.filter(
+                              (_, i) => i !== index,
+                            ),
                           })
                         }
                       >
-                        {t('Add condition value')}
+                        {t('Remove')}
                       </button>
-                    </div>
-                    {op.items.map((item, ii) =>
-                      item.applicabilityId !== def.applicabilityId ? null : (
-                        <div className="bootstrap-controls" key={ii}>
-                          <label>
-                            {t('Apply to')}
-                            <select
-                              value={item.subjectId ?? ''}
-                              onChange={(e) =>
-                                change(index, {
-                                  items: op.items.map((v, i) =>
-                                    i === ii
-                                      ? {
-                                          ...v,
-                                          subjectId: e.target.value || null,
-                                        }
-                                      : v,
-                                  ),
-                                })
-                              }
-                            >
-                              <option value="">
-                                {t('All participating Subjects')}
-                              </option>
-                              {draft.subjects
-                                .filter((s) => op.subjectIds.includes(s.id))
-                                .map((s) => (
-                                  <option key={s.id} value={s.id}>
-                                    {s.displayLabel}
-                                  </option>
-                                ))}
-                            </select>
-                          </label>
-                          <label>
-                            {t('Value')}
-                            {def.options.length ? (
-                              <select
-                                value={item.value}
-                                onChange={(e) =>
-                                  change(index, {
-                                    items: op.items.map((v, i) =>
-                                      i === ii
-                                        ? { ...v, value: e.target.value }
-                                        : v,
-                                    ),
-                                  })
-                                }
-                              >
-                                <option value="">{t('Select')}</option>
-                                {def.options.map((o) => (
-                                  <option key={o.value} value={o.value}>
-                                    {o.label}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <input
-                                value={item.value}
-                                onChange={(e) =>
-                                  change(index, {
-                                    items: op.items.map((v, i) =>
-                                      i === ii
-                                        ? { ...v, value: e.target.value }
-                                        : v,
-                                    ),
-                                  })
-                                }
-                              />
-                            )}
-                          </label>
-                          <label>
-                            {t('Role')}
-                            <select
-                              title={t('Intentionally Varied definition')}
-                              value={item.intentRole}
-                              onChange={(e) =>
-                                change(index, {
-                                  items: op.items.map((v, i) =>
-                                    i === ii
-                                      ? {
-                                          ...v,
-                                          intentRole: e.target.value as
-                                            | 'FIXED'
-                                            | 'VARIED',
-                                        }
-                                      : v,
-                                  ),
-                                })
-                              }
-                            >
-                              <option value="FIXED">{t('Fixed')}</option>
-                              <option value="VARIED">
-                                {t('Intentionally Varied')}
-                              </option>
-                            </select>
-                          </label>
-                          <button
-                            className="entry-button"
-                            onClick={() =>
-                              change(index, {
-                                items: op.items.filter((_, i) => i !== ii),
-                              })
-                            }
-                          >
-                            {t('Remove')}
-                          </button>
-                        </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {!draft.operations.length && (
+                <tr>
+                  <td colSpan={9}>
+                    {t(
+                      'Add Operations for this Run. Study defaults are optional.',
+                    )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </section>
+      </fieldset>
+      <RunDraftConditionsGrid draft={draft} options={options} change={change} />
+      {draft.operations.some(
+        (op) =>
+          options.find((option) => option.id === op.optionId)?.operation
+            .role === 'MEASUREMENT',
+      ) && (
+        <fieldset>
+          <legend>4. {t('Measurement Plan')}</legend>
+          {draft.operations.map((op, index) => {
+            const option = options.find((o) => o.id === op.optionId)!;
+            if (option.operation.role !== 'MEASUREMENT') return null;
+            return (
+              <section className="bootstrap-operation" key={index}>
+                <h3>
+                  {index + 1}. {option.operation.label}
+                </h3>
+                <label>
+                  {t('Measurement point')}
+                  <select
+                    value={op.point ?? ''}
+                    onChange={(e) =>
+                      change(index, {
+                        point: (e.target.value || null) as typeof op.point,
+                        parameterIds: [],
+                      })
+                    }
+                  >
+                    <option value="">{t('Select')}</option>
+                    {['PRE', 'INTERMEDIATE', 'POST', 'FINAL', 'CUSTOM'].map(
+                      (p) => (
+                        <option key={p}>{p}</option>
                       ),
                     )}
-                  </div>
-                ))
-              )}
-            </section>
-          );
-        })}
-        {!draft.operations.length && (
-          <p>
-            {t('Add Operations for this Run. Study defaults are optional.')}
-          </p>
-        )}
-      </fieldset>
+                  </select>
+                </label>
+                <div className="draft-subjects">
+                  {catalog.parameters
+                    .filter(
+                      (p) =>
+                        option.parameterIds.includes(p.id) &&
+                        (!op.point ||
+                          p.supportedMeasurementPoints.includes(op.point)),
+                    )
+                    .map((p) => (
+                      <label key={p.id}>
+                        <input
+                          type="checkbox"
+                          checked={op.parameterIds.includes(p.id)}
+                          onChange={(e) =>
+                            change(index, {
+                              parameterIds: e.target.checked
+                                ? [...op.parameterIds, p.id]
+                                : op.parameterIds.filter((id) => id !== p.id),
+                            })
+                          }
+                        />
+                        {p.name}
+                        {!!p.requiredSupportingParameterIds.length && (
+                          <small>
+                            {t('Required supporting parameters')}:{' '}
+                            {p.requiredSupportingParameterIds
+                              .map(
+                                (id) =>
+                                  catalog.parameters.find((p) => p.id === id)
+                                    ?.name,
+                              )
+                              .join(', ')}
+                          </small>
+                        )}
+                      </label>
+                    ))}
+                </div>
+              </section>
+            );
+          })}
+        </fieldset>
+      )}
     </>
   );
 }

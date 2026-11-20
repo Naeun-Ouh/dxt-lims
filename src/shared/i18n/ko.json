@@ -1392,5 +1392,20 @@
   "Area reference ID": "영역 참조 ID",
   "Equipment reference ID": "장비 참조 ID",
   "Module reference ID": "모듈 참조 ID",
-  "Measurement parameter IDs": "계측항목 ID"
+  "Measurement parameter IDs": "계측항목 ID",
+  "Value checks describe the entered format only. Preview checks execution readiness and required conditions.": "표의 검증 상태는 입력 형식에 대한 확인입니다. 필수 조건과 실행 준비 상태는 미리보기에서 확인합니다.",
+  "Run condition values": "실험 차수 조건값",
+  "Condition name": "조건명",
+  "Validation status": "검증 상태",
+  "Value format valid": "입력 형식 확인됨",
+  "Not entered": "미입력",
+  "{0} participating · {1} not participating": "공정 참여 {0}개 · 미참여 {1}개",
+  "No execution conditions to display for the selected Operations.": "선택한 공정에 표시할 실행 조건이 없습니다.",
+  "Ordered Operations": "공정 실행 순서",
+  "Order": "순서",
+  "Condition summary": "조건 요약",
+  "Move": "이동",
+  "Add Subjects to choose participation.": "실험 대상을 추가한 뒤 참여 여부를 선택하세요.",
+  "{0} condition rows": "조건 입력행 {0}개",
+  "Add value": "값 추가"
 }

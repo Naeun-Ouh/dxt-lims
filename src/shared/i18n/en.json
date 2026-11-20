@@ -531,5 +531,20 @@
   "Area reference ID": "Area reference ID",
   "Equipment reference ID": "Equipment reference ID",
   "Module reference ID": "Module reference ID",
-  "Measurement parameter IDs": "Measurement parameter IDs"
+  "Measurement parameter IDs": "Measurement parameter IDs",
+  "Value checks describe the entered format only. Preview checks execution readiness and required conditions.": "Value checks describe the entered format only. Preview checks execution readiness and required conditions.",
+  "Run condition values": "Run condition values",
+  "Condition name": "Condition name",
+  "Validation status": "Validation status",
+  "Value format valid": "Value format valid",
+  "Not entered": "Not entered",
+  "{0} participating · {1} not participating": "Operation: {0} participating · {1} not participating",
+  "No execution conditions to display for the selected Operations.": "No execution conditions to display for the selected Operations.",
+  "Ordered Operations": "Ordered Operations",
+  "Order": "Order",
+  "Condition summary": "Condition summary",
+  "Move": "Move",
+  "Add Subjects to choose participation.": "Add Subjects to choose participation.",
+  "{0} condition rows": "{0} condition rows",
+  "Add value": "Add value"
 }

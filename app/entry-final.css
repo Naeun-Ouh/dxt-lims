@@ -955,3 +955,41 @@
 
 .operation-master-dialog h2 { color: #203548; }
 .study-bootstrap .operation-master-dialog p { font-size: 13px; }
+
+/* Run Draft execution authoring: compact tables, existing controlled inputs. */
+.draft-grid-scroll { overflow: auto; max-height: 560px; border: 1px solid #dbe3eb; }
+.draft-dense-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 12px; line-height: 1.45; }
+.draft-dense-table th, .draft-dense-table td { padding: 8px 10px; text-align: left; vertical-align: top; font-size: inherit; line-height: inherit; border-bottom: 1px solid #dbe3eb; border-right: 1px solid #edf0f4; overflow-wrap: anywhere; }
+.draft-dense-table thead th { position: sticky; top: 0; z-index: 1; background: #edf2f6; font-weight: 600; }
+.draft-dense-table tbody th { font-weight: 600; background: #f7f9fb; }
+.draft-dense-table tbody tr:focus-within { background: #f1f7fb; }
+.draft-dense-table small { display: block; color: #526779; margin-top: 5px; font-weight: 400; }
+.draft-operation-table { min-width: 1120px; }
+.draft-operation-table thead th:nth-child(1) { width: 50px; }
+.draft-operation-table thead th:nth-child(2) { width: 210px; }
+.draft-operation-table thead th:nth-child(3) { width: 135px; }
+.draft-operation-table thead th:nth-child(4) { width: 95px; }
+.draft-operation-table thead th:nth-child(5), .draft-operation-table thead th:nth-child(6) { width: 110px; }
+.draft-operation-table thead th:nth-child(7) { width: 180px; }
+.draft-operation-table thead th:nth-child(8) { width: 180px; }
+.draft-operation-table thead th:nth-child(9) { width: 75px; }
+.draft-conditions-table { min-width: 1160px; }
+.draft-conditions-table thead th:nth-child(1) { width: 150px; }
+.draft-conditions-table thead th:nth-child(2) { width: 165px; }
+.draft-conditions-table thead th:nth-child(3) { width: 160px; }
+.draft-conditions-table thead th:nth-child(4) { width: 65px; }
+.draft-conditions-table thead th:nth-child(5) { width: 180px; }
+.draft-conditions-table thead th:nth-child(6) { width: 220px; }
+.draft-conditions-table thead th:nth-child(7) { width: 125px; }
+.draft-conditions-table thead th:nth-child(8) { width: 185px; }
+.study-bootstrap .draft-dense-table input:not([type='checkbox']), .study-bootstrap .draft-dense-table select { min-height: 32px; padding: 5px 8px; font-size: 12px; }
+.study-bootstrap .draft-dense-table select { padding-right: 24px; }
+.study-bootstrap .draft-dense-table .entry-button { min-height: 30px; padding: 5px 8px; font-size: 12px; }
+.draft-grid-actions { display: flex; flex-wrap: wrap; gap: 5px; }
+.draft-participation { margin-top: 6px; font-weight: 400; }
+.draft-participation summary { cursor: pointer; color: #245c7c; }
+.draft-participation[open] > .draft-grid-actions { margin-top: 10px; }
+.study-bootstrap .draft-participation .draft-subjects label { padding: 4px 0; }
+.draft-value-status { display: inline-block; padding: 4px 0; }
+.draft-value-status.needs-input { color: #a23a25; }
+.study-bootstrap .draft-dense-table [aria-invalid='true'] { border-color: #b45a40; }
