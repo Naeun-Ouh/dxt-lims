@@ -11,6 +11,7 @@ import type {
 } from '@/src/application/run-creation';
 import { EntryShell } from './entry-shell';
 import { RunDraftEditor } from './run-draft-editor';
+import { RunDraftActions } from './run-draft-actions';
 import { bootstrapActionError } from './study-bootstrap-feedback';
 import type { SeriesSlug, RunCreationSource } from './run-entry-model';
 
@@ -213,16 +214,15 @@ function RunDraftPage({
                   setError('');
                 }}
               />
-              <div className="entry-actions">
-                <button
-                  className="entry-button"
-                  onClick={() => void act(false)}
-                >
-                  {t('Check readiness and preview')}
-                </button>
-              </div>
             </fieldset>
           )}
+          <RunDraftActions
+            busy={busy}
+            canPreview={Boolean(draft && context?.catalog)}
+            readiness={preview?.readiness}
+            onPreview={() => void act(false)}
+            onCreate={() => void act(true)}
+          />
           {preview && (
             <section className="draft-preview" aria-label={t('Run Preview')}>
               <h2>{t('Run Preview')}</h2>
@@ -288,15 +288,6 @@ function RunDraftPage({
                     ))}
                   </tbody>
                 </table>
-              </div>
-              <div className="entry-actions">
-                <button
-                  className="entry-button primary"
-                  disabled={busy || preview.readiness.status !== 'READY'}
-                  onClick={() => void act(true)}
-                >
-                  {t('Create Run')}
-                </button>
               </div>
             </section>
           )}

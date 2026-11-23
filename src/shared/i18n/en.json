@@ -477,6 +477,7 @@
   "Replace the current draft with the selected source?": "Replace the current draft with the selected source?",
   "Execution only. Target and Evaluation Criteria are not configured in this flow.": "Execution only. Target and Evaluation Criteria are not configured in this flow.",
   "Check readiness and preview": "Check readiness and preview",
+  "Please review the preview first.": "Please review the preview first.",
   "Run Preview": "Run Preview",
   "Experiment reference information": "Experiment reference information",
   "Experiment reference information help": "The reference version for processes, conditions and measurement parameters used in this experiment. It is preserved after Run creation for traceability.",

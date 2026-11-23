@@ -63,3 +63,16 @@ Implements Product/Architecture decision [7041220375](https://github.com/Naeun-O
 - Validation: 5 existing matrix invariant tests (extended terminology assertions) + 4 localization tests PASS; TypeScript, changed-file lint, diff whitespace PASS. Browser KO 1440px, EN 720px, intact controls/no page overflow, execution-ready read-only Preview with planned terminology. No scientific write/Create action. Full backend/native suites not repeated for wording-only changes; the earlier 335-test/native result belongs to the preceding revision.
 - Isolated wording preview: http://127.0.0.1:3240/runs/new?series=agent-run-draft-specimen&from=previous-run . Existing 3239 environment/input preserved.
 - Human retest required; agent checks are not acceptance. PR remains unmerged.
+
+## Preview / Create discoverability follow-up (2026-11-23)
+
+Product decision: PR #12 comment 7103334680. UI-only correction.
+
+- Preview action is now `실험 차수 미리보기` (`Run Preview`). It still calls the existing non-persistent preview/readiness boundary.
+- `실험 차수 생성` remains visible as the rightmost primary action before and after Preview. Initial/loading/unavailable states disable it. The adjacent live description explains why, with `미리보기를 먼저 확인해 주세요.` before review or the translated exact missing prerequisites after NOT_READY.
+- Only the current READY preview enables Create. Existing draft/source edits clear the preview and disable Create again. Busy requests disable both actions.
+- Existing Create handler, fingerprint/idempotency handling, readiness, authorization, domain, schema and persistence are unchanged. No scientific data was saved during verification.
+
+Validation: 10 focused tests PASS (6 grid/action tests and 4 localization tests), TypeScript, changed-file lint and `git diff --check` PASS. KO/EN action-state coverage includes initial, unavailable, NOT_READY, READY, busy and cleared preview. Browser: initial disabled reason, server READY enables Create, removal of a required condition clears Preview and disables Create, then NOT_READY explains the missing Cure Time condition in KO and EN. Visual check shows both actions right-aligned and the reason directly below. Browser fill attempt did not change the controlled value; the edit-invalidation check instead used the existing remove-condition control in an isolated agent draft. No Create action executed. Full repository/PostgreSQL/build suites were not rerun for this presentation-only change.
+
+Verification server: http://127.0.0.1:3241/runs/new?series=agent-run-draft-specimen&from=previous-run . Existing UAT servers/data were preserved. Agent observations are not Human acceptance. Human retest of Preview/Create discoverability remains required; PR #12 must remain unmerged.

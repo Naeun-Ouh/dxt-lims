@@ -958,3 +958,12 @@
 .draft-participation summary { cursor: pointer; color: #245c7c; }
 .draft-participation[open] > .draft-grid-actions { margin-top: 10px; }
 .study-bootstrap .draft-participation .draft-subjects label { padding: 4px 0; }
+
+/* Keep Preview/Create discoverable, with the disabled reason next to the action. */
+.draft-action-reason {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.draft-action-reason p {
+  margin: 4px 0 0;
+}

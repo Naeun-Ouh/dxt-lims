@@ -1,3 +1,5 @@
+import { RunDraftActions } from '@/src/features/experiment-series/run-draft-actions';
+import type { AuthoritativeRunPreview } from '@/src/application/run-creation';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -290,4 +292,59 @@ void test('Unified matrix renders objects and scoped assignments without changin
     assert.ok(korean.includes(label));
   assert.doesNotMatch(korean, /미참여|참여 여부|개별값|공통값|기록되어/);
   assert.equal(JSON.stringify(value), before);
+});
+
+void test('Run Draft keeps Create visible but requires a successful READY preview in both locales', () => {
+  for (const locale of ['ko', 'en'] as const) {
+    const renderActions = (
+      readiness?: AuthoritativeRunPreview['readiness'],
+      busy = false,
+      canPreview = true,
+    ) =>
+      renderToStaticMarkup(
+        <LocaleProvider initialLocale={locale} persist={false}>
+          <RunDraftActions
+            busy={busy}
+            canPreview={canPreview}
+            readiness={readiness}
+            onPreview={noWrite}
+            onCreate={noWrite}
+          />
+        </LocaleProvider>,
+      );
+    const primary = (html: string) =>
+      html.match(/<button[^>]*class="entry-button primary"[^>]*>/)?.[0] ?? '';
+    const initial = renderActions();
+    assert.match(
+      initial,
+      locale === 'ko' ? /실험 차수 미리보기/ : /Run Preview/,
+    );
+    assert.match(initial, locale === 'ko' ? /실험 차수 생성/ : /Create Run/);
+    assert.match(
+      initial,
+      locale === 'ko'
+        ? /미리보기를 먼저 확인해 주세요./
+        : /Please review the preview first/,
+    );
+    assert.match(primary(initial), /disabled/);
+    assert.match(primary(initial), /aria-describedby/);
+    const blocked = renderActions({
+      status: 'NOT_READY',
+      missing: ['Missing'],
+    });
+    assert.match(primary(blocked), /disabled/);
+    assert.match(blocked, locale === 'ko' ? /누락/ : /Missing/);
+    const ready = { status: 'READY', missing: [] } as const;
+    assert.doesNotMatch(
+      primary(renderActions({ ...ready, missing: [] })),
+      /disabled|aria-describedby/,
+    );
+    assert.match(
+      primary(renderActions({ ...ready, missing: [] }, true)),
+      /disabled/,
+    );
+    assert.match(primary(renderActions(undefined, false, false)), /disabled/);
+    // Editing/source changes clear the parent's preview; Create must lock again.
+    assert.match(primary(renderActions(undefined)), /disabled/);
+  }
 });

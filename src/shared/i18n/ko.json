@@ -1338,6 +1338,7 @@
   "Replace the current draft with the selected source?": "현재 초안을 선택한 원본으로 교체할까요?",
   "Execution only. Target and Evaluation Criteria are not configured in this flow.": "실행 계획을 작성하는 단계입니다. 목표와 평가 기준은 여기서 설정하지 않으며, 차수 생성에 필요하지 않습니다.",
   "Check readiness and preview": "실행 준비 확인 및 미리보기",
+  "Please review the preview first.": "미리보기를 먼저 확인해 주세요.",
   "Run Preview": "실험 차수 미리보기",
   "Experiment reference information": "실험 기준정보",
   "Experiment reference information help": "이 실험에서 사용하는 공정, 조건, 계측항목 등의 기준정보 버전입니다. 실험 생성 후에는 당시 기준을 추적할 수 있도록 유지됩니다.",
