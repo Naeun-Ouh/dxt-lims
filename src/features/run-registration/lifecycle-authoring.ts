@@ -1,4 +1,5 @@
 import { decisionSchema } from '@/src/domain/decision';
+import { analysisMeasurementApplicability } from '@/src/application/analysis-applicability';
 import type { AnalysisMeasurementSource } from '@/src/domain/analysis';
 import {
   subjectMeasurementResultSetSchema,
@@ -425,6 +426,7 @@ export function authoredAnalysisSource(
     runId: state.runId,
     runNumber: state.snapshot.runNumber,
     subjects: state.snapshot.subjects,
+    measurementApplicability: analysisMeasurementApplicability(state.snapshot),
     measurements: state.measurementResults,
     parameterLabels: Object.fromEntries(
       parameterIds.map((id) => [id, resolveById(catalog.parameters, id).name]),

@@ -1,4 +1,5 @@
 import type { ConfigurationAuthoringBoundary } from './configuration-authoring';
+import { analysisMeasurementApplicability } from './analysis-applicability';
 import { currentSubjectMeasurementValidity } from '@/src/domain/measurement/subject-measurement';
 import { emptyMeasurements } from './measurement-record';
 import { filterMeasurements } from './measurement-query';
@@ -209,6 +210,7 @@ export class DxtApplication {
       const ids=[...new Set(entries.flatMap(e=>e.parameterIds))];
       sources.push({studySlug:entries[0]?.studySlug,studyId:snapshot.series.id.replace(/^series-/,''),studyLabel:snapshot.series.name,workspaceContextLabel:snapshot.workspaceContextLabel??snapshot.area,
         runId,runNumber:snapshot.runNumber,subjects:snapshot.subjects,
+        measurementApplicability:analysisMeasurementApplicability(snapshot),
         measurements:{...emptyMeasurements(),datasets:entries.map(e=>e.dataset)},
         parameterLabels:Object.fromEntries(ids.map(id=>{const p=catalog.parameters.find(p=>p.id===id);if(!p)throw new ApplicationError('NOT_FOUND','Exact Analysis Parameter revision is missing.');return [id,p.name];})),
         unitSymbols:Object.fromEntries(ids.map(id=>{const p=catalog.parameters.find(p=>p.id===id)!;return [id,catalog.units.find(u=>u.id===p.unitId)?.symbol??''];}))});
@@ -224,7 +226,7 @@ export class DxtApplication {
       // An immutable summary remains historical, but excluded inputs cannot be
       // treated as the current representative result in the Analysis projection.
       const validity=currentSubjectMeasurementValidity(measurements.validityDecisions);
-      return {...source,measurements:{...measurements,summaries:measurements.summaries.filter(summary=>summary.sourceMeasurementIds.every(id=>validity.get(id)?.state!=='EXCLUDED'))}};
+      return {...source,measurementDatasetContexts:source.measurementDatasetContexts??source.measurements.datasets,measurements:{...measurements,summaries:measurements.summaries.filter(summary=>summary.sourceMeasurementIds.every(id=>validity.get(id)?.state!=='EXCLUDED'))}};
     });
   }
   async authoredAnalysisSources(catalog:ReferenceCatalog) {
