@@ -113,7 +113,7 @@ export default function ProductionSampleUsage({
       catalogShell
       contextLabel="MATERIAL / SAMPLE MASTER"
     >
-      <div className="catalog-page dxt-density">
+      <div className="catalog-page dxt-density sample-usage-page">
         <h1>{t('Samples')}</h1>
         <section className="sample-section" role="note">
           <p>

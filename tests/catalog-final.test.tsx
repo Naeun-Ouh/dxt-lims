@@ -174,6 +174,10 @@ void test('Production Samples never render fixture identity or claim verified Sa
   for (const locale of ['en', 'ko'] as const) {
     const html = render(<ProductionSampleUsage unavailableDetail />, locale);
     assert.doesNotMatch(html, /D031|D035|Photo Sample A|Create Sample/);
+    if (locale === 'ko') {
+      assert.match(html, /검색/);
+      assert.doesNotMatch(html, />Search</);
+    }
     assert.match(
       html,
       locale === 'ko'

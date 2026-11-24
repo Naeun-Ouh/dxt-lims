@@ -1497,5 +1497,7 @@
   "{0} assignments": "지정 {0}개",
   "Pagination": "페이지 이동",
   "Common material assignment": "공통 지정",
-  "Planned value": "계획값"
+  "Planned value": "계획값",
+  "Search": "검색",
+  "Material": "재료"
 }

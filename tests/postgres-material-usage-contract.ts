@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { authorizedOperation } from '@/src/infrastructure/postgres/authorized-application';
-import { dispatchRepository } from '@/app/api/repository/route';
+import {
+  dispatchRepository,
+  handleRepositoryRequest,
+} from '@/app/api/repository/route';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
 import type { DiscoveryPage } from '@/src/application/discovery';
 import type { MaterialAssignmentUsage } from '@/src/application/material-usage';
@@ -26,13 +29,25 @@ export async function materialUsageContract(
     `INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT 'material-usage-reader',study_id,'material-owner','VIEW_RUN','material-owner' FROM experiment_run WHERE run_domain_id=$1`,
     [snapshot.id],
   );
-  const read = (p: string, query: object = {}) =>
-    authorizedOperation(
-      db,
-      p,
-      { operation: 'material.usage', query },
-      dispatchRepository,
-    ) as Promise<DiscoveryPage<MaterialAssignmentUsage>>;
+  const api = (p: string, query: object = {}) =>
+    handleRepositoryRequest(
+      new Request('http://localhost/api/repository', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operation: 'material.usage', query }),
+      }),
+      (input, dispatch) =>
+        authorizedOperation(db, p, input, dispatch ?? dispatchRepository),
+    );
+  const read = async (
+    p: string,
+    query: object = {},
+  ): Promise<DiscoveryPage<MaterialAssignmentUsage>> => {
+    const response = await api(p, query);
+    assert.equal(response.status, 200, await response.clone().text());
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    return response.json();
+  };
   const before = await db.query(
     'SELECT run_assignment_id,assignment_reference_revision_id,value_text FROM run_assignment ORDER BY run_assignment_id',
   );
@@ -71,14 +86,11 @@ export async function materialUsageContract(
     await read('material-owner', { studySlug: 'does-not-exist' }),
     { items: [], total: 0 },
   );
-  await assert.rejects(() => read('material-owner', { limit: 101 }));
+  assert.equal((await api('material-owner', { limit: 101 })).status, 400);
   await db.query(
     "UPDATE auth_principal SET active=false WHERE id='material-owner'",
   );
-  await assert.rejects(
-    () => read('material-owner'),
-    /inactive|available|denied/i,
-  );
+  assert.equal((await api('material-owner')).status, 403);
   assert.deepEqual(
     (
       await db.query(
