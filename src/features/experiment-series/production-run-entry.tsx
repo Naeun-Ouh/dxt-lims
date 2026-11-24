@@ -1,5 +1,4 @@
 'use client';
-import { DxtStatus } from '@/src/shared/ui/dxt-grid';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -12,8 +11,22 @@ import type {
 import { EntryShell } from './entry-shell';
 import { RunDraftEditor } from './run-draft-editor';
 import { RunDraftActions } from './run-draft-actions';
+import { RunCreationReview } from './run-creation-review';
+import {
+  DraftFeedbackContext,
+  locateDraftFeedback,
+  summarizeDraftFeedback,
+} from './run-draft-feedback';
 import { bootstrapActionError } from './study-bootstrap-feedback';
 import type { SeriesSlug, RunCreationSource } from './run-entry-model';
+
+function runDraftError(error: unknown) {
+  const message = bootstrapActionError(error, 'run');
+  return message ===
+    'Could not create or preview the Run. Check that Setup is saved and execution conditions are complete, then try again.'
+    ? 'Could not check or create the Run. Your draft is kept. Check your inputs and connection, then try again.'
+    : message;
+}
 
 function RunDraftPage({
   seriesSlug,
@@ -29,6 +42,9 @@ function RunDraftPage({
   const [context, setContext] = useState<AuthoritativeRunPreview | null>(null);
   const [draft, setDraft] = useState<RunDraft | null>(null);
   const [preview, setPreview] = useState<AuthoritativeRunPreview | null>(null);
+  const [reviewing, setReviewing] = useState(false);
+  const [confirmationAttempted, setConfirmationAttempted] = useState(false);
+  const surface = useRef<HTMLElement>(null);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(true);
@@ -48,7 +64,7 @@ function RunDraftPage({
         command.current = null;
       })
       .catch((e) => {
-        if (active) setError(bootstrapActionError(e, 'run'));
+        if (active) setError(runDraftError(e));
       })
       .finally(() => {
         if (active) setBusy(false);
@@ -65,7 +81,22 @@ function RunDraftPage({
     window.addEventListener('beforeunload', protect);
     return () => window.removeEventListener('beforeunload', protect);
   }, [dirty]);
+  useEffect(() => {
+    if (busy) return;
+    const target = error
+      ? surface.current?.querySelector<HTMLElement>('.draft-action-reason')
+      : reviewing
+        ? surface.current?.querySelector<HTMLElement>('.draft-review-heading')
+        : preview?.readiness.status === 'NOT_READY'
+          ? surface.current?.querySelector<HTMLElement>(
+              '[data-draft-error], .draft-action-reason',
+            )
+          : null;
+    target?.focus();
+    target?.scrollIntoView({ block: 'center' });
+  }, [busy, reviewing, preview, error]);
   function resetSource() {
+    setReviewing(false);
     setBusy(true);
     setError('');
     setPreview(null);
@@ -78,16 +109,22 @@ function RunDraftPage({
     draft: draft!,
     sourceFingerprint: context!.sourceFingerprint,
   });
-  async function act(create: boolean) {
+  async function act(intent: 'review' | 'confirm') {
     if (pending.current || !context || !draft) return;
     pending.current = true;
     setBusy(true);
     setError('');
     try {
-      if (!create) {
-        setPreview(await application.runs.previewCreation(request()));
+      if (intent === 'review') {
+        setConfirmationAttempted(false);
+        setReviewing(false);
+        setPreview(null);
+        const checked = await application.runs.previewCreation(request());
+        setPreview(checked);
+        setReviewing(checked.readiness.status === 'READY');
         command.current = null;
-      } else if (preview?.readiness.status === 'READY') {
+      } else if (reviewing && preview?.readiness.status === 'READY') {
+        setConfirmationAttempted(true);
         command.current ??= crypto.randomUUID();
         const saved = await application.runs.createFromPreview(
           request(),
@@ -100,7 +137,7 @@ function RunDraftPage({
         );
       }
     } catch (e) {
-      setError(bootstrapActionError(e, 'run'));
+      setError(runDraftError(e));
     } finally {
       setBusy(false);
       pending.current = false;
@@ -127,8 +164,9 @@ function RunDraftPage({
         <section
           className="study-bootstrap run-draft dxt-density"
           aria-busy={busy}
+          ref={surface}
         >
-          <fieldset disabled={busy}>
+          <fieldset disabled={busy || reviewing}>
             <legend>{t('Run starting point')}</legend>
             <div className="draft-source-buttons">
               {(['BLANK', 'STUDY_DEFAULT', 'PREVIOUS_RUN'] as const).map(
@@ -175,7 +213,6 @@ function RunDraftPage({
                 )}
               </p>
             )}
-          {error && <p role="alert">{t(error)}</p>}
           {!busy && !draft && (
             <button
               className="entry-button"
@@ -200,96 +237,55 @@ function RunDraftPage({
             )}
           </p>
           {draft && context?.catalog && (
-            <fieldset className="draft-content" disabled={busy}>
-              <RunDraftEditor
-                key={`${source}-${generation}`}
-                draft={draft}
-                options={context.options ?? []}
-                catalog={context.catalog}
-                onChange={(value) => {
-                  setDraft(value);
-                  setDirty(true);
-                  setPreview(null);
-                  command.current = null;
-                  setError('');
-                }}
-              />
+            <fieldset className="draft-content" disabled={busy || reviewing}>
+              <DraftFeedbackContext.Provider
+                value={locateDraftFeedback(
+                  draft,
+                  context.options ?? [],
+                  preview?.readiness.missing ?? [],
+                )}
+              >
+                <RunDraftEditor
+                  key={`${source}-${generation}`}
+                  draft={draft}
+                  options={context.options ?? []}
+                  catalog={context.catalog}
+                  onChange={(value) => {
+                    setDraft(value);
+                    setDirty(true);
+                    setPreview(null);
+                    setReviewing(false);
+                    command.current = null;
+                    setError('');
+                  }}
+                />
+              </DraftFeedbackContext.Provider>
             </fieldset>
           )}
           <RunDraftActions
             busy={busy}
-            canPreview={Boolean(draft && context?.catalog)}
-            readiness={preview?.readiness}
-            onPreview={() => void act(false)}
-            onCreate={() => void act(true)}
+            available={Boolean(draft && context?.catalog)}
+            reviewing={reviewing}
+            missing={summarizeDraftFeedback(
+              draft,
+              context?.options ?? [],
+              preview?.readiness.missing ?? [],
+            )}
+            error={error}
+            onCreate={() => void act('review')}
           />
-          {preview && (
-            <section className="draft-preview" aria-label={t('Run Preview')}>
-              <h2>{t('Run Preview')}</h2>
-              <output>
-                <DxtStatus
-                  tone={
-                    preview.readiness.status === 'READY' ? 'success' : 'warning'
-                  }
-                >
-                  {t('Execution Readiness')}: {t(preview.readiness.status)}
-                </DxtStatus>
-              </output>
-              <ul>
-                {preview.readiness.missing.map((m, i) => {
-                  const [key, ...args] = m.split('|');
-                  return <li key={i}>{t(key, args)}</li>;
-                })}
-              </ul>
-              <div className="dxt-grid-scroll draft-preview-scroll">
-                <table className="dxt-grid">
-                  <thead>
-                    <tr>
-                      <th>{t('Operation')}</th>
-                      <th>{t('Subjects')}</th>
-                      <th>{t('Conditions')}</th>
-                      <th>{t('Measurement Plan')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {preview.snapshot.steps.map((step) => (
-                      <tr key={step.id}>
-                        <td>{step.label}</td>
-                        <td>
-                          {preview.snapshot.subjects
-                            .filter((s) =>
-                              preview.snapshot.subjectOperationIds[
-                                s.id
-                              ]?.includes(step.id),
-                            )
-                            .map((s) => s.displayLabel)
-                            .join(', ') || t('Operation does not apply')}
-                        </td>
-                        <td>
-                          {preview.snapshot.assignments
-                            .filter((a) => a.processStepId === step.id)
-                            .map((a) => (
-                              <div key={a.id}>
-                                {a.label}: {a.value} ·{' '}
-                                {a.subjectId ? `${t('Subject-specific planned value')} · ${a.subjectId}` : t('Common planned value')}{' '}
-                                · {t(a.intentRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed')}
-                              </div>
-                            ))}
-                        </td>
-                        <td>
-                          {preview.snapshot.measurements
-                            .filter((m) => m.stepId === step.id)
-                            .map(
-                              (m) => `${m.point} · ${m.parameters.join(', ')}`,
-                            )
-                            .join(' / ') || '—'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+          {reviewing && preview?.readiness.status === 'READY' && (
+            <RunCreationReview
+              preview={preview}
+              confirmationAttempted={confirmationAttempted}
+              busy={busy}
+              onCancel={() => {
+                setReviewing(false);
+                setPreview(null);
+                setError('');
+              }}
+              onConfirm={() => void act('confirm')}
+            />
           )}
         </section>
       </main>

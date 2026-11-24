@@ -601,5 +601,17 @@
   "Existing Operations do not automatically apply to new Subjects. Choose Operation application in the grid below.": "Existing Operations do not automatically apply to new Subjects. Choose Operation application in the grid below.",
   "Choose which Subjects each Operation applies to. Edit planned conditions directly below it; Subjects remain in the same columns.": "Choose which Subjects each Operation applies to. Edit planned conditions directly below it; Subjects remain in the same columns.",
   "Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. Preview verifies the plan.": "Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. Preview verifies the plan.",
-  "Specify whether this Subject will perform the Operation. Not applicable means the Subject is not assigned to this Operation, not that a result is Missing.": "Specify whether this Subject will perform the Operation. Not applicable means the Subject is not assigned to this Operation, not that a result is Missing."
+  "Specify whether this Subject will perform the Operation. Not applicable means the Subject is not assigned to this Operation, not that a result is Missing.": "Specify whether this Subject will perform the Operation. Not applicable means the Subject is not assigned to this Operation, not that a result is Missing.",
+  "Confirm Run creation": "Confirm Run creation",
+  "Final Create": "Final Create",
+  "Nothing has been saved yet. Review this plan. Only Final Create saves the Run.": "Nothing has been saved yet. Review this plan. Only Final Create saves the Run.",
+  "Nothing has been saved. Correct the highlighted inputs, then select Create Run again.": "Nothing has been saved. Correct the highlighted inputs, then select Create Run again.",
+  "We will check your plan and ask for final confirmation before saving.": "We will check your plan and ask for final confirmation before saving.",
+  "Add at least one Subject to this draft.": "Add at least one Subject to this draft.",
+  "Add at least one Operation to this draft.": "Add at least one Operation to this draft.",
+  "Enter a common planned value or a planned value for this Subject.": "Enter a common planned value or a planned value for this Subject.",
+  "Requiredness checked when creating": "Requiredness checked when creating",
+  "Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. The plan is checked when you select Create Run.": "Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. The plan is checked when you select Create Run.",
+  "Could not check or create the Run. Your draft is kept. Check your inputs and connection, then try again.": "Could not check or create the Run. Your draft is kept. Check your inputs and connection, then try again.",
+  "If confirmation was interrupted, retry Final Create to check the same request.": "If confirmation was interrupted, retry Final Create to check the same request."
 }

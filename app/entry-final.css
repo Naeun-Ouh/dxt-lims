@@ -967,3 +967,9 @@
 .draft-action-reason p {
   margin: 4px 0 0;
 }
+
+.draft-inline-errors { color: #a32222; background: #fff4f2; padding: 6px; border-left: 2px solid #a32222; }
+.draft-inline-errors p { margin: 0; white-space: normal; }
+.draft-inline-errors:focus, .draft-review-heading:focus { outline: 2px solid #315e80; outline-offset: 3px; }
+.draft-action-reason ul { list-style-position: inside; padding: 0; }
+.draft-review-subjects { display: flex; flex-wrap: wrap; gap: 8px 24px; padding-left: 20px; }

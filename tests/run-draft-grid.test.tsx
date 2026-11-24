@@ -1,3 +1,11 @@
+import {
+  DraftFeedbackContext,
+  locateDraftFeedback,
+  summarizeDraftFeedback,
+  conditionFeedbackKey,
+} from '@/src/features/experiment-series/run-draft-feedback';
+import { RunCreationReview } from '@/src/features/experiment-series/run-creation-review';
+import { runPlanningScenarios } from '@/src/features/run-registration/planning-model';
 import { RunDraftActions } from '@/src/features/experiment-series/run-draft-actions';
 import type { AuthoritativeRunPreview } from '@/src/application/run-creation';
 import assert from 'node:assert/strict';
@@ -294,57 +302,182 @@ void test('Unified matrix renders objects and scoped assignments without changin
   assert.equal(JSON.stringify(value), before);
 });
 
-void test('Run Draft keeps Create visible but requires a successful READY preview in both locales', () => {
+void test('Create-first actions need no preview, remain retryable after invalid input, and never render a durable confirm', () => {
   for (const locale of ['ko', 'en'] as const) {
-    const renderActions = (
-      readiness?: AuthoritativeRunPreview['readiness'],
+    const actions = (
+      missing: string[] = [],
       busy = false,
-      canPreview = true,
+      reviewing = false,
+      available = true,
     ) =>
       renderToStaticMarkup(
         <LocaleProvider initialLocale={locale} persist={false}>
           <RunDraftActions
             busy={busy}
-            canPreview={canPreview}
-            readiness={readiness}
-            onPreview={noWrite}
+            available={available}
+            reviewing={reviewing}
+            missing={missing}
+            error=""
             onCreate={noWrite}
           />
         </LocaleProvider>,
       );
-    const primary = (html: string) =>
-      html.match(/<button[^>]*class="entry-button primary"[^>]*>/)?.[0] ?? '';
-    const initial = renderActions();
-    assert.match(
-      initial,
-      locale === 'ko' ? /실험 차수 미리보기/ : /Run Preview/,
-    );
+    const initial = actions();
     assert.match(initial, locale === 'ko' ? /실험 차수 생성/ : /Create Run/);
-    assert.match(
-      initial,
-      locale === 'ko'
-        ? /미리보기를 먼저 확인해 주세요./
-        : /Please review the preview first/,
-    );
-    assert.match(primary(initial), /disabled/);
-    assert.match(primary(initial), /aria-describedby/);
-    const blocked = renderActions({
-      status: 'NOT_READY',
-      missing: ['Missing'],
-    });
-    assert.match(primary(blocked), /disabled/);
-    assert.match(blocked, locale === 'ko' ? /누락/ : /Missing/);
-    const ready = { status: 'READY', missing: [] } as const;
     assert.doesNotMatch(
-      primary(renderActions({ ...ready, missing: [] })),
-      /disabled|aria-describedby/,
+      initial,
+      /disabled|미리보기|Preview|최종 생성|Final Create/,
+    );
+    const blocked = actions(['Add and save at least one Subject.']);
+    assert.doesNotMatch(blocked, /disabled/);
+    assert.match(
+      blocked,
+      locale === 'ko' ? /실험 대상을 한 개 이상/ : /Add at least one Subject/,
+    );
+    assert.match(actions([], true), /disabled/);
+    assert.match(actions([], false, true), /disabled/);
+    assert.match(actions([], false, false, false), /disabled/);
+  }
+});
+
+void test('authoritative errors locate exact scoped conditions without marking non-applicable Subjects missing', () => {
+  const value = draft();
+  value.subjects.push({ id: 'S3', displayLabel: 'S3' });
+  value.operations[0].items = [
+    {
+      applicabilityId: 'required',
+      value: 'oops',
+      intentRole: 'VARIED',
+      subjectId: 'S1',
+    },
+  ];
+  const before = JSON.stringify(value);
+  const missing = [
+    'Check the execution condition: {0}.|1 · required',
+    'Enter the required execution condition: {0}.|Test process · required',
+  ];
+  const feedback = locateDraftFeedback(value, [option], missing);
+  assert.equal(
+    summarizeDraftFeedback(
+      value,
+      [option],
+      [
+        ...missing,
+        'Check the execution condition: {0}.|Test process · required',
+      ],
+    ).length,
+    2,
+  );
+  assert.deepEqual(feedback[conditionFeedbackKey(0, 'required', 'S1')], [
+    'Enter a numeric value.',
+  ]);
+  assert.deepEqual(feedback[conditionFeedbackKey(0, 'required', 'S2')], [
+    'Enter a common planned value or a planned value for this Subject.',
+  ]);
+  assert.equal(feedback[conditionFeedbackKey(0, 'required', 'S3')], undefined);
+  assert.equal(feedback[conditionFeedbackKey(0, 'optional', 'S1')], undefined);
+  assert.equal(JSON.stringify(value), before);
+  const empty = locateDraftFeedback(
+    { subjects: [], operations: [] },
+    [],
+    ['Add and save at least one Subject.', 'Add and save ordered Operations.'],
+  );
+  assert.ok(empty.subjects.length && empty.operations.length);
+  const measurement = structuredClone(option);
+  measurement.operation.role = 'MEASUREMENT';
+  assert.deepEqual(
+    locateDraftFeedback(
+      value,
+      [measurement],
+      ['Complete the Measurement plan for {0}.|Test process'],
+    )['measurement-0'],
+    ['Complete the Measurement plan for {0}.|Test process'],
+  );
+});
+
+void test('common invalid values attach to their editable cell and feedback renders next to the input', () => {
+  const value = draft();
+  value.operations[0].items = [
+    {
+      applicabilityId: 'required',
+      value: 'oops',
+      intentRole: 'FIXED',
+      subjectId: null,
+    },
+  ];
+  const feedback = locateDraftFeedback(
+    value,
+    [option],
+    ['Check the execution condition: {0}.|Test process · required'],
+  );
+  assert.deepEqual(Object.keys(feedback), [
+    conditionFeedbackKey(0, 'required', null),
+  ]);
+  const html = renderToStaticMarkup(
+    <LocaleProvider initialLocale="ko" persist={false}>
+      <DraftFeedbackContext.Provider value={feedback}>
+        <RunDraftEditor
+          draft={value}
+          options={[option]}
+          catalog={referenceCatalogSchema.parse({
+            units: [],
+            conditions: [],
+            properties: [],
+            measurements: [],
+            evaluations: [],
+            evaluationCriteria: [],
+            components: [],
+            materialCategories: [],
+            experimentTypes: [],
+            areas: [],
+            operations: [],
+            measurementOperations: [],
+            parameters: [],
+          })}
+          onChange={noWrite}
+        />
+      </DraftFeedbackContext.Provider>
+    </LocaleProvider>,
+  );
+  assert.match(html, /data-draft-error/);
+  assert.match(html, /숫자/);
+  assert.match(html, /value="oops"/);
+});
+
+void test('creation review preserves snapshot and shows subjects, order, application, conditions and final-only action', () => {
+  const snapshot = structuredClone(runPlanningScenarios.PHOTO);
+  const preview: AuthoritativeRunPreview = {
+    snapshot,
+    fingerprint: 'test',
+    readiness: { status: 'READY', missing: [] },
+  };
+  const before = JSON.stringify(preview);
+  for (const locale of ['ko', 'en'] as const) {
+    const html = renderToStaticMarkup(
+      <LocaleProvider initialLocale={locale} persist={false}>
+        <RunCreationReview
+          preview={preview}
+          busy={false}
+          onCancel={noWrite}
+          onConfirm={noWrite}
+        />
+      </LocaleProvider>,
     );
     assert.match(
-      primary(renderActions({ ...ready, missing: [] }, true)),
-      /disabled/,
+      html,
+      locale === 'ko' ? /실험 차수 생성 확인/ : /Confirm Run creation/,
     );
-    assert.match(primary(renderActions(undefined, false, false)), /disabled/);
-    // Editing/source changes clear the parent's preview; Create must lock again.
-    assert.match(primary(renderActions(undefined)), /disabled/);
+    assert.match(html, locale === 'ko' ? /최종 생성/ : /Final Create/);
+    assert.match(
+      html,
+      locale === 'ko'
+        ? /아직 저장되지 않았습니다/
+        : /Nothing has been saved yet/,
+    );
+    assert.match(html, locale === 'ko' ? /미적용/ : /Not applicable/);
+    for (const subject of snapshot.subjects)
+      assert.ok(html.includes(subject.id));
+    for (const step of snapshot.steps) assert.ok(html.includes(step.label));
   }
+  assert.equal(JSON.stringify(preview), before);
 });

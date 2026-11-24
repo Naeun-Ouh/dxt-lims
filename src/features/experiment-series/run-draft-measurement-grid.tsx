@@ -1,4 +1,5 @@
 'use client';
+import { RunDraftFeedback } from './run-draft-feedback';
 import type { RunDraft } from '@/src/application/run-draft';
 import type { BootstrapOperationOption } from '@/src/application/study-bootstrap';
 import { unitSymbol, type ReferenceCatalog } from '@/src/domain/reference';
@@ -93,6 +94,7 @@ export function RunDraftMeasurementGrid({
                           rowSpan={Math.max(1, parameters.length)}
                         >
                           <DxtCellText>{`${index + 1}. ${option.operation.label}`}</DxtCellText>
+                          <RunDraftFeedback location={`measurement-${index}`} />
                           <small>
                             {t('{0} applicable · {1} not applicable', [
                               op.subjectIds.length,

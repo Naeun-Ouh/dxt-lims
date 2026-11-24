@@ -1,4 +1,5 @@
 'use client';
+import { RunDraftFeedback, conditionFeedbackKey } from './run-draft-feedback';
 import { useState, Fragment } from 'react';
 import { DxtGridFrame, DxtStatus, DxtCellText } from '@/src/shared/ui/dxt-grid';
 import { RunDraftMeasurementGrid } from './run-draft-measurement-grid';
@@ -58,6 +59,7 @@ export function RunDraftEditor({
             {t('Operation master lookup')}
           </button>
         </div>
+        <RunDraftFeedback location="operations" />
         {pickerOpen && (
           <OperationMasterPicker
             catalog={catalog}
@@ -95,7 +97,7 @@ export function RunDraftEditor({
           </button>
           <small>
             {t(
-              'Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. Preview verifies the plan.',
+              'Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. The plan is checked when you select Create Run.',
             )}
           </small>
         </div>
@@ -333,7 +335,7 @@ export function RunDraftEditor({
                                 option.conditionRequirements?.[
                                   def.applicabilityId
                                 ] === undefined
-                                  ? 'Requiredness checked in Preview'
+                                  ? 'Requiredness checked when creating'
                                   : option.conditionRequirements[
                                         def.applicabilityId
                                       ]
@@ -353,6 +355,11 @@ export function RunDraftEditor({
                                 }
                               >
                                 <RunDraftConditionCell
+                                  feedbackKey={conditionFeedbackKey(
+                                    index,
+                                    def.applicabilityId,
+                                    subjectId,
+                                  )}
                                   def={def}
                                   items={op.items}
                                   subjectId={subjectId}

@@ -1,4 +1,6 @@
 'use client';
+import { useContext } from 'react';
+import { DraftFeedbackContext, RunDraftFeedback } from './run-draft-feedback';
 import type { RunDraft } from '@/src/application/run-draft';
 import type { BootstrapOperationOption } from '@/src/application/study-bootstrap';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -8,6 +10,7 @@ import { validateStudySetupItem } from './study-setup-model';
 type Item = RunDraft['operations'][number]['items'][number];
 type Definition = BootstrapOperationOption['operation']['items'][number];
 export function RunDraftConditionCell({
+  feedbackKey,
   def,
   items,
   subjectId,
@@ -16,6 +19,7 @@ export function RunDraftConditionCell({
   label,
   onChange,
 }: {
+  feedbackKey?: string;
   def: Definition;
   items: Item[];
   subjectId: string | null;
@@ -25,6 +29,8 @@ export function RunDraftConditionCell({
   onChange: (items: Item[]) => void;
 }) {
   const { t } = useLocale();
+  const feedback = useContext(DraftFeedbackContext);
+  const hasFeedback = !!feedbackKey && !!feedback[feedbackKey]?.length;
   if (!participating && subjectId)
     return <DxtStatus>{t('Operation does not apply')}</DxtStatus>;
   const matches = items.flatMap((item, index) =>
@@ -95,6 +101,7 @@ export function RunDraftConditionCell({
               <input
                 aria-label={`${label} · ${t('Value')}`}
                 aria-invalid={invalid}
+                maxLength={4000}
                 inputMode={def.editor === 'NUMBER' ? 'decimal' : undefined}
                 value={item.value}
                 onChange={(e) => update({ value: e.target.value })}
@@ -125,15 +132,17 @@ export function RunDraftConditionCell({
             {invalid && (
               <>
                 <DxtStatus tone="error">{t(status)}</DxtStatus>
-                <small>
-                  {t(
-                    status === 'Missing'
-                      ? 'Enter a value or remove an optional assignment.'
-                      : def.editor === 'NUMBER'
-                        ? 'Enter a numeric value.'
-                        : 'Choose a supported value.',
-                  )}
-                </small>
+                {!hasFeedback && (
+                  <small>
+                    {t(
+                      status === 'Missing'
+                        ? 'Enter a value or remove an optional assignment.'
+                        : def.editor === 'NUMBER'
+                          ? 'Enter a numeric value.'
+                          : 'Choose a supported value.',
+                    )}
+                  </small>
+                )}
               </>
             )}
           </div>
@@ -182,6 +191,7 @@ export function RunDraftConditionCell({
           </button>
         </>
       )}
+      {feedbackKey && <RunDraftFeedback location={feedbackKey} />}
       {!!matches.length && !!common.length && (
         <small>
           {t('Subject-specific and common planned values are both configured.')}

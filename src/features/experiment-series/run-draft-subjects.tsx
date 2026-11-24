@@ -1,4 +1,5 @@
 'use client';
+import { RunDraftFeedback } from './run-draft-feedback';
 import { useState } from 'react';
 import type { RunDraft } from '@/src/application/run-draft';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -95,6 +96,7 @@ export function RunDraftSubjects({
           {t('Add Subject')}
         </button>
       </div>
+      <RunDraftFeedback location="subjects" />
       {error && <p role="alert">{t(error)}</p>}
       {draft.subjects.length >= 500 && (
         <p>{t('A Run supports up to 500 Subjects.')}</p>

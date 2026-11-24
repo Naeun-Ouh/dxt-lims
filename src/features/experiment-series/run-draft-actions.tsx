@@ -1,57 +1,63 @@
 'use client';
-import { useId } from 'react';
-import type { AuthoritativeRunPreview } from '@/src/application/run-creation';
 import { useLocale } from '@/src/shared/i18n/locale';
+import { draftMessage } from './run-draft-feedback';
 
 export function RunDraftActions({
   busy,
-  canPreview,
-  readiness,
-  onPreview,
+  available,
+  reviewing,
+  missing,
+  error,
   onCreate,
 }: {
   busy: boolean;
-  canPreview: boolean;
-  readiness?: AuthoritativeRunPreview['readiness'];
-  onPreview: () => void;
+  available: boolean;
+  reviewing: boolean;
+  missing: string[];
+  error: string;
   onCreate: () => void;
 }) {
   const { t } = useLocale();
-  const reasonId = useId();
-  const disabled = busy || !canPreview || readiness?.status !== 'READY';
-  const reasons = busy
-    ? [t('Request in progress…')]
-    : readiness && readiness.status !== 'READY' && readiness.missing.length
-      ? readiness.missing.map((missing) => {
-          const [key, ...args] = missing.split('|');
-          return t(key, args);
-        })
-      : [t('Please review the preview first.')];
-
   return (
     <div className="draft-actions">
       <div className="entry-actions">
         <button
           type="button"
-          className="entry-button"
-          disabled={busy || !canPreview}
-          onClick={onPreview}
-        >
-          {t('Run Preview')}
-        </button>
-        <button
-          type="button"
           className="entry-button primary"
-          disabled={disabled}
-          aria-describedby={disabled ? reasonId : undefined}
+          disabled={busy || !available || reviewing}
           onClick={onCreate}
         >
           {t('Create Run')}
         </button>
       </div>
-      <div id={reasonId} className="draft-action-reason" aria-live="polite">
-        {disabled &&
-          reasons.map((reason, index) => <p key={index}>{reason}</p>)}
+      <div className="draft-action-reason" aria-live="polite" tabIndex={-1}>
+        {busy ? (
+          <p>{t('Request in progress…')}</p>
+        ) : error ? (
+          <p role="alert">{t(error)}</p>
+        ) : missing.length ? (
+          <>
+            <p>
+              {t(
+                'Nothing has been saved. Correct the highlighted inputs, then select Create Run again.',
+              )}
+            </p>
+            <ul>
+              {[...new Set(missing)].map((message) => {
+                const [key, ...args] = message.split('|');
+                return <li key={message}>{t(draftMessage(key), args)}</li>;
+              })}
+            </ul>
+          </>
+        ) : (
+          !reviewing && (
+            <p>
+              {t(
+                'We will check your plan and ask for final confirmation before saving.',
+              )}
+            </p>
+          )
+        )}
       </div>
     </div>
   );
