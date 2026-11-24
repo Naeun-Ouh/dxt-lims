@@ -389,3 +389,14 @@
     z-index: 4;
   }
 }
+
+.dxt-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--dxt-space-2);
+  padding-block: var(--dxt-space-2);
+}
+.material-usage-grid {
+  min-width: 880px;
+}
