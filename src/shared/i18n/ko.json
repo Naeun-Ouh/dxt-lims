@@ -1469,9 +1469,21 @@
   "We will check your plan and ask for final confirmation before saving.": "입력한 계획을 확인하고, 저장 전에 최종 확인을 요청합니다.",
   "Add at least one Subject to this draft.": "이번 실험 차수의 실험 대상을 한 개 이상 추가하세요.",
   "Add at least one Operation to this draft.": "공정 기준정보 조회에서 공정을 한 개 이상 추가하세요.",
-  "Enter a common planned value or a planned value for this Subject.": "공통 계획값 또는 이 대상의 계획값을 입력하세요.",
+  "Enter a common planned value or a planned value for this Subject.": "조건값을 입력하거나 이 대상의 조건값을 따로 지정해 주세요.",
   "Requiredness checked when creating": "생성 시 필수 여부 확인",
   "Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. The plan is checked when you select Create Run.": "공통 계획값은 공정 적용 대상 전체의 계획 조건입니다. 대상별 계획값은 특정 실험 대상에만 지정하는 계획 조건입니다. 실험 차수 생성을 누르면 계획을 확인합니다.",
   "Could not check or create the Run. Your draft is kept. Check your inputs and connection, then try again.": "실험 차수를 확인하거나 생성하지 못했습니다. 입력한 초안은 유지됩니다. 입력값과 연결 상태를 확인한 후 다시 시도해 주세요.",
-  "If confirmation was interrupted, retry Final Create to check the same request.": "최종 생성 응답이 중단되었다면 최종 생성을 다시 눌러 동일한 요청의 결과를 확인하세요."
+  "If confirmation was interrupted, retry Final Create to check the same request.": "최종 생성 응답이 중단되었다면 최종 생성을 다시 눌러 동일한 요청의 결과를 확인하세요.",
+  "Condition value": "조건값",
+  "Enter condition value": "조건값 입력",
+  "Set differently by Subject": "대상별로 다르게 설정",
+  "Subject-specific condition value": "대상별 조건값",
+  "Hide Subject-specific condition values": "대상별 조건값 접기",
+  "Use common condition value": "공통 조건값 사용",
+  "This value applies only to this Subject. Leave it blank to use the common condition value.": "입력한 값은 이 실험 대상에만 적용되며, 비워두면 공통 조건값을 사용합니다.",
+  "Enter the common condition value first, or specify a value for this Subject.": "공통 조건값을 먼저 입력하거나 이 대상의 조건값을 지정해 주세요.",
+  "The condition value applies to all Subjects this Operation applies to. Use “Set differently by Subject” only when a Subject needs a different planned condition.": "기본 조건값은 공정이 적용되는 모든 실험 대상에 사용됩니다. 특정 대상만 다르게 계획하려면 ‘대상별로 다르게 설정’을 사용하세요.",
+  "The condition value is used for all applicable Subjects.": "공정이 적용되는 모든 대상에 조건값을 사용합니다.",
+  "Subject-specific values are retained when hidden.": "접어도 대상별 조건값은 유지됩니다.",
+  "{0} Subject-specific condition values retained.": "대상별 조건값 {0}개 유지"
 }

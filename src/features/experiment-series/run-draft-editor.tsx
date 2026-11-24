@@ -1,10 +1,10 @@
 'use client';
-import { RunDraftFeedback, conditionFeedbackKey } from './run-draft-feedback';
+import { RunDraftFeedback } from './run-draft-feedback';
 import { useState, Fragment } from 'react';
 import { DxtGridFrame, DxtStatus, DxtCellText } from '@/src/shared/ui/dxt-grid';
 import { RunDraftMeasurementGrid } from './run-draft-measurement-grid';
 import { RunDraftSubjects } from './run-draft-subjects';
-import { RunDraftConditionCell } from './run-draft-condition-cell';
+import { RunDraftConditionRow } from './run-draft-condition-row';
 import { OperationMasterPicker } from './operation-master-picker';
 import type { RunDraft } from '@/src/application/run-draft';
 import type { BootstrapOperationOption } from '@/src/application/study-bootstrap';
@@ -97,7 +97,7 @@ export function RunDraftEditor({
           </button>
           <small>
             {t(
-              'Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. The plan is checked when you select Create Run.',
+              'The condition value applies to all Subjects this Operation applies to. Use “Set differently by Subject” only when a Subject needs a different planned condition.',
             )}
           </small>
         </div>
@@ -149,7 +149,7 @@ export function RunDraftEditor({
                   )}
                 <th scope="col">{t('Actions')}</th>
                 <th scope="col" className="matrix-common">
-                  {t('Common planned value')}
+                  {t('Condition value')}
                   <small>{t('All Subjects this Operation applies to')}</small>
                 </th>
                 {draft.subjects.map((s) => (
@@ -320,66 +320,16 @@ export function RunDraftEditor({
                     </tr>
                     {option.operation.role === 'PROCESS' &&
                       option.operation.items.map((def) => (
-                        <tr
+                        <RunDraftConditionRow
                           key={def.applicabilityId}
-                          className="matrix-condition"
-                        >
-                          <td aria-label={t('Condition name')}>↳</td>
-                          <th scope="row" colSpan={leftColumns - 1}>
-                            <span>↳ {def.label}</span>{' '}
-                            <span className="matrix-unit">
-                              {def.unit || '—'}
-                            </span>
-                            <small>
-                              {t(
-                                option.conditionRequirements?.[
-                                  def.applicabilityId
-                                ] === undefined
-                                  ? 'Requiredness checked when creating'
-                                  : option.conditionRequirements[
-                                        def.applicabilityId
-                                      ]
-                                    ? 'Required'
-                                    : 'Optional',
-                              )}
-                            </small>
-                          </th>
-                          {[null, ...draft.subjects.map((s) => s.id)].map(
-                            (subjectId) => (
-                              <td
-                                key={JSON.stringify(subjectId)}
-                                className={
-                                  subjectId
-                                    ? `matrix-subject ${op.subjectIds.includes(subjectId) ? '' : 'matrix-na'}`
-                                    : 'matrix-common'
-                                }
-                              >
-                                <RunDraftConditionCell
-                                  feedbackKey={conditionFeedbackKey(
-                                    index,
-                                    def.applicabilityId,
-                                    subjectId,
-                                  )}
-                                  def={def}
-                                  items={op.items}
-                                  subjectId={subjectId}
-                                  required={
-                                    option.conditionRequirements?.[
-                                      def.applicabilityId
-                                    ]
-                                  }
-                                  participating={
-                                    subjectId
-                                      ? op.subjectIds.includes(subjectId)
-                                      : op.subjectIds.length > 0
-                                  }
-                                  label={`${index + 1}. ${option.operation.label} · ${def.label} · ${subjectId ?? t('Common planned value')}`}
-                                  onChange={(items) => change(index, { items })}
-                                />
-                              </td>
-                            ),
-                          )}
-                        </tr>
+                          index={index}
+                          option={option}
+                          def={def}
+                          op={op}
+                          subjects={draft.subjects}
+                          leftColumns={leftColumns}
+                          onChange={(items) => change(index, { items })}
+                        />
                       ))}
                   </Fragment>
                 );

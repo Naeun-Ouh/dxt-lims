@@ -83,8 +83,8 @@ export function RunCreationReview({
                         <div key={a.id}>
                           {a.label}: {a.value} ·{' '}
                           {a.subjectId
-                            ? `${t('Subject-specific planned value')} · ${a.subjectId}`
-                            : t('Common planned value')}{' '}
+                            ? `${t('Subject-specific condition value')} · ${a.subjectId}`
+                            : t('Condition value')}{' '}
                           ·{' '}
                           {t(
                             a.intentRole === 'VARIED'

@@ -609,9 +609,21 @@
   "We will check your plan and ask for final confirmation before saving.": "We will check your plan and ask for final confirmation before saving.",
   "Add at least one Subject to this draft.": "Add at least one Subject to this draft.",
   "Add at least one Operation to this draft.": "Add at least one Operation to this draft.",
-  "Enter a common planned value or a planned value for this Subject.": "Enter a common planned value or a planned value for this Subject.",
+  "Enter a common planned value or a planned value for this Subject.": "Enter a condition value, or set a different value for this Subject.",
   "Requiredness checked when creating": "Requiredness checked when creating",
   "Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. The plan is checked when you select Create Run.": "Common planned values define conditions for all applicable Subjects. Subject-specific planned values define conditions for one Subject. The plan is checked when you select Create Run.",
   "Could not check or create the Run. Your draft is kept. Check your inputs and connection, then try again.": "Could not check or create the Run. Your draft is kept. Check your inputs and connection, then try again.",
-  "If confirmation was interrupted, retry Final Create to check the same request.": "If confirmation was interrupted, retry Final Create to check the same request."
+  "If confirmation was interrupted, retry Final Create to check the same request.": "If confirmation was interrupted, retry Final Create to check the same request.",
+  "Condition value": "Condition value",
+  "Enter condition value": "Enter condition value",
+  "Set differently by Subject": "Set differently by Subject",
+  "Subject-specific condition value": "Subject-specific condition value",
+  "Hide Subject-specific condition values": "Hide Subject-specific condition values",
+  "Use common condition value": "Use common condition value",
+  "This value applies only to this Subject. Leave it blank to use the common condition value.": "This value applies only to this Subject. Leave it blank to use the common condition value.",
+  "Enter the common condition value first, or specify a value for this Subject.": "Enter the common condition value first, or specify a value for this Subject.",
+  "The condition value applies to all Subjects this Operation applies to. Use “Set differently by Subject” only when a Subject needs a different planned condition.": "The condition value applies to all Subjects this Operation applies to. Use “Set differently by Subject” only when a Subject needs a different planned condition.",
+  "The condition value is used for all applicable Subjects.": "The condition value is used for all applicable Subjects.",
+  "Subject-specific values are retained when hidden.": "Subject-specific values are retained when hidden.",
+  "{0} Subject-specific condition values retained.": "{0} Subject-specific condition values retained."
 }

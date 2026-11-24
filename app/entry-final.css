@@ -973,3 +973,6 @@
 .draft-inline-errors:focus, .draft-review-heading:focus { outline: 2px solid #315e80; outline-offset: 3px; }
 .draft-action-reason ul { list-style-position: inside; padding: 0; }
 .draft-review-subjects { display: flex; flex-wrap: wrap; gap: 8px 24px; padding-left: 20px; }
+
+.dxt-density .dxt-grid .entry-button.draft-condition-disclosure { margin-top: 6px; max-width: 100%; white-space: normal; height: auto; min-height: 32px; }
+.draft-condition-inheritance { color: var(--text-secondary, #52677b); background: #f8fafc; vertical-align: middle; }

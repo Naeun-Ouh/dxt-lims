@@ -12,6 +12,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LocaleProvider } from '@/src/shared/i18n/locale';
+import { editDraftConditionValue } from '@/src/features/experiment-series/run-draft-condition-cell';
 import { RunDraftEditor } from '@/src/features/experiment-series/run-draft-editor';
 import { removeDraftSubject } from '@/src/features/experiment-series/run-draft-subjects';
 import { RunDraftMeasurementGrid } from '@/src/features/experiment-series/run-draft-measurement-grid';
@@ -96,8 +97,8 @@ void test('required/optional metadata shows missing participation coverage witho
     html = render(value);
   assert.match(html, /Required/);
   assert.match(html, /Optional/);
-  assert.match(html, /Missing/);
-  assert.match(html, /Not entered/);
+  assert.match(html, /Set differently by Subject/);
+  assert.doesNotMatch(html, /Subject-specific condition value/);
   assert.equal(JSON.stringify(value), before);
   value.operations[0].items = [
     {
@@ -107,7 +108,8 @@ void test('required/optional metadata shows missing participation coverage witho
       subjectId: 'S1',
     },
   ];
-  assert.match(render(value), /Missing/);
+  assert.match(render(value), /Use common condition value/);
+  assert.doesNotMatch(render(value), />Missing</);
   value.operations[0].subjectIds = [];
   value.operations[0].items = [];
   assert.match(render(value), /Not applicable/);
@@ -281,11 +283,8 @@ void test('Unified matrix renders objects and scoped assignments without changin
   assert.doesNotMatch(html, /textarea/);
   assert.match(html, /Add Subject/);
   assert.match(html, /Process Flow &amp; Conditions/);
-  assert.match(html, /Common planned value/);
-  assert.match(
-    html,
-    /Subject-specific and common planned values are both configured/,
-  );
+  assert.match(html, /Condition value/);
+  assert.match(html, /Subject-specific condition value/);
   assert.match(html, /Not applicable/);
   assert.match(html, /value="30"/);
   assert.match(html, /value="25"/);
@@ -293,8 +292,8 @@ void test('Unified matrix renders objects and scoped assignments without changin
   for (const label of [
     '공정 적용',
     '미적용',
-    '공통 계획값',
-    '대상별 계획값',
+    '조건값',
+    '대상별 조건값',
     '미적용은 결과 누락이 아니라',
   ])
     assert.ok(korean.includes(label));
@@ -480,4 +479,66 @@ void test('creation review preserves snapshot and shows subjects, order, applica
     for (const step of snapshot.steps) assert.ok(html.includes(step.label));
   }
   assert.equal(JSON.stringify(preview), before);
+});
+
+void test('Clearing a Subject condition inherits common value without writing an empty assignment', () => {
+  const common = {
+    applicabilityId: 'required',
+    subjectId: null,
+    value: '25',
+    intentRole: 'VARIED' as const,
+  };
+  const other = {
+    applicabilityId: 'required',
+    subjectId: 'S2',
+    value: '30',
+    intentRole: 'FIXED' as const,
+  };
+  const items = [common, other];
+  const before = JSON.stringify(items);
+  const entered = editDraftConditionValue(items, 'required', 'S1', '27');
+  assert.equal(entered.length, 3);
+  const cleared = editDraftConditionValue(entered, 'required', 'S1', '');
+  assert.deepEqual(cleared, items);
+  assert.equal(cleared[0], common);
+  assert.equal(cleared[1], other);
+  assert.equal(JSON.stringify(items), before);
+  assert.deepEqual(
+    editDraftConditionValue(items, 'required', 'S1', '  '),
+    items,
+  );
+  const changed = editDraftConditionValue(items, 'required', null, '26');
+  assert.equal(changed[0].intentRole, 'VARIED');
+  assert.equal(changed[1], other);
+  assert.equal(
+    editDraftConditionValue(items, 'required', null, '')[0].value,
+    '',
+  );
+});
+void test('Common-only conditions stay collapsed; existing Subject values are visible without mutation', () => {
+  const value = draft();
+  value.operations[0].items = [
+    {
+      applicabilityId: 'required',
+      subjectId: null,
+      value: '25',
+      intentRole: 'FIXED',
+    },
+  ];
+  const html = render(value, 'ko');
+  assert.match(html, /대상별로 다르게 설정/);
+  assert.doesNotMatch(html, /대상별 계획값|대상별 조건값/);
+  value.operations[0].items.push({
+    applicabilityId: 'required',
+    subjectId: 'S1',
+    value: '30',
+    intentRole: 'VARIED',
+  });
+  const before = JSON.stringify(value);
+  const expanded = render(value, 'ko');
+  assert.match(expanded, /대상별 조건값 접기/);
+  assert.match(expanded, /공통 조건값 사용/);
+  assert.match(expanded, /value="30"/);
+  assert.doesNotMatch(expanded, />누락</);
+  assert.equal(JSON.stringify(value), before);
 });
