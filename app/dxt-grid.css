@@ -389,3 +389,27 @@
     z-index: 4;
   }
 }
+
+.dxt-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--dxt-space-2);
+  padding-block: var(--dxt-space-2);
+}
+.material-usage-grid {
+  min-width: 880px;
+}
+
+.sample-usage-page .entry-button,
+.sample-usage-page .dxt-toolbar input {
+  border: 1px solid var(--dxt-border);
+  background: var(--dxt-surface);
+  color: var(--dxt-text);
+}
+.sample-usage-page .entry-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}

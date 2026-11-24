@@ -133,3 +133,5 @@ export const httpStudyBootstrap = {
       command: { commandId },
     }),
 };
+
+export const httpMaterialUsage = (query: unknown) => request<import('@/src/application/discovery').DiscoveryPage<import('@/src/application/material-usage').MaterialAssignmentUsage>>({operation: 'material.usage', query});

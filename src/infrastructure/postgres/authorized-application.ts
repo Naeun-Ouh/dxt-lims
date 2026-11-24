@@ -1,3 +1,4 @@
+import { scopedMaterialUsage } from './material-usage';
 import { readBootstrap, saveBootstrap, initializeReasoning } from './study-bootstrap';
 import { PostgresStudyCreation } from './study-creation';
 import {scopedDashboard,scopedStudyList,scopedRunSummaries,scopedSearch} from './scoped-discovery';
@@ -44,6 +45,7 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
    }
   }
   if(op==='study.identity')return studyCreation.get(text(input.slug));
+  if(op==='material.usage')return scopedMaterialUsage(sql,principal,input.query);
   if(op==='run.summaries')return scopedRunSummaries(sql,principal,input.query);
   if(op==='search.query')return scopedSearch(sql,principal,input.query,text(input.kind)||'ALL');
   const study=async(slug:string,action:StudyAction)=>{

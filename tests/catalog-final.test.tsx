@@ -1,3 +1,6 @@
+import ProductionSampleUsage, {
+  MaterialUsageTable,
+} from '../src/features/samples/production-usage';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -164,5 +167,57 @@ void test('Draft revision presentation uses actual status and empty usage withou
     }
   } finally {
     catalog.sampleRevisions[index] = original;
+  }
+});
+
+void test('Production Samples never render fixture identity or claim verified Sample usage', () => {
+  for (const locale of ['en', 'ko'] as const) {
+    const html = render(<ProductionSampleUsage unavailableDetail />, locale);
+    assert.doesNotMatch(html, /D031|D035|Photo Sample A|Create Sample/);
+    if (locale === 'ko') {
+      assert.match(html, /검색/);
+      assert.doesNotMatch(html, />Search</);
+    }
+    assert.match(
+      html,
+      locale === 'ko'
+        ? /샘플 등록 및 리비전 이력은 아직/
+        : /Sample registration and revision history are not available/,
+    );
+    const table = render(
+      <MaterialUsageTable
+        rows={[
+          {
+            assignmentId: 'assignment-1',
+            runId: 'run-actual-id',
+            study: 'Exact Study',
+            studySlug: 'generic-study',
+            runNumber: 12,
+            operation: 'Coat',
+            subject: null,
+            label: 'Material',
+            value: 'D035 Rev.2',
+            referenceId: 'exact-reference-id',
+            intentRole: 'VARIED',
+          },
+        ]}
+      />,
+      locale,
+    );
+    assert.match(
+      table,
+      /\/series\/generic-study\/runs\/12\/engineering-grid\?view=plan/,
+    );
+    assert.match(
+      table,
+      /<details><summary>.*?<\/summary><code>exact-reference-id<\/code>/,
+    );
+    assert.match(
+      table,
+      locale === 'ko'
+        ? /확인된 샘플 리비전 연결이 아닙니다/
+        : /not a verified Sample Revision link/,
+    );
+    assert.match(table, /D035 Rev.2/);
   }
 });

@@ -1,3 +1,4 @@
+import { materialUsageContract } from './postgres-material-usage-contract';
 import { studyBootstrapContract } from './postgres-study-bootstrap-contract';
 import { studyCreationContract } from './postgres-study-creation-contract';
 import {dashboardAuthorizationContract} from './postgres-dashboard-authorization-contract';
@@ -149,6 +150,7 @@ void test('native PostgreSQL 18 executes the Production Adapter slice through no
     await configurationAuthorizationContract(database);
     await savedAnalysisAuthorizationContract(database,measurementProof);
     await dashboardAuthorizationContract(database,measurementProof);
+    await materialUsageContract(database,measurementProof);
     await studyCreationContract(database);
     await studyBootstrapContract(database);
     await database.close();
