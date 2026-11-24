@@ -1485,5 +1485,13 @@
   "The condition value applies to all Subjects this Operation applies to. Use “Set differently by Subject” only when a Subject needs a different planned condition.": "기본 조건값은 공정이 적용되는 모든 실험 대상에 사용됩니다. 특정 대상만 다르게 계획하려면 ‘대상별로 다르게 설정’을 사용하세요.",
   "The condition value is used for all applicable Subjects.": "공정이 적용되는 모든 대상에 조건값을 사용합니다.",
   "Subject-specific values are retained when hidden.": "접어도 대상별 조건값은 유지됩니다.",
-  "{0} Subject-specific condition values retained.": "대상별 조건값 {0}개 유지"
+  "{0} Subject-specific condition values retained.": "대상별 조건값 {0}개 유지",
+  "Actual is read-only. Ask the Study manager for permission to record execution.": "실제 기록은 읽기 전용입니다. 실행 기록 권한은 스터디 관리자에게 요청해 주세요.",
+  "Measurement is read-only. Ask the Study manager for permission to record results.": "계측은 읽기 전용입니다. 결과 기록 권한은 스터디 관리자에게 요청해 주세요.",
+  "No Measurement plan exists for this Run. Record Actual for this process-only Run, or configure Measurement when creating a subsequent Run.": "이 실험 차수에는 계측 계획이 없습니다. 공정 실행 결과를 실제 탭에 기록하거나, 다음 실험 차수를 생성할 때 계측 계획을 설정해 주세요.",
+  "The saved evidence has changed. Keep your entered values, reload the latest evidence and try again.": "저장된 기록이 변경되었습니다. 입력값을 보관한 후 최신 기록을 불러와 다시 시도해 주세요.",
+  "This Run or its Measurement definitions are unavailable. Ask the Study manager to check the experiment configuration.": "실험 차수 또는 계측 기준정보를 사용할 수 없습니다. 스터디 관리자에게 실험 기준정보 확인을 요청해 주세요.",
+  "Could not load saved execution or Measurement evidence. Check your connection and access, then reload.": "저장된 실행 또는 계측 기록을 불러오지 못했습니다. 연결과 접근 권한을 확인한 후 다시 불러와 주세요.",
+  "Could not save Actual. Check the Operation, applicable Subject and execution times, then try again.": "실제 기록을 저장하지 못했습니다. 공정, 적용 대상, 실행 시간을 확인한 후 다시 시도해 주세요.",
+  "Could not save Measurement. Check the selected Operation, parameter, value and measurement location, then try again.": "계측을 저장하지 못했습니다. 선택한 공정, 계측항목, 값과 계측 위치를 확인한 후 다시 시도해 주세요."
 }

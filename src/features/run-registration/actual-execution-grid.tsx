@@ -1,4 +1,5 @@
 'use client';
+import { lifecycleErrorMessage } from './lifecycle-feedback';
 import { LifecycleInspectorClose } from '@/src/shared/ui/lifecycle-inspector-close';
 import { participatesInOperation } from './grid-plan-context';
 /* oxlint-disable next/no-img-element -- Exact Figma SVG assets. */
@@ -409,8 +410,8 @@ function ActualAuthoringBar({
   const [subjectId, setSubjectId] = useState(model.subjects[0]?.id ?? '');
   const [status, setStatus] =
     useState<ActualExecutionCommand['status']>('COMPLETED');
-  const [startedAt, setStartedAt] = useState('2026-09-14T09:00');
-  const [endedAt, setEndedAt] = useState('2026-09-14T09:30');
+  const [startedAt, setStartedAt] = useState('');
+  const [endedAt, setEndedAt] = useState('');
   const operation = operations.find((item) => item.id === operationId);
   const subject = model.subjects.find((item) => item.id === subjectId);
   const planned =
@@ -428,6 +429,11 @@ function ActualAuthoringBar({
     setSaving(true);
     setMessage('');
     try {
+      if (!startedAt) throw new Error('Execution start is required.');
+      if (status === 'COMPLETED' && !endedAt)
+        throw new Error(
+          'Completion time is required for a completed execution.',
+        );
       await onRecord({
         operationId,
         subjectId,
@@ -442,9 +448,7 @@ function ActualAuthoringBar({
       });
       setMessage('Actual execution saved. Plan remains unchanged.');
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : 'Unable to save execution.',
-      );
+      setMessage(lifecycleErrorMessage(error, 'actual'));
     } finally {
       setSaving(false);
     }
