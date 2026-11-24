@@ -1,4 +1,5 @@
 'use client';
+import { runAnalysisHref } from './run-analysis-link';
 import { ParticipationEditor } from './participation-editor';
 import { editOperationParticipation } from './participation';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -101,10 +102,13 @@ export default function EngineeringGrid({
   const baseModel = useMemo(
     () =>
       persistedPlan
-        ? { ...gridPlanningContext(
-            persistedPlan,
-            application.repositories.configuration,
-          ), explicitAssignments: inputModel.explicitAssignments }
+        ? {
+            ...gridPlanningContext(
+              persistedPlan,
+              application.repositories.configuration,
+            ),
+            explicitAssignments: inputModel.explicitAssignments,
+          }
         : {
             ...inputModel,
             configurationRepository: application.repositories.configuration,
@@ -365,11 +369,11 @@ export default function EngineeringGrid({
     authoring?.state.measurementResults ?? measurementResults;
   const resolvedCatalog =
     authoring?.state.measurementCatalog ??
-    authoring?.profile.catalog ??
+    authoring?.profile?.catalog ??
     referenceCatalog;
   const resolvedBindings =
     authoring?.state.targetBindings ??
-    authoring?.profile.targetBindings ??
+    authoring?.profile?.targetBindings ??
     evaluationTargetBindings;
   const resolvedEvaluations =
     authoring?.state.engineerEvaluations ?? engineerEvaluations;
@@ -378,9 +382,7 @@ export default function EngineeringGrid({
   const analysisParameterId = resolvedMeasurements?.values.find(
     (value) => value.parameterDefinitionId,
   )?.parameterDefinitionId;
-  const analysisHref = `/analysis?study=${seriesSlug}&runs=${model.snapshot.runNumber}${
-    analysisParameterId ? `&parameters=${analysisParameterId}` : ''
-  }`;
+  const analysisHref = runAnalysisHref(model.snapshot, analysisParameterId ?? undefined);
   const nextRunHref = resolvedNextRun
     ? `/series/${seriesSlug}/runs/${resolvedNextRun.snapshot.runNumber}/engineering-grid?view=plan`
     : undefined;
@@ -688,7 +690,9 @@ export default function EngineeringGrid({
           </button>
           <button
             className={workspaceMode === 'MEASUREMENT' ? 'active' : ''}
-            disabled={!resolvedMeasurements || !resolvedCatalog}
+            disabled={
+              !production && (!resolvedMeasurements || !resolvedCatalog)
+            }
             onClick={() => changeMode('MEASUREMENT')}
           >
             {t('Measurement')}
@@ -711,34 +715,63 @@ export default function EngineeringGrid({
         ) : workspaceMode !== 'PLAN' && authoring?.loading ? (
           <output>{t('Loading lifecycle evidence…')}</output>
         ) : workspaceMode === 'ACTUAL' ? (
-          <ActualExecutionGrid
-            model={model}
-            evidence={resolvedActualEvidence}
-            onComparePlan={() => changeMode('PLAN')}
-            onRecord={
-              authoring && (!production || scientific?.canRecordActual)
-                ? (command) => authoring.recordActual(command)
-                : undefined
-            }
-            onContinue={authoring ? () => changeMode('MEASUREMENT') : undefined}
-            now={authoring?.now}
-          />
+          <>
+            {production && !scientific?.canRecordActual && (
+              <output>
+                {t(
+                  'Actual is read-only. Ask the Study manager for permission to record execution.',
+                )}
+              </output>
+            )}
+            <ActualExecutionGrid
+              model={model}
+              evidence={resolvedActualEvidence}
+              onComparePlan={() => changeMode('PLAN')}
+              onRecord={
+                authoring && (!production || scientific?.canRecordActual)
+                  ? (command) => authoring.recordActual(command)
+                  : undefined
+              }
+              onContinue={
+                authoring ? () => changeMode('MEASUREMENT') : undefined
+              }
+              now={authoring?.now}
+            />
+          </>
+        ) : workspaceMode === 'MEASUREMENT' &&
+          production &&
+          !model.snapshot.measurements.length &&
+          !resolvedMeasurements?.datasets.length ? (
+          <output>
+            {t(
+              'No Measurement plan exists for this Run. Record Actual for this process-only Run, or configure Measurement when creating a subsequent Run.',
+            )}
+          </output>
         ) : workspaceMode === 'MEASUREMENT' &&
           resolvedMeasurements &&
           resolvedCatalog ? (
-          <MeasurementExecutionGrid
-            model={model}
-            results={resolvedMeasurements}
-            catalog={resolvedCatalog}
-            executionEvidence={resolvedActualEvidence}
-            onRecord={
-              authoring && (!production || scientific?.canRecordMeasurement)
-                ? (command) => authoring.recordMeasurement(command)
-                : undefined
-            }
-            analysisHref={authoring ? analysisHref : undefined}
-            now={authoring?.now}
-          />
+          <>
+            {production && !scientific?.canRecordMeasurement && (
+              <output>
+                {t(
+                  'Measurement is read-only. Ask the Study manager for permission to record results.',
+                )}
+              </output>
+            )}
+            <MeasurementExecutionGrid
+              model={model}
+              results={resolvedMeasurements}
+              catalog={resolvedCatalog}
+              executionEvidence={resolvedActualEvidence}
+              onRecord={
+                authoring && (!production || scientific?.canRecordMeasurement)
+                  ? (command) => authoring.recordMeasurement(command)
+                  : undefined
+              }
+              analysisHref={authoring ? analysisHref : undefined}
+              now={authoring?.now}
+            />
+          </>
         ) : workspaceMode === 'EVALUATION' &&
           resolvedMeasurements &&
           resolvedCatalog &&
@@ -771,7 +804,7 @@ export default function EngineeringGrid({
                 ? () => authoring.createNextRun()
                 : undefined
             }
-            actor={authoring?.profile.actor}
+            actor={authoring?.profile?.actor}
             now={authoring?.now}
           />
         ) : (

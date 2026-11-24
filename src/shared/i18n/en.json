@@ -625,5 +625,13 @@
   "The condition value applies to all Subjects this Operation applies to. Use “Set differently by Subject” only when a Subject needs a different planned condition.": "The condition value applies to all Subjects this Operation applies to. Use “Set differently by Subject” only when a Subject needs a different planned condition.",
   "The condition value is used for all applicable Subjects.": "The condition value is used for all applicable Subjects.",
   "Subject-specific values are retained when hidden.": "Subject-specific values are retained when hidden.",
-  "{0} Subject-specific condition values retained.": "{0} Subject-specific condition values retained."
+  "{0} Subject-specific condition values retained.": "{0} Subject-specific condition values retained.",
+  "Actual is read-only. Ask the Study manager for permission to record execution.": "Actual is read-only. Ask the Study manager for permission to record execution.",
+  "Measurement is read-only. Ask the Study manager for permission to record results.": "Measurement is read-only. Ask the Study manager for permission to record results.",
+  "No Measurement plan exists for this Run. Record Actual for this process-only Run, or configure Measurement when creating a subsequent Run.": "No Measurement plan exists for this Run. Record Actual for this process-only Run, or configure Measurement when creating a subsequent Run.",
+  "The saved evidence has changed. Keep your entered values, reload the latest evidence and try again.": "The saved evidence has changed. Keep your entered values, reload the latest evidence and try again.",
+  "This Run or its Measurement definitions are unavailable. Ask the Study manager to check the experiment configuration.": "This Run or its Measurement definitions are unavailable. Ask the Study manager to check the experiment configuration.",
+  "Could not load saved execution or Measurement evidence. Check your connection and access, then reload.": "Could not load saved execution or Measurement evidence. Check your connection and access, then reload.",
+  "Could not save Actual. Check the Operation, applicable Subject and execution times, then try again.": "Could not save Actual. Check the Operation, applicable Subject and execution times, then try again.",
+  "Could not save Measurement. Check the selected Operation, parameter, value and measurement location, then try again.": "Could not save Measurement. Check the selected Operation, parameter, value and measurement location, then try again."
 }

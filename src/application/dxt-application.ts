@@ -103,6 +103,21 @@ export class DxtApplication {
     },
   };
 
+  /** Read-only production lifecycle: exact persisted Run; no fixture profile or reasoning dependency. */
+  async loadPersistedLifecycle(runId: string, stage: 'ACTUAL' | 'MEASUREMENT' | 'ALL') {
+    const snapshot = await this.repositories.run.getSnapshot(runId);
+    if (!snapshot) throw new ApplicationError('NOT_FOUND', 'Saved Run could not be loaded.');
+    const execution = await this.executions.load(runId);
+    const state = { ...createEmptyLifecycleState(snapshot), actualEvidence: execution.records, executionVersion: execution.version };
+    if (stage === 'ACTUAL') return state;
+    const measurement = await this.measurements.load(runId);
+    // Process-only Runs do not need a Measurement catalog to explain the empty state.
+    const measurementCatalog = snapshot.measurements.length || measurement.record.datasets.length
+      ? await this.repositories.measurement.getCatalog(snapshot.configurationPackageVersionId)
+      : undefined;
+    return { ...state, measurementResults: measurement.record, measurementVersion: measurement.version, measurementCatalog };
+  }
+
   async loadLifecycle(snapshot: RunPlanningSnapshot, profile: LifecycleAuthoringProfile, stage: 'ACTUAL' | 'MEASUREMENT' | 'ALL' = 'ALL') {
     if (stage === 'ACTUAL' || stage === 'MEASUREMENT') {
       const saved = await this.repositories.run.getSnapshot(snapshot.id);
@@ -192,7 +207,7 @@ export class DxtApplication {
       const catalog=await this.repositories.measurement.getCatalog(snapshot.configurationPackageVersionId);
       const entries=datasets.filter(d=>d.dataset.experimentRunId===runId);
       const ids=[...new Set(entries.flatMap(e=>e.parameterIds))];
-      sources.push({studyId:snapshot.series.id.replace(/^series-/,''),studyLabel:snapshot.series.name,workspaceContextLabel:snapshot.workspaceContextLabel??snapshot.area,
+      sources.push({studySlug:entries[0]?.studySlug,studyId:snapshot.series.id.replace(/^series-/,''),studyLabel:snapshot.series.name,workspaceContextLabel:snapshot.workspaceContextLabel??snapshot.area,
         runId,runNumber:snapshot.runNumber,subjects:snapshot.subjects,
         measurements:{...emptyMeasurements(),datasets:entries.map(e=>e.dataset)},
         parameterLabels:Object.fromEntries(ids.map(id=>{const p=catalog.parameters.find(p=>p.id===id);if(!p)throw new ApplicationError('NOT_FOUND','Exact Analysis Parameter revision is missing.');return [id,p.name];})),

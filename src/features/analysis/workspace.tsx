@@ -327,7 +327,8 @@ function AnalysisWorkspaceContent({
   ];
   const [scopeOpen, setScopeOpen] = useState(true);
   const contextLabel = sources[0]?.workspaceContextLabel ?? 'R&D';
-  const studyHref = `/series/${selection.studyId}`;
+  const studySlug = sources[0]?.studySlug ?? selection.studyId;
+  const studyHref = `/series/${studySlug}`;
   const singleRun = selectedSources.length === 1 ? selectedSources[0] : null;
 
   const openSavedView = useCallback(
@@ -602,7 +603,7 @@ function AnalysisWorkspaceContent({
       page="Analysis"
       planShell
       lifecyclePhase="Analysis"
-      seriesSlug={selection.studyId}
+      seriesSlug={studySlug}
       seriesTitle={sources[0]?.studyLabel}
       run={singleRun?.runNumber}
       returnHref={studyHref}
@@ -620,7 +621,7 @@ function AnalysisWorkspaceContent({
             singleRun ? (
               <a
                 key={phase}
-                href={`/series/${selection.studyId}/runs/${singleRun.runNumber}/engineering-grid?view=${phase.toLowerCase()}`}
+                href={`/series/${studySlug}/runs/${singleRun.runNumber}/engineering-grid?view=${phase.toLowerCase()}`}
               >
                 {t(phase)}
               </a>

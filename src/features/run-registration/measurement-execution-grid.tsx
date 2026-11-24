@@ -1,4 +1,6 @@
 'use client';
+import { measurementAuthoringOptions } from './measurement-authoring-options';
+import { lifecycleErrorMessage } from './lifecycle-feedback';
 import { participatesInOperation } from './grid-plan-context';
 import { LifecycleInspectorClose } from '@/src/shared/ui/lifecycle-inspector-close';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -286,15 +288,16 @@ function MeasurementAuthoringBar({
 }) {
   const { t } = useLocale();
   const operations = model.operations.filter(
-    (item) => item.role === 'MEASUREMENT',
+    (item) =>
+      item.role === 'MEASUREMENT' &&
+      model.snapshot.measurements.some((plan) => plan.stepId === item.id),
   );
   const [operationId, setOperationId] = useState(operations[0]?.id ?? '');
   const operation = operations.find((item) => item.id === operationId);
-  const parameters = catalog.parameters.filter(
-    (item) =>
-      item.semanticRole === 'MEASUREMENT' &&
-      item.measurementOperationDefinitionId ===
-        operation?.operationDefinitionRevisionId,
+  const { plan, parameters } = measurementAuthoringOptions(
+    model.snapshot,
+    catalog,
+    operationId,
   );
   const [subjectId, setSubjectId] = useState(model.subjects[0]?.id ?? '');
   const [parameterId, setParameterId] = useState(parameters[0]?.id ?? '');
@@ -302,9 +305,9 @@ function MeasurementAuthoringBar({
     parameters.find((item) => item.id === parameterId) ?? parameters[0];
   const [value, setValue] = useState('');
   const [grain, setGrain] = useState<'SUBJECT' | 'SITE'>('SUBJECT');
-  const [site, setSite] = useState('S01');
-  const [x, setX] = useState('0');
-  const [y, setY] = useState('0');
+  const [site, setSite] = useState('');
+  const [x, setX] = useState('');
+  const [y, setY] = useState('');
   const [message, setMessage] = useState('');
   const coordinateSet = catalog.coordinateSets.find((item) =>
     item.measurementOperationDefinitionIds.includes(
@@ -313,32 +316,29 @@ function MeasurementAuthoringBar({
   );
   const changeOperation = (id: string) => {
     setOperationId(id);
-    const next = model.operations.find((item) => item.id === id);
-    const first = catalog.parameters.find(
-      (item) =>
-        item.semanticRole === 'MEASUREMENT' &&
-        item.measurementOperationDefinitionId ===
-          next?.operationDefinitionRevisionId,
-    );
+    const first = measurementAuthoringOptions(model.snapshot, catalog, id)
+      .parameters[0];
     setParameterId(first?.id ?? '');
   };
   const [saving, setSaving] = useState(false);
   const submit = async () => {
-    if (!parameter || !operation) return;
+    if (!parameter || !operation || !plan) return;
     setSaving(true);
     setMessage('');
     try {
       const ids = coordinateSet?.coordinateDefinitionIds ?? [];
+      if (
+        grain === 'SITE' &&
+        ids.slice(0, 2).some((_, index) => !(index === 0 ? x : y).trim())
+      )
+        throw new Error(
+          'Site coordinates are required for Site-grain Measurement.',
+        );
       await onRecord({
         operationId: operation.id,
         subjectId,
         parameterDefinitionId: parameter.id,
-        measurementPoint:
-          model.snapshot.measurements.find(
-            (item) =>
-              item.measurementOperationDefinitionId ===
-              operation.operationDefinitionRevisionId,
-          )?.point ?? parameter.supportedMeasurementPoints[0],
+        measurementPoint: plan.point,
         value,
         grain,
         siteIdentity: grain === 'SITE' ? site : undefined,
@@ -355,9 +355,7 @@ function MeasurementAuthoringBar({
       setValue('');
       setMessage('Measurement saved and available to Analysis.');
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : 'Unable to save Measurement.',
-      );
+      setMessage(lifecycleErrorMessage(error, 'measurement'));
     } finally {
       setSaving(false);
     }
