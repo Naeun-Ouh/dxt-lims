@@ -9,6 +9,7 @@ import {lifecycleAuthoringProfiles} from '@/src/mock/lifecycle-authoring';
 import {createNextRunPreview} from '@/src/features/run-registration/decision-continuation-model';
 
 export async function productionPlanAuthoringContract(db:SqlDatabase){
+ await stableOperationIdentityContract(db);
  const pins=(await db.query<{id:string}>('SELECT DISTINCT configuration_package_version_id id FROM study_setup_version')).rows.map(r=>r.id);
  const configuration=await hydrateConfigurationPackages(db,pins);
  const app=new DxtApplication(createProductionSliceRepositories(db,configuration));
@@ -88,4 +89,53 @@ export async function nativePlanEvidenceRace(db:SqlDatabase){
  const stale=assert.rejects(app.runs.savePlanning({...plan,snapshot:{...snapshot,intent:'concurrent overwrite'}},'7b-concurrent-save'),/locked/);
  release();await evidence;await stale;
  assert.deepEqual(await app.repositories.run.getSnapshot(snapshot.id),snapshot);
+}
+
+/** Operation instances and all surviving Plan children retain relational identity. */
+export async function stableOperationIdentityContract(db:SqlDatabase){
+ const pins=(await db.query<{id:string}>('SELECT DISTINCT configuration_package_version_id id FROM study_setup_version')).rows.map(r=>r.id);
+ const configuration=await hydrateConfigurationPackages(db,pins);
+ const app=new DxtApplication(createProductionSliceRepositories(db,configuration));
+ const created=await app.createRunFromStudy('adhesion-material-optimization','STUDY_DEFAULT','stable-operation-create');
+ const physical=async()=>{
+  const root=(await db.query<{run_id:string}>('SELECT run_id FROM experiment_run WHERE run_domain_id=$1',[created.id])).rows[0].run_id;
+  const operations=(await db.query<{id:string;domain:string;sequence:number}>('SELECT run_operation_id id,operation_domain_id domain,sequence FROM run_operation WHERE run_id=$1 ORDER BY operation_domain_id',[root])).rows;
+  const subjects=(await db.query<{id:string;domain:string;ordinal:number}>('SELECT rs.run_subject_id id,s.subject_domain_id domain,ordinal FROM run_subject rs JOIN subject s USING(subject_id) WHERE rs.run_id=$1 ORDER BY s.subject_domain_id',[root])).rows;
+  const assignments=(await db.query<{id:string;domain:string}>('SELECT run_assignment_id id,assignment_domain_id domain FROM run_assignment WHERE run_id=$1 ORDER BY assignment_domain_id',[root])).rows;
+  const measurements=(await db.query<{id:string;domain:string}>('SELECT measurement_plan_id id,measurement_domain_id domain FROM run_measurement_plan WHERE run_id=$1 ORDER BY measurement_domain_id',[root])).rows;
+  return {operations,subjects,assignments,measurements};
+ };
+ const before=await physical();
+ const original=(await app.runs.loadPlanning(created.id))!;
+ const processSteps=created.steps.filter(step=>step.role==='PROCESS');
+ if(processSteps.length>1)await assert.rejects(app.runs.savePlanning({...original,snapshot:{...created,steps:created.steps.map(step=>step.id===processSteps[0].id?{...step,operationDefinitionId:processSteps[1].operationDefinitionId}:step)}},'stable-operation-forged-definition'),/instance identity/);
+ assert.deepEqual(await physical(),before);
+ await app.runs.savePlanning({...original,snapshot:{...created,steps:[...created.steps].reverse().map(step=>({...step,label:`${step.label} renamed`})),subjects:[...created.subjects].reverse()}},'stable-operation-reorder');
+ const reordered=(await app.runs.loadPlanning(created.id))!;
+ const after=await physical();
+ const identities=(rows:{id:string;domain:string}[])=>rows.map(({id,domain})=>({id,domain}));
+ for(const kind of ['operations','subjects','assignments','measurements'] as const)assert.deepEqual(identities(after[kind]),identities(before[kind]),`${kind} identity changed during reorder`);
+ assert.deepEqual(reordered.snapshot.steps.map(step=>step.id),[...created.steps].reverse().map(step=>step.id));
+ assert.deepEqual(after.operations.map(row=>row.sequence),before.operations.map(row=>created.steps.length+1-row.sequence));
+ // Repeating a definition is a new explicit instance, never an alias of the first.
+ const source=created.steps.find(step=>step.role==='PROCESS')!;
+ const repeated={...source,id:`${created.id}-repeat-instance`,label:`${source.label} repeat`};
+ const repeatedAssignments=created.assignments.filter(a=>a.processStepId===source.id).map(a=>({...a,id:`${a.id}-repeat`,processStepId:repeated.id}));
+ await app.runs.savePlanning({...reordered,snapshot:{...reordered.snapshot,steps:[repeated,...reordered.snapshot.steps],assignments:[...reordered.snapshot.assignments,...repeatedAssignments],subjectOperationIds:Object.fromEntries(Object.entries(reordered.snapshot.subjectOperationIds).map(([id,steps])=>[id,[...steps,repeated.id]]))}},'stable-operation-repeat');
+ const repeatRecord=(await app.runs.loadPlanning(created.id))!;
+ const repeatedPhysical=await physical();
+ assert.notEqual(repeatedPhysical.operations.find(row=>row.domain===source.id)!.id,repeatedPhysical.operations.find(row=>row.domain===repeated.id)!.id);
+ for(const row of before.operations)assert.equal(repeatedPhysical.operations.find(next=>next.domain===row.domain)!.id,row.id);
+ // Remove only the repeated instance and one Subject; survivors keep their IDs.
+ const removedSubject=repeatRecord.snapshot.subjects.at(-1)!;
+ const remainingSubjects=repeatRecord.snapshot.subjects.filter(subject=>subject.id!==removedSubject.id);
+ await app.runs.savePlanning({...repeatRecord,snapshot:{...repeatRecord.snapshot,subjects:remainingSubjects,steps:repeatRecord.snapshot.steps.filter(step=>step.id!==repeated.id),assignments:repeatRecord.snapshot.assignments.filter(a=>a.processStepId!==repeated.id&&a.subjectId!==removedSubject.id),subjectOperationIds:Object.fromEntries(remainingSubjects.map(subject=>[subject.id,repeatRecord.snapshot.subjectOperationIds[subject.id].filter(id=>id!==repeated.id)]))}},'stable-operation-remove');
+ const removed=await physical();
+ assert.deepEqual(identities(removed.operations),identities(before.operations));
+ assert.deepEqual(identities(removed.subjects),identities(before.subjects.filter(row=>row.domain!==removedSubject.id)));
+ assert.deepEqual(identities(removed.assignments),identities(before.assignments));
+ const saved=(await app.runs.loadPlanning(created.id))!;
+ assert.ok(!saved.snapshot.steps.some(step=>step.id===repeated.id));
+ assert.ok(!saved.snapshot.subjects.some(subject=>subject.id===removedSubject.id));
+ return {snapshot:saved.snapshot,identities:removed};
 }

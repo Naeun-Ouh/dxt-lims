@@ -21,6 +21,11 @@ export function validatePlanEdit(current:RunPlanningSnapshot,next:RunPlanningSna
   if(!profile||next.steps.some(step=>!allowedOperations.includes(step.operationDefinitionId)))throw new ApplicationError('VALIDATION','Operation must belong to the exact experiment profile.');
   const eligible=current.candidateSubjects??current.subjects;
   if(next.subjects.some(subject=>!eligible.some(candidate=>candidate.id===subject.id&&candidate.type===subject.type)))throw new ApplicationError('VALIDATION','Subject is outside the Run planning context.');
+  for(const step of next.steps){
+    const existing=current.steps.find(candidate=>candidate.id===step.id);
+    if(existing&&(existing.operationDefinitionId!==step.operationDefinitionId||existing.role!==step.role))
+      throw new ApplicationError('VALIDATION','Existing Operation instance identity cannot change its definition or role. Create a new Operation instance instead.');
+  }
   next=inheritNewOperationParticipation(current,next);
   const errors=validatePlanningSnapshot(next);
   if(errors.length)throw new ApplicationError('VALIDATION',errors.join('; '));
