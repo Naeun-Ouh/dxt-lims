@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
+import type { RunPlanningSnapshot } from '../src/features/run-registration/planning-model';
+import type { RunCriteriaState } from '../src/application/run-criteria';
+import type { PlanningWorkspaceRecord } from '../src/application/repository-ports';
 import type { SampleAggregate, SampleDetail } from '../src/application/sample-lifecycle';
 
 const directory = resolve(process.argv[2] ?? '');
@@ -11,7 +14,7 @@ const environment = JSON.parse(await readFile(join(directory, 'environment.json'
 assert.equal(environment.label, 'AGENT TEST ONLY');
 const servers: { principal: string; baseUrl: string }[] = JSON.parse(await readFile(join(directory, 'servers.json'), 'utf8'));
 const evidence: { operation: string; principal: string; status: number }[] = [];
-async function request(principal: string, endpoint: string, body: object, expected = 200) {
+async function request<T = unknown>(principal: string, endpoint: string, body: object, expected = 200) {
   const server = servers.find(s => s.principal === `agent-integration-${principal}`)!;
   assert.ok(server && new URL(server.baseUrl).hostname === '127.0.0.1');
   const response = await fetch(server.baseUrl + endpoint, {
@@ -20,11 +23,11 @@ async function request(principal: string, endpoint: string, body: object, expect
   const value = await response.json();
   evidence.push({ operation: String((body as { operation: string }).operation), principal, status: response.status });
   assert.equal(response.status, expected, JSON.stringify(value));
-  return value;
+  return value as T;
 }
-const sample = (principal: string, body: object, expected = 200) => request(principal, '/api/samples', body, expected);
-const repository = (principal: string, body: object, expected = 200) => request(principal, '/api/repository', body, expected);
-const options = await sample('writer', { operation: 'options' });
+const sample = <T = SampleDetail>(principal: string, body: object, expected = 200) => request<T>(principal, '/api/samples', body, expected);
+const repository = <T = unknown>(principal: string, body: object, expected = 200) => request<T>(principal, '/api/repository', body, expected);
+const options = await sample<{ id: string }[]>('writer', { operation: 'options' });
 assert.ok(options.length > 0);
 const id = randomUUID(), revisionId = randomUUID(), rootId = randomUUID(), now = new Date().toISOString();
 const aggregate: SampleAggregate = {
@@ -52,16 +55,16 @@ assert.equal((await sample('writer', { operation: 'detail', id, revision: 1 })).
 assert.equal((await sample('viewer', { operation: 'detail', id })).properties[0].value, 1);
 assert.deepEqual(await sample('viewer', { operation: 'options' }), []);
 await sample('viewer', { ...command, commandId: randomUUID() }, 403);
-assert.equal((await sample('denied', { operation: 'list' })).rows.length, 0);
+assert.equal((await sample<{ rows: unknown[] }>('denied', { operation: 'list' })).rows.length, 0);
 await sample('denied', { operation: 'detail', id }, 404);
 const manifest = JSON.parse(await readFile(join(directory, 'routes.json'), 'utf8'));
 for (const route of manifest.routes) {
-  const run = await repository('writer', { operation: 'run.created', slug: route.study, runNumber: route.run });
+  const run = await repository<RunPlanningSnapshot>('writer', { operation: 'run.created', slug: route.study, runNumber: route.run });
   assert.ok(run.id);
-  const criteria = await repository('writer', { operation: 'run.criteria.load', runId: run.id });
+  const criteria = await repository<RunCriteriaState>('writer', { operation: 'run.criteria.load', runId: run.id });
   assert.equal(criteria.activeContextId, null, 'no automatic criteria');
   assert.equal(criteria.origin, 'ABSENT');
-  const read = await repository('viewer', { operation: 'run.planning', runId: run.id });
+  const read = await repository<PlanningWorkspaceRecord>('viewer', { operation: 'run.planning', runId: run.id });
   assert.equal(read.canEditPlan, false);
   await repository('denied', { operation: 'run.get', runId: run.id }, 403);
 }
