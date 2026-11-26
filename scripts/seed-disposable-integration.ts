@@ -1,5 +1,5 @@
 /** AGENT TEST ONLY: never a production seed or scientific default. */
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { PgDatabase } from '../src/infrastructure/postgres/pg-database';
 import { seedConfigurationRegistry } from '../src/infrastructure/postgres/slice-seed';
@@ -26,7 +26,8 @@ if (
   throw new Error('Disposable harness marker required');
 const db = PgDatabase.fromEnvironment();
 const writer = 'agent-integration-writer',
-  viewer = 'agent-integration-viewer';
+  viewer = 'agent-integration-viewer',
+  denied = 'agent-integration-denied';
 try {
   if (
     (
@@ -41,10 +42,15 @@ try {
   const migrations = (await readdir('src/infrastructure/postgres/migrations'))
     .filter((f) => /^\d{3}_.*\.sql$/.test(f))
     .sort();
-  for (const file of migrations)
-    await db.query(
-      await readFile('src/infrastructure/postgres/migrations/' + file, 'utf8'),
-    );
+  await db.query('CREATE TABLE dxt_schema_migration (name text PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())');
+  for (const file of migrations) {
+    const bytes = await readFile('src/infrastructure/postgres/migrations/' + file);
+    const checksum = createHash('sha256').update(bytes).digest('hex');
+    await db.transaction(async sql => {
+      await sql.query(bytes.toString('utf8').replace(/^BEGIN;\s*/, '').replace(/COMMIT;\s*$/, ''));
+      await sql.query('INSERT INTO dxt_schema_migration(name,checksum) VALUES($1,$2)', [file.replace(/\.sql$/, ''),checksum]);
+    });
+  }
   await seedConfigurationRegistry(
     db,
     configurationRepository.getConfigurationRegistry(),
@@ -73,6 +79,16 @@ try {
         [randomUUID(), scope, principal, writer],
       );
     }
+  }
+  await db.query("INSERT INTO auth_principal VALUES($1,$2,true,'GENERAL_USER')", [denied,'AGENT TEST ONLY denied principal']);
+  // The denied principal intentionally has no membership or visibility/authoring grants.
+  // Sample authoring capabilities are independent of Study/Run capabilities.
+  for (const principal of [writer, viewer]) {
+    const actions = principal === writer ? ['READ_SAMPLE', 'REGISTER_SAMPLE', 'REVISE_SAMPLE'] : ['READ_SAMPLE'];
+    for (const action of actions) await db.query(
+      'INSERT INTO dxt_sample.access_grant(id,owning_org_id,principal_id,action,granted_by) VALUES($1,$2,$3,$4,$5)',
+      [randomUUID(), 'agent-integration-dept', principal, action, writer],
+    );
   }
   await db.query(
     "INSERT INTO study_creation_grant(id,principal_id,department_id,granted_by) VALUES($1,$2,'agent-integration-dept',$2)",
@@ -220,6 +236,7 @@ try {
     migrations,
     writer,
     viewer,
+    denied,
     routes,
   };
   await writeFile(

@@ -131,6 +131,7 @@ if (action === 'create') {
   for (const principal of [
     'agent-integration-writer',
     'agent-integration-viewer',
+    'agent-integration-denied',
   ]) {
     const appPort = await port(),
       dest = join(state.directory, 'app-' + appPort);
