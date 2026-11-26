@@ -33,6 +33,7 @@ import { validateVariableValue } from './applicability';
 import { ActualExecutionGrid } from './actual-execution-grid';
 import type { ActualExecutionEvidence } from './actual-execution-model';
 import { MeasurementExecutionGrid } from './measurement-execution-grid';
+import { RunCriteriaPanel } from './run-criteria-panel';
 import { EvaluationExecutionGrid } from './evaluation-execution-grid';
 import type {
   EngineerEvaluationRecord,
@@ -294,6 +295,7 @@ export default function EngineeringGrid({
   const keyWidth = compactContext ? 340 : 540;
   const subjectWidth = 80;
 
+  const [criteriaRefresh, setCriteriaRefresh] = useState(0);
   const authoring = useLifecycleAuthoring(
     model,
     authoringProfile,
@@ -303,6 +305,7 @@ export default function EngineeringGrid({
       : workspaceMode === 'MEASUREMENT'
         ? 'MEASUREMENT'
         : 'ALL',
+    criteriaRefresh,
   );
   const savePlan = async (
     patch: Partial<
@@ -387,7 +390,8 @@ export default function EngineeringGrid({
   const analysisParameterId = resolvedMeasurements?.values.find(
     (value) => value.parameterDefinitionId,
   )?.parameterDefinitionId;
-  const analysisHref = runAnalysisHref(model.snapshot, analysisParameterId ?? undefined);
+  const analysisHref = runAnalysisHref(model.snapshot, analysisParameterId ?? undefined,
+  );
   const nextRunHref = resolvedNextRun
     ? `/series/${seriesSlug}/runs/${resolvedNextRun.snapshot.runNumber}/engineering-grid?view=plan`
     : undefined;
@@ -423,9 +427,9 @@ export default function EngineeringGrid({
     const matchesFilter = (row: EngineeringGridRow) => {
       const role = roles[row.id] ?? row.role;
       return filter === 'VARIED'
-        ? (row.subjectRoles && roles[row.id] === undefined
+        ? row.subjectRoles && roles[row.id] === undefined
           ? Object.values(row.subjectRoles).includes('VARIED')
-          : role === 'VARIED')
+          : role === 'VARIED'
         : filter === 'CHANGED'
           ? Object.keys(dirty).some((key) => key.startsWith(`${row.id}:`)) ||
             model.snapshot.delta.items.some(
@@ -681,7 +685,8 @@ export default function EngineeringGrid({
         <h1 className="plan-screen-title">{t('Engineering Grid')}</h1>
         {legacyConditionWarning && (
           <p role="note">
-            {t('This existing Plan contains overlapping condition scopes. Its saved interpretation is preserved; copying it requires reviewing effective values.')}
+            {t('This existing Plan contains overlapping condition scopes. Its saved interpretation is preserved; copying it requires reviewing effective values.',
+            )}
           </p>
         )}
         <nav
@@ -784,12 +789,23 @@ export default function EngineeringGrid({
               now={authoring?.now}
             />
           </>
-        ) : workspaceMode === 'EVALUATION' &&
-          resolvedMeasurements &&
+        ) : workspaceMode === 'EVALUATION' ? (
+          <>
+            {production && (
+              <RunCriteriaPanel
+                runId={model.snapshot.id}
+                onChanged={() => setCriteriaRefresh((v) => v + 1)}
+                history={[
+                  ...(authoring?.state.evaluationProvenance ?? []),
+                  ...(authoring?.state.decisionProvenance ?? []),
+                ]}
+              />
+            )}
+            {resolvedMeasurements &&
           resolvedCatalog &&
           resolvedBindings.length ? (
           <EvaluationExecutionGrid
-            key={`evaluation-${model.snapshot.id}`}
+            key={`evaluation-${model.snapshot.id}-${authoring?.state.interpretation?.contextId ?? criteriaRefresh}`}
             model={model}
             results={resolvedMeasurements}
             catalog={resolvedCatalog}
@@ -806,8 +822,7 @@ export default function EngineeringGrid({
             }
             onRecordDecision={
               authoring &&
-              (!production ||
-                (scientific?.canDecide && scientific?.canAuthorNextAction))
+              (!production || scientific?.canDecide)
                 ? (command) => authoring.recordDecision(command)
                 : undefined
             }
@@ -816,9 +831,17 @@ export default function EngineeringGrid({
                 ? () => authoring.createNextRun()
                 : undefined
             }
-            actor={authoring?.profile?.actor}
+            actor={authoring?.state.actor ?? authoring?.profile?.actor}
             now={authoring?.now}
-          />
+              />
+            ) : (
+              <p>
+                {t(
+                  'No Evaluation Criteria selected. This Run remains available for execution and Measurement.',
+                )}
+              </p>
+            )}
+          </>
         ) : (
           <>
             {scopeMode ? (
@@ -1663,8 +1686,10 @@ function GridRow(props: {
             {row.subjectRoles && (
               <span
                 className={`plan-intent-label ${cellRole === 'VARIED' ? 'varied' : ''}`}
-                aria-label={t(cellRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed')}
-                title={t(cellRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed')}
+                aria-label={t(cellRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed',
+                )}
+                title={t(cellRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed',
+                )}
               >
                 {cellRole === 'VARIED' ? 'V' : 'F'}
               </span>

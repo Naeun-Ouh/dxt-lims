@@ -13,6 +13,7 @@ import {
 } from '@/src/application/reasoning-record';
 import type { EngineerEvaluationRecord } from '@/src/features/run-registration/evaluation-grid-model';
 import type { SqlDatabase, SqlSession } from './sql-database';
+import { referenceCatalogSchema } from '@/src/domain/reference';
 import { readReasoningContext } from './reasoning-context';
 const canonical = (x: unknown): unknown =>
   Array.isArray(x)
@@ -94,6 +95,58 @@ async function version(
   );
   return r.rows[0]?.version ?? 0;
 }
+async function exactProvenance(
+  sql: SqlSession,
+  rid: string,
+  kind: 'evaluation' | 'decision',
+) {
+  const table = kind === 'evaluation' ? 'engineer_evaluation' : 'decision';
+  const result = await sql.query<{
+    record_id: string;
+    context_id: string;
+    revision: number;
+    record: unknown;
+    payload: import('@/src/application/study-readiness').StudyReasoningContext;
+  }>(
+    `SELECT e.domain_id record_id,e.context_id,c.revision,c.payload,e.payload record FROM ${table} e JOIN reasoning_criteria_revision c ON c.id=e.context_id WHERE e.run_id=$1 ORDER BY e.domain_id`,
+    [rid],
+  );
+  return result.rows.map((r) => ({
+    recordId: r.record_id,
+    contextId: r.context_id,
+    revision: r.revision,
+    context: r.payload,
+    record: r.record,
+  }));
+}
+async function authoringContext(
+  sql: SqlSession,
+  rid: string,
+  runId: string,
+  cmd: RepositoryCommand,
+  action: string,
+) {
+  const expected = cmd.expectedInterpretation;
+  if (!expected)
+    throw new ApplicationError(
+      'CONFLICT',
+      'Reload Evaluation Criteria before saving.',
+    );
+  await sql.query('SELECT assert_run_reasoning_authoring($1,$2,$3,$4,$5)', [
+    rid,
+    expected.contextId,
+    expected.sequence,
+    sql.trustedPrincipalId,
+    action,
+  ]);
+  const context = await readReasoningContext(sql, runId);
+  if (!context)
+    throw new ApplicationError(
+      'VALIDATION',
+      'Configure or select Evaluation Criteria before evaluating results.',
+    );
+  return context;
+}
 async function commandWrite(
   db: SqlDatabase,
   kind: 'evaluation' | 'decision',
@@ -105,7 +158,31 @@ async function commandWrite(
   try {
     await db.transaction(async (sql) => {
       const id = await run(sql, runId, true);
-      const requestInput = { input, expectedVersion: cmd.expectedVersion };
+      if (!sql.trustedPrincipalId)
+        throw new ApplicationError(
+          'FORBIDDEN',
+          'Scientific authoring permission is required.',
+        );
+      const allowed = (
+        await sql.query<{ reason: string }>(
+          'SELECT dxt_explicit_scientific_access_reason($1,study_id,$2) reason FROM experiment_run WHERE run_id=$3',
+          [
+            sql.trustedPrincipalId,
+            kind === 'evaluation' ? 'AUTHOR_EVALUATION' : 'AUTHOR_DECISION',
+            id,
+          ],
+        )
+      ).rows[0];
+      if (allowed?.reason !== 'EXPLICIT_GRANT')
+        throw new ApplicationError(
+          'FORBIDDEN',
+          'Scientific authoring permission is required.',
+        );
+      const requestInput = { input, expectedVersion: cmd.expectedVersion,
+        ...(cmd.expectedInterpretation
+          ? { expectedInterpretation: cmd.expectedInterpretation }
+          : {}),
+      };
       const request = hash(requestInput);
       const receipt = await sql.query<{ request_hash: string }>(
         'SELECT request_hash FROM reasoning_command_receipt WHERE run_id=$1 AND kind=$2 AND command_id=$3',
@@ -149,8 +226,14 @@ async function commandWrite(
   } catch (e) {
     if (e instanceof ApplicationError) throw e;
     throw new ApplicationError(
-      'PERSISTENCE',
-      'Scientific reasoning could not be saved.',
+      (e as { code?: string })?.code === '40001'
+        ? 'CONFLICT'
+        : (e as { code?: string })?.code === '42501'
+          ? 'FORBIDDEN'
+          : 'PERSISTENCE',
+      (e as { code?: string })?.code === '40001'
+        ? 'Evaluation Criteria changed. Reload before saving.'
+        : 'Could not save Evaluation. Check your permission and selected results, then try again.',
       { cause: e },
     );
   }
@@ -180,8 +263,31 @@ async function summary(
 export class PostgresEvaluationRepository implements EvaluationRepository {
   constructor(private db: SqlDatabase) {}
   async getContext(id: string) {
-    const p = (await readReasoningContext(this.db, id)).payload;
-    return { ...p, targetBindings: [...p.targetBindings] };
+    const context = await readReasoningContext(this.db, id);
+    const actor = this.db.trustedPrincipalId
+      ? (
+          await this.db.query<{ user_id: string }>(
+            'SELECT user_id FROM auth_principal WHERE id=$1',
+            [this.db.trustedPrincipalId],
+          )
+        ).rows[0]?.user_id
+      : undefined;
+    return context
+      ? {
+          actor,
+          ...context.payload,
+          targetBindings: [...context.payload.targetBindings],
+          interpretation: { contextId: context.id, sequence: context.sequence },
+        }
+      : {
+          targetBindings: [],
+          catalog: referenceCatalogSchema.parse(
+            Object.fromEntries(
+              Object.keys(referenceCatalogSchema.shape).map((key) => [key, []]),
+            ),
+          ),
+          interpretation: null,
+        };
   }
   async getStateByRun(id: string) {
     return this.db.transaction(async (sql) => {
@@ -189,6 +295,7 @@ export class PostgresEvaluationRepository implements EvaluationRepository {
       return {
         version: await version(sql, 'evaluation', rid),
         record: await evaluations(sql, rid),
+        provenance: await exactProvenance(sql, rid, 'evaluation'),
       };
     });
   }
@@ -211,7 +318,6 @@ export class PostgresEvaluationRepository implements EvaluationRepository {
       records,
       cmd,
       async (sql, rid) => {
-        const ctx = await readReasoningContext(sql, id);
         const ids: string[] = [];
         const scopes = new Set<string>();
         for (const item of records) {
@@ -227,6 +333,30 @@ export class PostgresEvaluationRepository implements EvaluationRepository {
               'Duplicate Evaluation scope.',
             );
           scopes.add(scope);
+          const old = await sql.query<{ id: string; content_hash: string }>(
+            'SELECT id,content_hash FROM engineer_evaluation WHERE domain_id=$1 AND run_id=$2',
+            [item.id, rid],
+          );
+          if (old.rows[0]) {
+            if (
+              old.rows[0].content_hash !== hash(item) &&
+              old.rows[0].content_hash !==
+                createHash('sha256').update(JSON.stringify(item)).digest('hex')
+            )
+              throw new ApplicationError(
+                'CONFLICT',
+                'Evaluation identity already has different content.',
+              );
+            ids.push(old.rows[0].id);
+            continue;
+          }
+          const ctx = await authoringContext(
+            sql,
+            rid,
+            id,
+            cmd,
+            'AUTHOR_EVALUATION',
+          );
           const source = await summary(
             sql,
             rid,
@@ -244,23 +374,6 @@ export class PostgresEvaluationRepository implements EvaluationRepository {
               'VALIDATION',
               'Evaluation Target does not match the exact result.',
             );
-          const old = await sql.query<{ id: string; content_hash: string }>(
-            'SELECT id,content_hash FROM engineer_evaluation WHERE domain_id=$1',
-            [item.id],
-          );
-          if (old.rows[0]) {
-            if (
-              old.rows[0].content_hash !== hash(item) &&
-              old.rows[0].content_hash !==
-                createHash('sha256').update(JSON.stringify(item)).digest('hex')
-            )
-              throw new ApplicationError(
-                'CONFLICT',
-                'Evaluation identity already has different content.',
-              );
-            ids.push(old.rows[0].id);
-            continue;
-          }
           const subject = await sql.query<{ run_subject_id: string }>(
             'SELECT rs.run_subject_id FROM run_subject rs JOIN subject s ON s.subject_id=rs.subject_id WHERE rs.run_id=$1 AND s.subject_domain_id=$2',
             [rid, item.subjectId],
@@ -303,6 +416,7 @@ export class PostgresDecisionRepository implements DecisionRepository {
       return {
         version: await version(sql, 'decision', rid),
         record: await decision(sql, rid),
+        provenance: await exactProvenance(sql, rid, 'decision'),
       };
     });
   }
@@ -349,13 +463,42 @@ export class PostgresDecisionRepository implements DecisionRepository {
       record,
       cmd,
       async (sql, rid) => {
-        const ctx = await readReasoningContext(sql, id);
+        const existing = await sql.query<{ id: string; content_hash: string }>(
+          'SELECT id,content_hash FROM decision WHERE domain_id=$1 AND run_id=$2',
+          [context.decision.id, rid],
+        );
+        if (existing.rows[0]) {
+          if (existing.rows[0].content_hash !== hash(record))
+            throw new ApplicationError(
+              'CONFLICT',
+              'Decision identity already has different content.',
+            );
+          return [existing.rows[0].id];
+        }
+        const ctx = await authoringContext(
+          sql,
+          rid,
+          id,
+          cmd,
+          'AUTHOR_DECISION',
+        );
         if (context.decision.experimentRunId !== id)
           throw new ApplicationError(
             'VALIDATION',
             'Decision belongs to another Run.',
           );
         const action = context.decision.nextAction;
+        if (action || record.nextRunPreview)
+          await sql.query(
+            'SELECT assert_run_reasoning_authoring($1,$2,$3,$4,$5)',
+            [
+              rid,
+              ctx.id,
+              ctx.sequence,
+              sql.trustedPrincipalId,
+              'AUTHOR_NEXT_ACTION',
+            ],
+          );
         if (
           action &&
           !ctx.payload.catalog.nextActionTypes.some(
@@ -366,23 +509,11 @@ export class PostgresDecisionRepository implements DecisionRepository {
             'VALIDATION',
             'Exact Next Action definition is unavailable.',
           );
-        const existing = await sql.query<{ id: string; content_hash: string }>(
-          'SELECT id,content_hash FROM decision WHERE domain_id=$1',
-          [context.decision.id],
-        );
-        if (existing.rows[0]) {
-          if (existing.rows[0].content_hash !== hash(record))
-            throw new ApplicationError(
-              'CONFLICT',
-              'Decision identity already has different content.',
-            );
-          return [existing.rows[0].id];
-        }
         const eidRefs: string[] = [];
         for (const ref of context.engineerEvaluationIds) {
           const e = await sql.query<{ id: string }>(
-            'SELECT id FROM engineer_evaluation WHERE run_id=$1 AND domain_id=$2',
-            [rid, ref],
+            'SELECT id FROM engineer_evaluation WHERE run_id=$1 AND domain_id=$2 AND context_id=$3',
+            [rid, ref, ctx.id],
           );
           if (!e.rows[0])
             throw new ApplicationError(

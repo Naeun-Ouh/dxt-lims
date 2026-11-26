@@ -499,7 +499,6 @@ function EvaluationAuthoringPanel({
   const canSaveConclusion =
     !saving &&
     !conclusionBlocked &&
-    !!actionType &&
     !!conclusion.trim() &&
     !!reason.trim() &&
     (!isNextRun || !!nextAction.trim()) &&
@@ -543,8 +542,7 @@ function EvaluationAuthoringPanel({
     if (
       !canSaveConclusion ||
       !onRecordDecision ||
-      !selected?.engineerEvaluation ||
-      !actionType
+      !selected?.engineerEvaluation
     )
       return;
     setSaving(true);
@@ -557,9 +555,11 @@ function EvaluationAuthoringPanel({
           decisionStatement: conclusion.trim(),
           conclusion: conclusion.trim(),
           reason: reason.trim(),
-          nextActionTypeDefinitionId: actionType.id,
+          nextActionTypeDefinitionId: actionType?.id ?? '',
           // Complete is an explicit user-selected action, not inferred from a result.
-          nextActionNote: isNextRun ? nextAction.trim() : 'Complete Run',
+          nextActionNote: actionType
+            ? isNextRun ? nextAction.trim() : 'Complete Run'
+            : '',
           evaluationIds: [selected.engineerEvaluation.id],
           targetReferences: [
             {
@@ -682,6 +682,15 @@ function EvaluationAuthoringPanel({
         >
           <fieldset className="conclusion-options">
             <legend className="sr-only">{t('Next Action')}</legend>
+            <label>
+              <input
+                type="radio"
+                name="run-conclusion"
+                checked={!nextActionType}
+                onChange={() => setNextActionType('')}
+              />
+              {t('No Next Action (optional)')}
+            </label>
             {catalog.nextActionTypes
               .filter(
                 (item) =>

@@ -6,7 +6,9 @@ export type SqlResult<T extends SqlRow = SqlRow> = {
 };
 
 export interface SqlSession {
-  query<T extends SqlRow = SqlRow>(sql: string, parameters?: unknown[]): Promise<SqlResult<T>>;
+  readonly trustedPrincipalId?: string;
+  query<T extends SqlRow = SqlRow>(sql: string, parameters?: unknown[],
+  ): Promise<SqlResult<T>>;
 }
 
 export interface SqlDatabase extends SqlSession {
