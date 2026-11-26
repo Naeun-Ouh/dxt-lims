@@ -1,6 +1,7 @@
 /** AGENT TEST ONLY: never a production seed or scientific default. */
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { Client } from 'pg';
 import { PgDatabase } from '../src/infrastructure/postgres/pg-database';
 import { seedConfigurationRegistry } from '../src/infrastructure/postgres/slice-seed';
 import { provisionConfigurationCatalog } from '../src/infrastructure/postgres/postgres-configuration-authoring';
@@ -43,14 +44,23 @@ try {
     .filter((f) => /^\d{3}_.*\.sql$/.test(f))
     .sort();
   await db.query('CREATE TABLE dxt_schema_migration (name text PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())');
-  for (const file of migrations) {
-    const bytes = await readFile('src/infrastructure/postgres/migrations/' + file);
-    const checksum = createHash('sha256').update(bytes).digest('hex');
-    await db.transaction(async sql => {
-      await sql.query(bytes.toString('utf8').replace(/^BEGIN;\s*/, '').replace(/COMMIT;\s*$/, ''));
-      await sql.query('INSERT INTO dxt_schema_migration(name,checksum) VALUES($1,$2)', [file.replace(/\.sql$/, ''),checksum]);
-    });
-  }
+  const migrationClient = new Client({ connectionString: process.env.DATABASE_URL });
+  await migrationClient.connect();
+  try {
+    for (const file of migrations) {
+      const bytes = await readFile('src/infrastructure/postgres/migrations/' + file);
+      const checksum = createHash('sha256').update(bytes).digest('hex');
+      await migrationClient.query('BEGIN');
+      try {
+        await migrationClient.query(bytes.toString('utf8').replace(/^BEGIN;\s*/m, '').replace(/COMMIT;\s*$/, ''));
+        await migrationClient.query('INSERT INTO dxt_schema_migration(name,checksum) VALUES($1,$2)', [file.replace(/\.sql$/, ''),checksum]);
+        await migrationClient.query('COMMIT');
+      } catch (error) {
+        await migrationClient.query('ROLLBACK');
+        throw error;
+      }
+    }
+  } finally { await migrationClient.end(); }
   await seedConfigurationRegistry(
     db,
     configurationRepository.getConfigurationRegistry(),
