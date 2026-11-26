@@ -1543,5 +1543,12 @@
   "Selected Evaluation or Next Action references are unavailable.": "선택한 평가 또는 후속 조치 기준정보를 사용할 수 없습니다.",
   "Check the numeric Target, unit, measurement point and Evaluation reference.": "숫자 목표 값, 단위, 계측 지점과 평가 기준정보를 확인해 주세요.",
   "Select Evaluation Criteria and explain the change.": "평가 기준을 선택하고 변경 사유를 입력해 주세요.",
-  "Create revision of selected criteria": "선택한 평가 기준의 개정 작성"
+  "Create revision of selected criteria": "선택한 평가 기준의 개정 작성",
+  "Reload Evaluation Criteria before saving.": "저장하기 전에 평가 기준을 다시 불러와 주세요.",
+  "Configure or select Evaluation Criteria before evaluating results.": "결과를 평가하려면 평가 기준을 작성하거나 선택해 주세요.",
+  "You do not have permission to record Next Action.": "후속 조치를 작성할 권한이 없습니다.",
+  "Could not save Evaluation. Check your permission and selected results, then try again.": "평가를 저장하지 못했습니다. 작성 권한과 선택한 결과를 확인한 후 다시 시도해 주세요.",
+  "Scientific authoring permission is required.": "과학 기록 작성 권한이 필요합니다.",
+  "Choose criteria for this Run’s experiment references.": "이 실험 차수의 실험 기준정보에 맞는 평가 기준을 선택해 주세요.",
+  "Selected Evaluation criteria are unavailable.": "선택한 평가 기준을 사용할 수 없습니다."
 }

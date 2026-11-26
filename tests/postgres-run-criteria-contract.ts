@@ -145,7 +145,7 @@ export async function runCriteriaContract(db: SqlDatabase) {
     code('CONFLICT'),
   );
   const actualModel = createExperimentWorkspace(snapshot, config);
-  let state = await app.loadPersistedLifecycle(snapshot.id, 'ALL');
+  let state: import('@/src/features/run-registration/lifecycle-authoring').AuthoredLifecycleState = await app.loadPersistedLifecycle(snapshot.id, 'ALL');
   state = await app.recordActual(state, actualModel, {
     id: 'criteria-actual',
     operationId: actualModel.operations.find((o) => o.role === 'PROCESS')!.id,

@@ -11,7 +11,7 @@ import type { ReasoningState } from '@/src/application/repository-ports';
 export function RunCriteriaPanel({
   runId,
   onChanged,
-  history = [],
+  history,
 }: {
   runId: string;
   onChanged: () => void;
@@ -59,6 +59,11 @@ export function RunCriteriaPanel({
       active = false;
     };
   }, [runId]);
+  const chooseRevision=(enabled:boolean)=>{
+    setRevise(enabled);
+    const selected=state?.revisions.find(r=>r.id===selection);
+    if(enabled&&selected){const b=selected.context.targetBindings[0];setParameter(b.target.parameterDefinitionId);setPoint(b.measurementPoint);setMethod(b.aggregationMethod);setOperator(b.target.operator);setValue(String(b.target.threshold??b.target.lowerBound??''));setUpper(String(b.target.upperBound??''));setEvaluation(selected.context.catalog.evaluations[0]?.id??'');setActions(selected.context.catalog.nextActionTypes.map(a=>a.id));}
+  };
   const perform = async (kind: 'save' | 'adopt') => {
     if (!state) return;
     setBusy(true);
@@ -108,7 +113,7 @@ export function RunCriteriaPanel({
               criteria: {
                 packageVersionId: state.packageVersionId,
                 confirmed: true,
-                evaluationIds: [evaluation],
+                evaluationIds: [evaluation,...(selected?.context.catalog.evaluations.slice(1).map(e=>e.id)??[])],
                 nextActionIds: actions,
                 targetBindings: [
                   {
@@ -140,6 +145,7 @@ export function RunCriteriaPanel({
                     resultGrain: 'SUBJECT_SUMMARY',
                     aggregationMethod: method,
                   },
+                  ...(selected?.context.targetBindings.slice(1)??[]),
                 ],
               },
             });
@@ -238,7 +244,7 @@ export function RunCriteriaPanel({
                   <input
                     type="checkbox"
                     checked={revise}
-                    onChange={(e) => setRevise(e.target.checked)}
+                    onChange={(e) => chooseRevision(e.target.checked)}
                   />
                   {t('Create revision of selected criteria')}
                 </label>
@@ -405,19 +411,7 @@ export function RunCriteriaPanel({
                   )
                   .join(', ')}
               </p>
-              <p>
-                {String(
-                  (
-                    h.record as {
-                      rationale?: string;
-                      comment?: string;
-                      conclusion?: string;
-                    }
-                  ).rationale ??
-                    (h.record as { comment?: string }).comment ??
-                    '',
-                )}
-              </p>
+              <HistoricalRecord record={h.record} context={h.context}/>
               <details>
                 <summary>{t('Technical details')}</summary>
                 <code>
@@ -430,4 +424,9 @@ export function RunCriteriaPanel({
       )}
     </section>
   );
+}
+
+function HistoricalRecord({record,context}:{record:unknown;context:NonNullable<ReasoningState<unknown>['provenance']>[number]['context']}){
+ const {t}=useLocale();const r=record as {comment?:string;disposition?:string;evaluator?:string;evaluatedAt?:string;decisionStatement?:string;decision?:{conclusion:string;reason:string;recordedBy:string;recordedAt:string;nextAction:{nextActionTypeDefinitionId:string;note:string}|null}};
+ return r.decision?<><p>{r.decisionStatement??r.decision.conclusion}</p><p>{r.decision.reason}</p><p>{r.decision.recordedBy} · {r.decision.recordedAt}</p><p>{r.decision.nextAction?`${context.catalog.nextActionTypes.find(a=>a.id===r.decision!.nextAction!.nextActionTypeDefinitionId)?.name??t('Next Action')}: ${r.decision.nextAction.note}`:t('No Next Action (optional)')}</p></>:<><p>{r.comment}</p><p>{r.disposition&&t(r.disposition)} · {r.evaluator} · {r.evaluatedAt}</p></>;
 }
