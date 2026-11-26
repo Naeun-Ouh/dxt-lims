@@ -1,8 +1,8 @@
--- Each consumer secures its trusted function schema independently.
-REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 -- Coordinated runtime migration. Apply only to approved/disposable environments.
 -- Requires 016 shared scientific authority; deployment/ACL approval remains separate.
 BEGIN;
+-- Each consumer secures its trusted function schema independently and atomically.
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 LOCK TABLE reasoning_context, experiment_run IN SHARE ROW EXCLUSIVE MODE;
 
 -- Keep UUIDs and every existing FK. PostgreSQL tracks the renamed table by OID.
