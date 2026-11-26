@@ -49,7 +49,15 @@ if (action === 'create') {
           ' before provisioning',
       );
   await mkdir(join(root, 'tmp'), { recursive: true });
-  const dir = await mkdtemp(join(root, 'tmp/agent-integration-'));
+  const humanUat = process.argv[4] === '--human-uat';
+  if (process.argv[4] && !humanUat)
+    throw new Error('Unknown provisioning mode');
+  const dir = await mkdtemp(
+    join(
+      root,
+      humanUat ? 'tmp/human-uat-integration-' : 'tmp/agent-integration-',
+    ),
+  );
   const dbPort = await port(),
     data = join(dir, 'data'),
     socket = await mkdtemp('/tmp/dxt-agent-socket-');
@@ -74,7 +82,8 @@ if (action === 'create') {
   ]);
   const databaseUrl = `postgresql://dxt_agent@127.0.0.1:${dbPort}/postgres`;
   const state = {
-    label: 'AGENT TEST ONLY',
+    label: humanUat ? 'HUMAN UAT ONLY — NOT RUN' : 'AGENT TEST ONLY',
+    humanUat,
     directory: dir,
     postgresBin: pgBin,
     databaseUrl,
@@ -102,6 +111,7 @@ if (action === 'create') {
     DXT_SCHEMA_STAGE: 'disposable-development',
     DXT_DISPOSABLE_INTEGRATION: 'NEW_EMPTY_DATABASE_ONLY',
     DXT_DISPOSABLE_MANIFEST: join(dir, 'routes.json'),
+    DXT_HUMAN_UAT: humanUat ? 'NEW_CLEAN_HUMAN_ONLY' : '',
   };
   try {
     const result = await run(process.execPath, [bundle], {
@@ -119,7 +129,10 @@ if (action === 'create') {
 } else if (action === 'start') {
   const file = resolve(process.argv[3] ?? '');
   if (
-    !file.startsWith(join(root, 'tmp/agent-integration-')) ||
+    !(
+      file.startsWith(join(root, 'tmp/agent-integration-')) ||
+      file.startsWith(join(root, 'tmp/human-uat-integration-'))
+    ) ||
     !file.endsWith('/environment.json')
   )
     throw new Error('Only this harness local environment file is accepted');
@@ -128,11 +141,10 @@ if (action === 'create') {
     .split('\0')
     .filter(Boolean);
   const servers = [];
-  for (const principal of [
-    'agent-integration-writer',
-    'agent-integration-viewer',
-    'agent-integration-denied',
-  ]) {
+  const manifest = JSON.parse(
+    await readFile(join(state.directory, 'routes.json'), 'utf8'),
+  );
+  for (const principal of [manifest.writer, manifest.viewer, manifest.denied]) {
     const appPort = await port(),
       dest = join(state.directory, 'app-' + appPort);
     await mkdir(dest);

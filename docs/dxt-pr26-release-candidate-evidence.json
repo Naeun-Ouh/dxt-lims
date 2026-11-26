@@ -1,0 +1,494 @@
+{
+  "authority": "PR26 comment7187254223",
+  "productHead": "fe5c326f55e943cededd975e1f59d155faf564b8",
+  "humanAcceptance": "NOT RUN",
+  "sampleBrowserReadbacks": [
+    {
+      "step": "clear-final",
+      "runId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-1",
+      "runNumber": 1,
+      "assignments": [
+        {
+          "id": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-1-assignment-4",
+          "kind": "MATERIAL",
+          "label": "Material",
+          "value": "D035 Rev.2",
+          "referenceId": "sample-D035-r2",
+          "processStepId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-1-step-1",
+          "subjectId": null,
+          "positionId": null,
+          "intentRole": "FIXED",
+          "provenance": "AD_HOC",
+          "sampleRevisionId": null
+        }
+      ],
+      "time": "2026-11-26T09:08:02.300Z"
+    },
+    {
+      "step": "draft-linked-create",
+      "runId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-3",
+      "runNumber": 3,
+      "assignments": [
+        {
+          "id": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-3-assignment-4",
+          "kind": "MATERIAL",
+          "label": "Material",
+          "value": "D035 Rev.2",
+          "referenceId": "sample-D035-r2",
+          "processStepId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-3-step-1",
+          "subjectId": null,
+          "positionId": null,
+          "intentRole": "FIXED",
+          "provenance": "AD_HOC",
+          "sampleRevisionId": "cd187a6c-7cf9-46f1-8b4b-bea1c5c4f432"
+        }
+      ],
+      "time": "2026-11-26T09:13:24.173Z"
+    },
+    {
+      "step": "copy-exact-r1",
+      "runId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-4",
+      "runNumber": 4,
+      "assignments": [
+        {
+          "id": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-4-assignment-4",
+          "kind": "MATERIAL",
+          "label": "Material",
+          "value": "D035 Rev.2",
+          "referenceId": "sample-D035-r2",
+          "processStepId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-4-step-1",
+          "subjectId": null,
+          "positionId": null,
+          "intentRole": "FIXED",
+          "provenance": "AD_HOC",
+          "sampleRevisionId": "cd187a6c-7cf9-46f1-8b4b-bea1c5c4f432"
+        }
+      ],
+      "time": "2026-11-26T09:14:52.654Z"
+    },
+    {
+      "step": "removed-material",
+      "runId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-5",
+      "runNumber": 5,
+      "assignments": [],
+      "time": "2026-11-26T09:16:53.146Z"
+    },
+    {
+      "step": "readded-no-resurrection",
+      "runId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-6",
+      "runNumber": 6,
+      "assignments": [
+        {
+          "id": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-6-assignment-5",
+          "kind": "MATERIAL",
+          "label": "Material",
+          "value": "D035 Rev.2",
+          "referenceId": "sample-D035-r2",
+          "processStepId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-6-step-1",
+          "subjectId": null,
+          "positionId": null,
+          "intentRole": "FIXED",
+          "provenance": "AD_HOC",
+          "sampleRevisionId": null
+        }
+      ],
+      "time": "2026-11-26T09:18:41.892Z"
+    },
+    {
+      "step": "original-copy-source-preserved",
+      "runId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-3",
+      "runNumber": 3,
+      "assignments": [
+        {
+          "id": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-3-assignment-4",
+          "kind": "MATERIAL",
+          "label": "Material",
+          "value": "D035 Rev.2",
+          "referenceId": "sample-D035-r2",
+          "processStepId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-3-step-1",
+          "subjectId": null,
+          "positionId": null,
+          "intentRole": "FIXED",
+          "provenance": "AD_HOC",
+          "sampleRevisionId": "cd187a6c-7cf9-46f1-8b4b-bea1c5c4f432"
+        }
+      ],
+      "time": "2026-11-26T09:18:41.992Z"
+    },
+    {
+      "step": "earlier-plan-preserved",
+      "runId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-1",
+      "runNumber": 1,
+      "assignments": [
+        {
+          "id": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-1-assignment-4",
+          "kind": "MATERIAL",
+          "label": "Material",
+          "value": "D035 Rev.2",
+          "referenceId": "sample-D035-r2",
+          "processStepId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-1-step-1",
+          "subjectId": null,
+          "positionId": null,
+          "intentRole": "FIXED",
+          "provenance": "AD_HOC",
+          "sampleRevisionId": "cd187a6c-7cf9-46f1-8b4b-bea1c5c4f432"
+        }
+      ],
+      "time": "2026-11-26T09:18:42.088Z"
+    }
+  ],
+  "activationDiagnostic": {
+    "originalCause": "UNCONFIRMED",
+    "fixedIterations": [
+      {
+        "iteration": 1,
+        "status": "PASS",
+        "activationEvents": 12
+      },
+      {
+        "iteration": 2,
+        "status": "PASS",
+        "activationEvents": 12
+      },
+      {
+        "iteration": 3,
+        "status": "PASS",
+        "activationEvents": 12
+      },
+      {
+        "iteration": 4,
+        "status": "PASS",
+        "activationEvents": 12
+      },
+      {
+        "iteration": 5,
+        "status": "PASS",
+        "activationEvents": 12
+      }
+    ],
+    "timestampObservationCount": 130,
+    "negativeControl": {
+      "label": "CONTROLLED CLOCK-ROLLBACK PROBE; NOT PROOF OF ORIGINAL CAUSE",
+      "before": {
+        "activation_id": "dcd6a6d7-f305-46f0-afc7-4de9dff3eb6c",
+        "active_from": "2026-11-26 18:23:25.282+09",
+        "active_to": null
+      },
+      "error": {
+        "message": "error: new row for relation \"configuration_activation\" violates check constraint \"configuration_activation_check1\"",
+        "code": "23514",
+        "detail": "Failing row contains (dcd6a6d7-f305-46f0-afc7-4de9dff3eb6c, AREA, material-rd, config-package-material-rd, config-package-material-rd-v1, 2026-11-26 18:23:25.282+09, 2026-11-26 17:23:25.284+09, 1)."
+      },
+      "after": {
+        "active_from": "2026-11-26 18:23:25.282+09",
+        "active_to": null
+      }
+    }
+  },
+  "humanEnvironment": {
+    "label": "READ-ONLY ENVIRONMENT CHECK — HUMAN ACCEPTANCE NOT RUN",
+    "counts": {
+      "experiment_run": 0,
+      "dxt_sample.sample": 0,
+      "dxt_sample.revision": 0,
+      "run_assignment": 0,
+      "measurement_execution": 0
+    },
+    "studies": [
+      {
+        "study_id": "6e3c7d01-b57a-473e-8f21-719c327156ac",
+        "series_slug": "human-uat-pilot-specimen",
+        "display_name": "HUMAN UAT ONLY · specimen · Pilot v1"
+      },
+      {
+        "study_id": "1a4773b5-b955-4a36-85aa-34d6c3673064",
+        "series_slug": "human-uat-pilot-wafer",
+        "display_name": "HUMAN UAT ONLY · wafer · Pilot v1"
+      }
+    ],
+    "grants": [
+      {
+        "principal_id": "human-uat-pilot-viewer",
+        "action": "VIEW_DECISION",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-viewer",
+        "action": "VIEW_EVALUATION",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-viewer",
+        "action": "VIEW_EXECUTION",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-viewer",
+        "action": "VIEW_MEASUREMENT",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-viewer",
+        "action": "VIEW_RUN",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-viewer",
+        "action": "VIEW_STUDY",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "AUTHOR_DECISION",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "AUTHOR_EVALUATION",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "AUTHOR_NEXT_ACTION",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "CREATE_RUN",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "EDIT_RUN_PLAN",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "MANAGE_REASONING_CONTEXT",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "RECORD_ACTUAL",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "RECORD_MEASUREMENT",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "VIEW_DECISION",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "VIEW_EVALUATION",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "VIEW_EXECUTION",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "VIEW_MEASUREMENT",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "VIEW_RUN",
+        "count": 2
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "VIEW_STUDY",
+        "count": 2
+      }
+    ],
+    "sampleGrants": [
+      {
+        "principal_id": "human-uat-pilot-viewer",
+        "action": "READ_SAMPLE"
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "READ_SAMPLE"
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "REGISTER_SAMPLE"
+      },
+      {
+        "principal_id": "human-uat-pilot-writer",
+        "action": "REVISE_SAMPLE"
+      }
+    ],
+    "ledger": [
+      {
+        "name": "001_production_adapter_slice_1",
+        "checksum": "17f8f0ea470a2bcd837d7dc28c2753c7faa799df7f330b3ec04040903f73ea54"
+      },
+      {
+        "name": "002_actual_execution",
+        "checksum": "0f7cfc21c4806558b2cb2c12f73e5a079c84f75f4cd867ca6595ce2c00a09cee"
+      },
+      {
+        "name": "003_measurement",
+        "checksum": "031df1991567806a05f15fc8cce6a195654e4d371c6bbf8cd5ea74474206a724"
+      },
+      {
+        "name": "004_evaluation_decision",
+        "checksum": "85ef902c24f3b7f5577498dde03912cdca5381d89142b3f4d02ae5685b9918c2"
+      },
+      {
+        "name": "005_saved_analysis",
+        "checksum": "ff63946cbbb6f9fb91a3dd8634b86cd75335180b12ed6d9ba697c88b169a0566"
+      },
+      {
+        "name": "006_configuration_study_authoring",
+        "checksum": "8ed55947a2fcb2552ef3aaddee07884670998661d0a6813df97048fe345ed3b5"
+      },
+      {
+        "name": "007_run_plan_authoring",
+        "checksum": "6335eef1215d4c261ca94f66c053dd3b5b1e9f4f368d6cd80906efb054451989"
+      },
+      {
+        "name": "008_study_reasoning_adoption",
+        "checksum": "9823868e6a46e7978fd2bdfda8a09c20695a6febaf60d2de5bffe38810f2c42b"
+      },
+      {
+        "name": "009_authorization_study_run",
+        "checksum": "30273a6d9bd0b2a30b072bef40bf450a46fdf796da4cc0305fcb1398ee8a32c0"
+      },
+      {
+        "name": "010_authorization_scientific",
+        "checksum": "43e19059a7d4950a44dcc4d14f3c1d75ddec10469d684d23b16f7a2e0fae91ad"
+      },
+      {
+        "name": "011_authorization_configuration",
+        "checksum": "16e4a293f50297e600834729547832ce8f3b9bd7fbf55074c9311aa614b2fb77"
+      },
+      {
+        "name": "012_authorization_saved_analysis",
+        "checksum": "04ec05f312bf3024683abecf02fa3631fe4d6d3873e79e31b8e9bb1be4db2332"
+      },
+      {
+        "name": "013_authorization_discovery",
+        "checksum": "5edce54120941ebc6bdbf262c3bea269de8254bc114b16af86b8f75eec04aa29"
+      },
+      {
+        "name": "014_study_creation_grant",
+        "checksum": "a9c1a194b88e3fab5897cb18f05c9a65a4cba4875a0897a9d3a621c7a8889334"
+      },
+      {
+        "name": "015_study_initial_reasoning",
+        "checksum": "f73a681b2708d762ae423bcef97f33881269ee7ea1fef7855efcc8f51211b678"
+      },
+      {
+        "name": "016_shared_scientific_authority",
+        "checksum": "76e93d9ca79116275c01dc1332aa2230473098e5afe6dbadd77e45256646398e"
+      },
+      {
+        "name": "017_run_reasoning_provenance",
+        "checksum": "a90513c006937884bb8b7b7727cedfd1f2f620ad9974de8ecfbc1e8a31e9eae7"
+      },
+      {
+        "name": "018_sample_lifecycle",
+        "checksum": "2b173988476e802ebb0f204e48c49c748712530eef5a80b5116ea74240253326"
+      }
+    ],
+    "http": [
+      {
+        "principal": "human-uat-pilot-writer",
+        "path": "/studies",
+        "status": 200
+      },
+      {
+        "principal": "human-uat-pilot-writer",
+        "path": "/samples",
+        "status": 200
+      },
+      {
+        "principal": "human-uat-pilot-writer",
+        "path": "/runs/new?series=human-uat-pilot-wafer&from=blank",
+        "status": 200
+      },
+      {
+        "principal": "human-uat-pilot-viewer",
+        "path": "/studies",
+        "status": 200
+      },
+      {
+        "principal": "human-uat-pilot-viewer",
+        "path": "/samples",
+        "status": 200
+      },
+      {
+        "principal": "human-uat-pilot-viewer",
+        "path": "/runs/new?series=human-uat-pilot-wafer&from=blank",
+        "status": 200
+      },
+      {
+        "principal": "human-uat-pilot-denied",
+        "path": "/studies",
+        "status": 200
+      },
+      {
+        "principal": "human-uat-pilot-denied",
+        "path": "/samples",
+        "status": 200
+      },
+      {
+        "principal": "human-uat-pilot-denied",
+        "path": "/runs/new?series=human-uat-pilot-wafer&from=blank",
+        "status": 200
+      }
+    ],
+    "servers": [
+      {
+        "principal": "human-uat-pilot-writer",
+        "port": 62891,
+        "pid": 65941,
+        "baseUrl": "http://127.0.0.1:62891"
+      },
+      {
+        "principal": "human-uat-pilot-viewer",
+        "port": 62893,
+        "pid": 65942,
+        "baseUrl": "http://127.0.0.1:62893"
+      },
+      {
+        "principal": "human-uat-pilot-denied",
+        "port": 62895,
+        "pid": 65946,
+        "baseUrl": "http://127.0.0.1:62895"
+      }
+    ]
+  },
+  "rawEvidenceHashes": {
+    "tmp/activation-diagnostic.json": "6ee549e943191df81c30c36574bd165bb9473bca8075edc4b6707ef4358d49e0",
+    "tmp/sample-link-readback.json": "d91e28185c6cc7117d10c18d3feb5372f978fb1cbe537744b39441a464b2490e",
+    "tmp/activation-clock-control.json": "cde9c9e41b82f4ef9ab068e3b1d6c3474ba283381b46e7ca8a1a8e9d438eff5f",
+    "tmp/pr26-human-clean-evidence.json": "78680d73864cb0a3691a2f073e169718f60117b9054ef09d618e3a7356502005"
+  },
+  "runtimeSourceAttestation": [
+    {
+      "server": "app-62891",
+      "files": 292,
+      "differences": []
+    },
+    {
+      "server": "app-62893",
+      "files": 292,
+      "differences": []
+    },
+    {
+      "server": "app-62895",
+      "files": 292,
+      "differences": []
+    }
+  ]
+}

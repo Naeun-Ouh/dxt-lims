@@ -26,9 +26,12 @@ if (
 )
   throw new Error('Disposable harness marker required');
 const db = PgDatabase.fromEnvironment();
-const writer = 'agent-integration-writer',
-  viewer = 'agent-integration-viewer',
-  denied = 'agent-integration-denied';
+const humanUat = process.env.DXT_HUMAN_UAT === 'NEW_CLEAN_HUMAN_ONLY';
+const prefix = humanUat ? 'human-uat-pilot' : 'agent-integration';
+const label = humanUat ? 'HUMAN UAT ONLY' : 'AGENT TEST ONLY';
+const writer = `${prefix}-writer`,
+  viewer = `${prefix}-viewer`,
+  denied = `${prefix}-denied`;
 try {
   if (
     (
@@ -149,7 +152,7 @@ try {
   for (const principal of [writer, viewer]) {
     await db.query(
       "INSERT INTO auth_principal VALUES($1,$2,true,'GENERAL_USER')",
-      [principal, 'AGENT TEST ONLY ' + principal],
+      [principal, label + ' ' + principal],
     );
     await db.query(
       "INSERT INTO auth_membership VALUES($1,'agent-integration-dept',false)",
@@ -168,7 +171,7 @@ try {
   }
   await db.query(
     "INSERT INTO auth_principal VALUES($1,$2,true,'GENERAL_USER')",
-    [denied, 'AGENT TEST ONLY denied principal'],
+    [denied, label + ' denied principal'],
   );
   // The denied principal intentionally has no membership or visibility/authoring grants.
   // Sample authoring capabilities are independent of Study/Run capabilities.
@@ -200,14 +203,16 @@ try {
     const context = options.contexts.find((c) => c.packageVersionId === pkg);
     if (!context)
       throw new Error('Exact eligible test context unavailable: ' + pkg);
-    const slug = 'agent-integration-' + domain;
+    const slug = prefix + '-' + domain;
     const study = (await call({
       operation: 'study.create',
       commandId: randomUUID(),
       input: {
         slug,
-        name: 'AGENT TEST ONLY ' + domain + ' integration',
-        intent: 'Disposable automated regression; not Human acceptance',
+        name: label + ' · ' + domain + ' · Pilot v1',
+        intent: humanUat
+          ? 'Clean Human UAT; no acceptance recorded. Researcher authors all Run/Sample/evidence data.'
+          : 'Disposable automated regression; not Human acceptance',
         departmentId: 'agent-integration-dept',
         packageVersionId: pkg,
         experimentTypeProfileVersionId: context.experimentTypeProfileVersionId,
@@ -243,6 +248,16 @@ try {
           'INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) VALUES($1,$2,$3,$4,$5)',
           [randomUUID(), study.id, principal, action, writer],
         );
+    if (humanUat) {
+      routes.push({
+        domain,
+        scenario: 'human-authored-blank-run',
+        study: slug,
+        run: null,
+        path: `/runs/new?series=${slug}&from=blank`,
+      });
+      continue;
+    }
     for (const withMeasurement of [false, true]) {
       const source = { seriesSlug: slug, source: 'BLANK' as const };
       const blank = (await call({
@@ -326,7 +341,9 @@ try {
     }
   }
   const manifest = {
-    label: 'AGENT TEST ONLY — HUMAN ACCEPTANCE NOT RUN',
+    label: humanUat
+      ? 'HUMAN UAT ONLY — HUMAN ACCEPTANCE NOT RUN'
+      : 'AGENT TEST ONLY — HUMAN ACCEPTANCE NOT RUN',
     migrations,
     writer,
     viewer,
