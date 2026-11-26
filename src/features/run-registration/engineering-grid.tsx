@@ -1,4 +1,5 @@
 'use client';
+import {SampleSelectionDetail} from '@/src/features/samples/selection-detail';
 import { legacyConditionAmbiguities } from '@/src/application/condition-resolution';
 import { runAnalysisHref } from './run-analysis-link';
 import { ParticipationEditor } from './participation-editor';
@@ -1807,6 +1808,7 @@ function GridInspector({
             <dd>{row.definition.unit || t('None')}</dd>
             <dt>{t('Source')}</dt>
             <dd>{t(row.assignment?.provenance)}</dd>
+            {row.assignment?.kind==='MATERIAL'&&<><dt>{t('Sample')}</dt><dd><SampleSelectionDetail revisionId={row.assignment.sampleRevisionId} denied={row.assignment.sampleAccessDenied}/></dd></>}
             <dt>{t('Variation')}</dt>
             <dd>{role ? t(role) : '—'}</dd>
           </dl>
