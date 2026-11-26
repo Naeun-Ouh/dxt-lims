@@ -6,7 +6,7 @@ import { recordActualExecution } from '@/src/features/run-registration/lifecycle
 import { projectOperationExecution } from '@/src/features/run-registration/actual-execution-model';
 import { lifecycleAuthoringProfiles } from '@/src/mock/lifecycle-authoring';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { PostgresExecutionRepository } from '@/src/infrastructure/postgres/postgres-execution-repository';
 import { createInMemoryRepositories } from '@/src/infrastructure/memory/in-memory-repositories';
 import { createBrowserRepositories } from '@/src/infrastructure/browser/browser-repositories';

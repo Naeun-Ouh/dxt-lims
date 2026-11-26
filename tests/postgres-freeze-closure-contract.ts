@@ -1,7 +1,8 @@
+import {adoptTestCriteria} from './postgres-reasoning-fixtures';
 import {resolveSavedAnalysisView,projectSavedAnalysisRows} from '@/src/features/analysis/saved-view-repository';
 import assert from 'node:assert/strict';
 import { DxtApplication } from '@/src/application/dxt-application';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
 import type { productionConfigurationStudyContract } from './postgres-configuration-study-contract';
@@ -66,6 +67,7 @@ export async function productionFreezeClosureContract(db:SqlDatabase,adoption:Aw
     state=await app.recordActual(state,model,{id:`full-actual-${slug}`,operationId:operation.id,subjectId:model.subjects[0].id,status:'COMPLETED',startedAt:'2026-09-19T01:00:00Z',endedAt:'2026-09-19T01:30:00Z',actualOverrides:{[numeric.referenceId]:String(Number(numeric.value)+1)}});
     assert.deepEqual(await app.repositories.run.getSnapshot(snapshot.id),edited.snapshot);
     await assert.rejects(app.runs.savePlanning(edited,`stale-after-evidence-${slug}`),/locked/);
+    await adoptTestCriteria(db,snapshot.id);
     const ctx=await app.repositories.evaluation.getContext!(snapshot.id);
     const binding=ctx.targetBindings[0];
     const catalog=await app.repositories.measurement.getCatalog(newPin);

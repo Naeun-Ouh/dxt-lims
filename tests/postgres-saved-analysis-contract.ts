@@ -6,7 +6,7 @@ import { ApplicationError, type SavedAnalysisRepository } from '@/src/applicatio
 import { saveAnalysisView, projectAnalysisRows, type SavedAnalysisView } from '@/src/domain/analysis';
 import { projectSavedAnalysisRows, resolveSavedAnalysisView } from '@/src/features/analysis/saved-view-repository';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
 import type { productionMeasurementContract } from './postgres-measurement-contract';
 

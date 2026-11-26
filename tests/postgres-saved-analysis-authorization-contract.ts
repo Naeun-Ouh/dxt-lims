@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { authorizedOperation } from '@/src/infrastructure/postgres/authorized-application';
 import { handleRepositoryRequest,dispatchRepository } from '@/app/api/repository/route';
 import { DxtApplication } from '@/src/application/dxt-application';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
 import { projectAnalysisRows,saveAnalysisView,type SavedAnalysisView } from '@/src/domain/analysis';
 import type { SavedAnalysisAccess,SavedAnalysisSharing } from '@/src/application/saved-analysis-access';

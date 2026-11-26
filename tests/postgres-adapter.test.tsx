@@ -1,3 +1,6 @@
+import {completeLegacyFixtureMeasurementPlans} from './complete-legacy-fixture-measurement-plans';
+import {runCriteriaContract} from './postgres-run-criteria-contract';
+import {seedScientificTestPrincipal} from './postgres-reasoning-fixtures';
 import { explicitScientificContract } from './postgres-explicit-scientific-contract';
 import { materialUsageContract } from './postgres-material-usage-contract';
 import { studyBootstrapContract } from './postgres-study-bootstrap-contract';
@@ -48,7 +51,7 @@ import { definitions } from '@/src/mock/reference';
 import { updateStudySetupItem } from '@/src/features/experiment-series/study-setup-model';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
 import { PGliteTestDatabase } from '@/src/infrastructure/postgres/pglite-test-database';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { persistStudySetupVersion, seedProductionSlice } from '@/src/infrastructure/postgres/slice-seed';
 import { createInMemoryRepositories } from '@/src/infrastructure/memory/in-memory-repositories';
 
@@ -74,9 +77,13 @@ async function withDatabase() {
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/014_study_creation_grant.sql'), 'utf8'));
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/015_study_initial_reasoning.sql'), 'utf8'));
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/016_shared_scientific_authority.sql'), 'utf8'));
+    await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/017_run_reasoning_provenance.sql'), 'utf8'));
+    await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/018_sample_lifecycle.sql'), 'utf8'));
   await seedProductionSlice(database, configurationRepository);
+  await seedScientificTestPrincipal(database);
   await provisionMeasurementReferences(database, definitions);
   await provisionReasoningContexts(database,lifecycleAuthoringProfiles);
+  await completeLegacyFixtureMeasurementPlans(database);
   return { directory, dataDir, database };
 }
 
@@ -325,3 +332,5 @@ void test('Study bootstrap: generic first Run and initial reasoning authorizatio
 
 void test('Explicit scientific authorization: responsibility separation, revocation and transition inventory',async()=>{const s=await withDatabase();try{await explicitScientificContract(s.database);}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
 void test("Material usage: authoritative assignments, exact refs, permission-scoped search/count/page and no writes",async()=>{const s=await withDatabase();try{await materialUsageContract(s.database,await productionMeasurementContract(s.database));}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
+
+void test('Run criteria: immutable revisions, exact adoption, optional continuation, replay and explicit authority',async()=>{const s=await withDatabase();try{await runCriteriaContract(s.database);}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});

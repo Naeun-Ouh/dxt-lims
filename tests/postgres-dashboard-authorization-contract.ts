@@ -1,3 +1,4 @@
+import {seedScientificTestPrincipal,scientificTestPrincipal} from './postgres-reasoning-fixtures';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { authorizedOperation } from '@/src/infrastructure/postgres/authorized-application';
@@ -18,7 +19,7 @@ import type {
 } from '@/src/application/discovery';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
 import { DxtApplication } from '@/src/application/dxt-application';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
 import { projectAnalysisRows, saveAnalysisView } from '@/src/domain/analysis';
 import type { productionMeasurementContract } from './postgres-measurement-contract';
@@ -101,17 +102,6 @@ export async function dashboardAuthorizationContract(
       [id, `scope-study-${i}`, `${i < 4 ? 'Visible' : 'Secret'} Study ${i}`],
     );
     await db.query(
-      `INSERT INTO experiment_run(run_id,run_domain_id,study_id,run_number,configuration_package_version_id,experiment_type_profile_version_id,subject_type_revision_id,display_name,study_name,experiment_type,area,created_at,intent,provenance_kind,provenance_label,delta)
-  SELECT $1,$2,$3,1,configuration_package_version_id,experiment_type_profile_version_id,subject_type_revision_id,$4,$4,experiment_type,area,now(),'scope proof',provenance_kind,provenance_label,delta FROM experiment_run WHERE run_domain_id=$5`,
-      [
-        runId,
-        runIds[i],
-        id,
-        `${i < 4 ? 'Visible' : 'Secret'} Run ${i}`,
-        template,
-      ],
-    );
-    await db.query(
       `INSERT INTO study_access(study_id,responsible_user_id,responsible_department_id,area_id,visibility) VALUES($1,'scope-owner',$2,$3,$4)`,
       [
         id,
@@ -128,6 +118,21 @@ export async function dashboardAuthorizationContract(
       id,
       i === 2 || i === 4 || i === 6 ? 'scope-module' : 'scope-other-module',
     ]);
+    await seedScientificTestPrincipal(db);
+    await db.transaction(async sql=>{
+    await sql.query(
+      `INSERT INTO experiment_run(run_id,run_domain_id,study_id,run_number,configuration_package_version_id,experiment_type_profile_version_id,subject_type_revision_id,display_name,study_name,experiment_type,area,created_at,intent,provenance_kind,provenance_label,delta)
+  SELECT $1,$2,$3,1,configuration_package_version_id,experiment_type_profile_version_id,subject_type_revision_id,$4,$4,experiment_type,area,now(),'scope proof',provenance_kind,provenance_label,delta FROM experiment_run WHERE run_domain_id=$5`,
+      [
+        runId,
+        runIds[i],
+        id,
+        `${i < 4 ? 'Visible' : 'Secret'} Run ${i}`,
+        template,
+      ],
+    );
+      await sql.query("SELECT record_run_reasoning_origin($1,'ABSENT',NULL,$2,'Explicit isolated dashboard test Run')",[runId,scientificTestPrincipal]);
+    });
   }
   const policy = new PostgresAuthorization(db);
   // 1. Policy/list parity for every persona: no second discoverability interpretation.

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
 import { DxtApplication } from '@/src/application/dxt-application';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
 import { activateConfigurationPackage } from '@/src/infrastructure/postgres/configuration-activation';
 import { persistStudySetupVersion } from '@/src/infrastructure/postgres/slice-seed';

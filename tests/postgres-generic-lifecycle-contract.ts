@@ -9,7 +9,7 @@ import type {
 import type { RunPlanningSnapshot } from '@/src/features/run-registration/planning-model';
 import { createExperimentWorkspace } from '@/src/features/run-registration/workspace-model';
 import { measurementParticipationState } from '@/src/features/run-registration/measurement-grid-model';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
 

@@ -1,3 +1,4 @@
+import {adoptTestCriteria} from './postgres-reasoning-fixtures';
 import { scientificStudyActions } from '@/src/application/authorization';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -9,7 +10,7 @@ import {
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
 import { DxtApplication } from '@/src/application/dxt-application';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { createExperimentWorkspace } from '@/src/features/run-registration/workspace-model';
 import {
   createEmptyLifecycleState,
@@ -163,6 +164,7 @@ export async function scientificAuthorizationContract(db: SqlDatabase) {
     })) as RunPlanningSnapshot;
     const model = createExperimentWorkspace(snapshot, config),
       profile = lifecycleAuthoringProfiles[slug];
+    await adoptTestCriteria(db,snapshot.id);
     const context = await trusted.reasoning.context(snapshot.id);
     let state = {
       ...createEmptyLifecycleState(snapshot, profile),
@@ -318,7 +320,7 @@ export async function scientificAuthorizationContract(db: SqlDatabase) {
       operation: 'evaluation.save',
       runId: snapshot.id,
       records: evaluated.engineerEvaluations,
-      command: { commandId: randomUUID(), expectedVersion: 0 },
+      command: { commandId: randomUUID(), expectedVersion: 0, expectedInterpretation: context.interpretation },
     };
     await denied(evaluationRequest);
     await denied(evaluationRequest, ['measurer', 'decider']);
@@ -335,7 +337,7 @@ export async function scientificAuthorizationContract(db: SqlDatabase) {
           measurementSummaryId: 'missing-summary',
         },
       ],
-      command: { commandId: randomUUID(), expectedVersion: 1 },
+      command: { commandId: randomUUID(), expectedVersion: 1, expectedInterpretation: context.interpretation },
     };
     assert.equal((await api('collaborator', invalidEval)).status, 409);
     state = {
@@ -368,7 +370,7 @@ export async function scientificAuthorizationContract(db: SqlDatabase) {
         context: decided.decisionContext,
         nextRunPreview: decided.nextRunPreview,
       },
-      command: { commandId: randomUUID(), expectedVersion: 0 },
+      command: { commandId: randomUUID(), expectedVersion: 0, expectedInterpretation: context.interpretation },
     };
     await denied(decisionRequest);
     await denied(decisionRequest, ['evaluator', 'collaborator', 'decider']);
