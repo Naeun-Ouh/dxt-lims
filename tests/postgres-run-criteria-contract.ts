@@ -145,7 +145,8 @@ export async function runCriteriaContract(db: SqlDatabase) {
     code('CONFLICT'),
   );
   const actualModel = createExperimentWorkspace(snapshot, config);
-  let state: import('@/src/features/run-registration/lifecycle-authoring').AuthoredLifecycleState = await app.loadPersistedLifecycle(snapshot.id, 'ALL');
+  let state: import('@/src/features/run-registration/lifecycle-authoring').AuthoredLifecycleState =
+    await app.loadPersistedLifecycle(snapshot.id, 'ALL');
   state = await app.recordActual(state, actualModel, {
     id: 'criteria-actual',
     operationId: actualModel.operations.find((o) => o.role === 'PROCESS')!.id,
@@ -397,30 +398,36 @@ export async function runCriteriaContract(db: SqlDatabase) {
     'losing adoption leaves no orphan criteria revision',
   );
   await db.query('CREATE ROLE criteria_untrusted NOLOGIN');
-  await db.query('SET ROLE criteria_untrusted');
   try {
-    await assert.rejects(
-      db.query(
-        'SELECT append_run_reasoning_adoption($1,$2,$3,$4,$5,$6,$7,$8)',
-        [
-          randomUUID(),
-          study.study_id,
-          input.revisionId,
-          0,
-          scientificTestPrincipal,
-          'forged',
-          'forged',
-          'forged',
-        ],
-      ),
-      /permission denied/,
-    );
-    await assert.rejects(
-      db.query('SELECT * FROM reasoning_criteria_revision'),
-      /permission denied/,
-    );
+    await db.transaction(async (session) => {
+      // SQL roles belong to one connection; pooled queries must share a session.
+      await session.query('SET LOCAL ROLE criteria_untrusted');
+      await session.query('SAVEPOINT denied_adoption');
+      await assert.rejects(
+        session.query(
+          'SELECT append_run_reasoning_adoption($1,$2,$3,$4,$5,$6,$7,$8)',
+          [
+            randomUUID(),
+            study.study_id,
+            input.revisionId,
+            0,
+            scientificTestPrincipal,
+            'forged',
+            'forged',
+            'forged',
+          ],
+        ),
+        /permission denied/,
+      );
+      await session.query('ROLLBACK TO SAVEPOINT denied_adoption');
+      await session.query('SAVEPOINT denied_read');
+      await assert.rejects(
+        session.query('SELECT * FROM reasoning_criteria_revision'),
+        /permission denied/,
+      );
+      await session.query('ROLLBACK TO SAVEPOINT denied_read');
+    });
   } finally {
-    await db.query('RESET ROLE');
     await db.query('DROP ROLE criteria_untrusted');
   }
   assert.deepEqual(
