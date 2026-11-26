@@ -178,6 +178,11 @@ async function commandWrite(
           'FORBIDDEN',
           'Scientific authoring permission is required.',
         );
+      const proposedDecision = kind==='decision' ? input as DecisionRecord : null;
+      if(proposedDecision?.context?.decision.nextAction||proposedDecision?.nextRunPreview){
+        const nextAllowed=(await sql.query<{reason:string}>('SELECT dxt_explicit_scientific_access_reason($1,study_id,$2) reason FROM experiment_run WHERE run_id=$3',[sql.trustedPrincipalId,'AUTHOR_NEXT_ACTION',id])).rows[0];
+        if(nextAllowed?.reason!=='EXPLICIT_GRANT')throw new ApplicationError('FORBIDDEN','You do not have permission to record Next Action.');
+      }
       const requestInput = { input, expectedVersion: cmd.expectedVersion,
         ...(cmd.expectedInterpretation
           ? { expectedInterpretation: cmd.expectedInterpretation }
