@@ -141,6 +141,8 @@ try {
       ],
     });
   }
+  // Cloned packages need their own exact Measurement reference bindings before Preview.
+  await provisionMeasurementReferences(db, definitions);
   await db.query(
     "INSERT INTO auth_org_unit VALUES('agent-integration-dept','DEPARTMENT',NULL),('agent-integration-area','AREA',NULL)",
   );
@@ -232,6 +234,7 @@ try {
               'RECORD_MEASUREMENT',
               'AUTHOR_EVALUATION',
               'AUTHOR_DECISION',
+              'AUTHOR_NEXT_ACTION',
               'MANAGE_REASONING_CONTEXT',
             ]
           : []),
