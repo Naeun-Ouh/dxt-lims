@@ -382,9 +382,7 @@ export async function materializePersistedStudy(session: SqlSession, slug: strin
 }
 
 /** Bounded bootstrap policy: legacy seeded workspaces retain their existing contract. */
-async function creationReadiness(session:SqlSession,slug:string,snapshot:RunPlanningSnapshot) {
-  const bootstrap=await session.query(`SELECT 1 FROM study s JOIN study_setup_command_receipt r USING(study_id) WHERE s.series_slug=$1 AND r.command_id LIKE 'study-create:%' LIMIT 1`,[slug]);
-  if(!bootstrap.rowCount)return studyReadiness(session,slug,snapshot.configurationPackageVersionId);
+async function creationReadiness(session:SqlSession,_slug:string,snapshot:RunPlanningSnapshot) {
   return executionReadiness(snapshot,await hydrateConfigurationPackages(session,[snapshot.configurationPackageVersionId]),await readMeasurementCatalog(session,snapshot.configurationPackageVersionId)).execution;
 }
 
@@ -502,6 +500,20 @@ export class PostgresRunRepository implements RunRepository {
         if(execution.status!=='READY')throw new ApplicationError('VALIDATION', 'contextId' in execution ? 'Study lifecycle not ready. Review the saved Study criteria.' : 'Complete and save the required execution conditions before creating a Run.');
         await session.query('UPDATE study SET next_run_number = $2, aggregate_version = aggregate_version + 1 WHERE study_id = $1', [study.study_id, allocated + 1]);
         const runId = await insertSnapshot(session, study, snapshot);
+        if (!session.trustedPrincipalId)
+          throw new ApplicationError(
+            'FORBIDDEN',
+            'A signed-in researcher with Run creation permission is required.',
+          );
+        await session.query(
+          'SELECT record_run_reasoning_origin($1,$2,NULL,$3,$4)',
+          [
+            runId,
+            'ABSENT',
+            session.trustedPrincipalId,
+            'Run created without selected Evaluation Criteria',
+          ],
+        );
         await session.query(`UPDATE idempotency_record SET status = 'SUCCEEDED', result_run_id = $2, completed_at = now()
           WHERE command_scope = 'CREATE_RUN' AND idempotency_key = $1`, [command.commandId, runId]);
         const saved = await readRun(session, 'WHERE run.run_id = $1', [runId]);
@@ -546,7 +558,20 @@ export class PostgresRunRepository implements RunRepository {
 export function createProductionSliceRepositories(
   database: SqlDatabase,
   configuration: ApplicationRepositories['configuration'],
+  principalId?: string,
 ): ApplicationRepositories {
+  if (principalId) {
+    const source = database;
+    const session = (sql: SqlSession): SqlSession => ({
+      query: sql.query.bind(sql),
+      trustedPrincipalId: principalId,
+    });
+    database = {
+      ...session(source),
+      transaction: (work) => source.transaction((sql) => work(session(sql))),
+      close: () => source.close(),
+    };
+  }
   const deferred = unsupportedRepositories();
   return {
     ...deferred, configuration,

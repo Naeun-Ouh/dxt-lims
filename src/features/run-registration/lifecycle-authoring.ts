@@ -5,11 +5,15 @@ import {
   subjectMeasurementResultSetSchema,
   type SubjectMeasurementResultSet,
 } from '@/src/domain/measurement/subject-measurement';
-import { resolveById, unitSymbol, type ReferenceCatalog } from '@/src/domain/reference';
+import { resolveById, unitSymbol, type ReferenceCatalog,
+} from '@/src/domain/reference';
 import type { SeriesSlug } from '@/src/features/experiment-series/run-entry-model';
-import { projectOperationExecution, plannedExecutionIdentity, type ActualExecutionEvidence } from './actual-execution-model';
-import { createNextRunPreview, type DecisionContinuationContext, type NextRunPreview } from './decision-continuation-model';
-import type { EngineerEvaluationRecord, EvaluationTargetBinding } from './evaluation-grid-model';
+import { projectOperationExecution, plannedExecutionIdentity, type ActualExecutionEvidence,
+} from './actual-execution-model';
+import { createNextRunPreview, type DecisionContinuationContext, type NextRunPreview,
+} from './decision-continuation-model';
+import type { EngineerEvaluationRecord, EvaluationTargetBinding,
+} from './evaluation-grid-model';
 import { plannedMeasurementIdentity } from './measurement-grid-model';
 import type { RunPlanningSnapshot } from './planning-model';
 import type { ExperimentWorkspaceModel } from './workspace-model';
@@ -36,6 +40,10 @@ export type AuthoredLifecycleState = {
   measurementResults: SubjectMeasurementResultSet;
   measurementVersion?: number;
   measurementCatalog?: ReferenceCatalog;
+  interpretation?: { contextId: string; sequence: number } | null;
+  actor?: string;
+  evaluationProvenance?: import('@/src/application/repository-ports').ReasoningState<unknown>['provenance'];
+  decisionProvenance?: import('@/src/application/repository-ports').ReasoningState<unknown>['provenance'];
   evaluationVersion?: number;
   decisionVersion?: number;
   targetBindings?: EvaluationTargetBinding[];
@@ -128,7 +136,8 @@ export function recordActualExecution(
   model: ExperimentWorkspaceModel,
   command: ActualExecutionCommand,
 ) {
-  const operation = model.operations.find((item) => item.id === command.operationId);
+  const operation = model.operations.find((item) => item.id === command.operationId,
+  );
   const subject = model.subjects.find((item) => item.id === command.subjectId);
   if (!operation || !subject) throw new Error('Select a valid Operation and Subject.');
   if (!command.startedAt) throw new Error('Execution start is required.');
@@ -164,7 +173,8 @@ export function recordActualExecution(
       id: `${command.id}:execution`,
       experimentRunId: state.runId,
       processStepId: operation.id,
-      plannedExecutionItemId: plannedExecutionIdentity(state.runId, subject.id, operation.id),
+      plannedExecutionItemId: plannedExecutionIdentity(state.runId, subject.id, operation.id,
+      ),
       observedOperation: operation.name,
       observedRecipe,
       equipment: command.equipment ?? operation.equipment,
@@ -208,12 +218,14 @@ export function recordManualMeasurement(
     catalog.measurementOperations,
     operation.operationDefinitionRevisionId,
   );
-  const parameter = resolveById(catalog.parameters, command.parameterDefinitionId);
+  const parameter = resolveById(catalog.parameters, command.parameterDefinitionId,
+  );
   if (
     parameter.measurementOperationDefinitionId !== definition.id ||
     parameter.semanticRole !== 'MEASUREMENT'
   )
-    throw new Error('Parameter is not applicable to the selected Measurement Operation.');
+    throw new Error('Parameter is not applicable to the selected Measurement Operation.',
+    );
   if (!parameter.supportedMeasurementPoints.includes(command.measurementPoint))
     throw new Error('Measurement point is not supported by this Parameter.');
   const trimmed = command.value.trim();
@@ -228,9 +240,10 @@ export function recordManualMeasurement(
     throw new Error('Measurement value must be a valid number.');
   if (command.grain === 'SITE' && !command.siteIdentity?.trim())
     throw new Error('Site is required for Site-grain Measurement.');
-  const coordinateValues = command.grain === 'SITE' ? command.coordinateValues ?? [] : [];
+  const coordinateValues = command.grain === 'SITE' ? (command.coordinateValues ?? []) : [];
   if (command.grain === 'SITE' && !coordinateValues.length)
-    throw new Error('Site coordinates are required for Site-grain Measurement.');
+    throw new Error('Site coordinates are required for Site-grain Measurement.',
+    );
   const executionId = `${command.id}:execution`;
   const datasetId = `${command.id}:dataset`;
   const valueId = `${command.id}:value`;
@@ -344,7 +357,8 @@ export function recordEngineerEvaluation(
     (item) => item.id === command.measurementSummaryId,
   );
   if (!summary || summary.subjectId !== command.subjectId)
-    throw new Error('Evaluation must reference an exact measured Subject result.');
+    throw new Error('Evaluation must reference an exact measured Subject result.',
+    );
   const record: EngineerEvaluationRecord = {
     id: command.id,
     runId: state.runId,
@@ -378,8 +392,10 @@ export function recordDecisionAndNextAction(
 ) {
   if (!command.conclusion.trim() || !command.reason.trim())
     throw new Error('Decision and scientific rationale are required.');
-  if (!command.nextActionNote.trim()) throw new Error('Next Action is required.');
+  if (command.nextActionTypeDefinitionId) {
+    if (!command.nextActionNote.trim()) throw new Error('Next Action note is required.');
   resolveById(catalog.nextActionTypes, command.nextActionTypeDefinitionId);
+  }
   const decision = decisionSchema.parse({
     id: command.id,
     experimentRunId: state.runId,
@@ -387,10 +403,12 @@ export function recordDecisionAndNextAction(
     criterionAssessments: [],
     conclusion: command.conclusion.trim(),
     reason: command.reason.trim(),
-    nextAction: {
+    nextAction: command.nextActionTypeDefinitionId
+      ? {
       nextActionTypeDefinitionId: command.nextActionTypeDefinitionId,
       note: command.nextActionNote.trim(),
-    },
+    }
+      : null,
     recordedBy: command.recordedBy,
     recordedAt: command.recordedAt,
   });

@@ -21,6 +21,7 @@ export function useLifecycleAuthoring(
   profile: LifecycleAuthoringProfile | undefined,
   enabled = true,
   stage: 'ACTUAL' | 'MEASUREMENT' | 'ALL' = 'ALL',
+  refresh = 0,
 ) {
   const { application } = useDxtApplication();
   const production = !!application.configurationAuthoringBoundary;
@@ -34,7 +35,7 @@ export function useLifecycleAuthoring(
     key: string;
     error: string | null;
   } | null>(null);
-  const loadKey = `${model.snapshot.id}:${stage}`;
+  const loadKey = `${model.snapshot.id}:${stage}:${refresh}`;
   const pendingMeasurement = useRef<{
     request: string;
     command: ManualMeasurementCommand;
@@ -53,7 +54,7 @@ export function useLifecycleAuthoring(
     if ((!profile && !production) || !enabled) return;
     let active = true;
     void (
-      production && (stage !== 'ALL' || !profile)
+      production
         ? application.loadPersistedLifecycle(model.snapshot.id, stage)
         : application.loadLifecycle(model.snapshot, profile!, stage)
     )
@@ -141,7 +142,7 @@ export function useLifecycleAuthoring(
       return commit(next);
     },
     async recordDecision(command: Omit<DecisionCommand, 'id'>) {
-      if (!profile)
+      if (!state.measurementCatalog && !profile)
         throw new Error('Evaluation criteria are not configured for this Run.');
       const request = JSON.stringify({ ...command, recordedAt: undefined });
       if (pendingDecision.current?.request !== request)
@@ -151,18 +152,16 @@ export function useLifecycleAuthoring(
         };
       const next = await application.recordDecision(
         state,
-        profile.catalog,
+        state.measurementCatalog ?? profile!.catalog,
         pendingDecision.current.command,
       );
       pendingDecision.current = null;
       return commit(next);
     },
     createNextRun() {
-      if (!profile)
-        throw new Error('Evaluation criteria are not configured for this Run.');
       pendingNextRun.current ??= authoringId('next-run');
       return application.createNextRun(
-        profile.studyId,
+        state.studyId,
         state,
         pendingNextRun.current,
       );

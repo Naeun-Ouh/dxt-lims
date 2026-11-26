@@ -15,23 +15,31 @@ async function request<T>(body: unknown): Promise<T> {
   let response: Response;
   let value: unknown;
   try {
-    response = await fetch('/api/repository', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    response = await fetch('/api/repository', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body),
+    });
     value = await response.json();
   } catch { throw new ApplicationError('PERSISTENCE',requestFailureMessage(body)); }
   if (!response.ok) {
-    const error = z.object({ code:z.enum(['NOT_FOUND','CONFLICT','VALIDATION','PERSISTENCE','FORBIDDEN']).optional(), error:z.string() }).safeParse(value);
-    const code = error.success ? error.data.code ?? 'PERSISTENCE' : 'PERSISTENCE';
-    const message = error.success && code !== 'PERSISTENCE' && !/repository|adapter|database|API|reasoning context/i.test(error.data.error) ? error.data.error : requestFailureMessage(body);
+    const error = z.object({ code:z.enum(['NOT_FOUND','CONFLICT','VALIDATION','PERSISTENCE','FORBIDDEN',
+          ]).optional(), error:z.string(),
+      }).safeParse(value);
+    const code = error.success ? (error.data.code ?? 'PERSISTENCE')
+      : 'PERSISTENCE';
+    const message = error.success && code !== 'PERSISTENCE' && !/repository|adapter|database|API|reasoning context/i.test(error.data.error,
+      ) ? error.data.error : requestFailureMessage(body);
     throw new ApplicationError(code,message);
   }
   return value as T;
 }
 
-export function createHttpRepositories(configuration: ApplicationRepositories['configuration']): ApplicationRepositories {
-  const unsupported = async (): Promise<never> => { throw new ApplicationError('VALIDATION', 'This command is outside Production Adapter Slices 1–3.'); };
+export function createHttpRepositories(configuration: ApplicationRepositories['configuration'],
+): ApplicationRepositories {
+  const unsupported = async (): Promise<never> => { throw new ApplicationError('VALIDATION', 'This command is outside Production Adapter Slices 1–3.',
+    ); };
   return {
     ...unsupportedRepositories(), configuration,
-    study: { getLifecycleReadiness:(slug,pin)=>request({operation:'study.readiness',slug,pin}), confirmReasoningContext:(slug,input,command)=>request({operation:'study.reasoning.confirm',slug,input,command}), getSetup: (slug) => request({ operation: 'study.load', slug }), saveSetup:(setup,command)=>request({operation:'study.save',setup,command}) },
+    study: { getLifecycleReadiness:(slug,pin)=>request({operation:'study.readiness',slug,pin}), confirmReasoningContext:(slug,input,command)=>request({operation:'study.reasoning.confirm',slug,input,command}), getSetup: (slug) => request({ operation: 'study.load', slug }), saveSetup:(setup,command)=>request({operation:'study.save',setup,command}),
+    },
     measurement: {
       getCatalog:(packageId)=>request({operation:'measurement.catalog',packageId}),
       listDatasets:()=>request({operation:'measurement.datasets'}),
@@ -41,7 +49,7 @@ export function createHttpRepositories(configuration: ApplicationRepositories['c
       saveByRun:(runId,record,command)=>request({operation:'measurement.save',runId,record,command}),
     },
     savedAnalysis: {
-      getAccess:id=>request({operation:'analysis.access',id}),
+      getAccess: (id) =>request({operation:'analysis.access',id}),
       share:(id,sharing,command)=>request({operation:'analysis.share',id,sharing,command}),
       list:()=>request({operation:'analysis.list'}),
       getState:(id)=>request({operation:'analysis.load',id}),
@@ -66,9 +74,12 @@ export function createHttpRepositories(configuration: ApplicationRepositories['c
     },
     run: {
       previewCreation:(input)=>request({operation:'run.preview',input}),
-      createFromPreview:(input,fingerprint,command)=>request({operation:'run.create.preview',input,fingerprint,command}),
-      createFromPreviousRun:(sourceRunId,decisionId,command)=>request({operation:'run.next',sourceRunId,decisionId,commandId:command.commandId}),
-      createFromStudyDefault: (slug, command) => request({ operation: 'run.create', slug, commandId: command.commandId }),
+      createFromPreview:(input,fingerprint,command)=>request({operation:'run.create.preview',input,fingerprint,command,
+        }),
+      createFromPreviousRun:(sourceRunId,decisionId,command)=>request({operation:'run.next',sourceRunId,decisionId,commandId:command.commandId,
+        }),
+      createFromStudyDefault: (slug, command) => request({ operation: 'run.create', slug, commandId: command.commandId,
+        }),
       getSnapshot: (runId) => request({ operation: 'run.get', runId }),
       getCreatedRun: (slug, runNumber) => request({ operation: 'run.created', slug, runNumber }),
       listSnapshots: () => request({ operation: 'run.list' }),
@@ -78,16 +89,20 @@ export function createHttpRepositories(configuration: ApplicationRepositories['c
   };
 }
 
-export const httpConfigurationAuthoring:ConfigurationAuthoringBoundary={load:()=>request({operation:'configuration.load'}),execute:(requestData,commandId)=>request({operation:'configuration.execute',request:requestData,commandId})};
+export const httpConfigurationAuthoring:ConfigurationAuthoringBoundary={load:()=>request({operation:'configuration.load'}),execute:(requestData,commandId)=>request({operation:'configuration.execute',request:requestData,commandId,
+    }),
+};
 
-export const loadStudyPermissions=(slug:string)=>request<import('@/src/application/authorization').StudyPermissions>({operation:'study.permissions',slug});
+export const loadStudyPermissions=(slug:string)=>request<import('@/src/application/authorization').StudyPermissions>({operation:'study.permissions',slug,
+  });
 
-export const loadRunSummaries=(query:Partial<import('@/src/application/discovery').DiscoveryQuery>)=>request<import('@/src/application/discovery').DiscoveryPage<import('@/src/application/discovery').RunSummary>>({operation:'run.summaries',query});
+export const loadRunSummaries=(query:Partial<import('@/src/application/discovery').DiscoveryQuery>,
+)=>request<import('@/src/application/discovery').DiscoveryPage<import('@/src/application/discovery').RunSummary>>({operation:'run.summaries',query});
 
 export const httpStudyCreation: import('@/src/application/study-creation').StudyCreationRepository = {
   options: () => request({ operation: 'study.creation.options' }),
   create: (input, commandId) => request({ operation: 'study.create', input, commandId }),
-  get: slug => request({ operation: 'study.identity', slug }),
+  get: (slug) => request({ operation: 'study.identity', slug }),
 };
 
 export const httpStudyBootstrap = {
@@ -135,3 +150,33 @@ export const httpStudyBootstrap = {
 };
 
 export const httpMaterialUsage = (query: unknown) => request<import('@/src/application/discovery').DiscoveryPage<import('@/src/application/material-usage').MaterialAssignmentUsage>>({operation: 'material.usage', query});
+
+export const httpRunCriteria = {
+  load: (runId: string) =>
+    request<import('@/src/application/run-criteria').RunCriteriaState>({
+      operation: 'run.criteria.load',
+      runId,
+    }),
+  save: (
+    runId: string,
+    input: import('@/src/application/run-criteria').CriteriaSaveInput,
+    commandId: string,
+  ) =>
+    request<import('@/src/application/run-criteria').RunCriteriaState>({
+      operation: 'run.criteria.save',
+      runId,
+      input,
+      commandId,
+    }),
+  adopt: (
+    runId: string,
+    input: import('@/src/application/run-criteria').CriteriaAdoptInput,
+    commandId: string,
+  ) =>
+    request<import('@/src/application/run-criteria').RunCriteriaState>({
+      operation: 'run.criteria.adopt',
+      runId,
+      input,
+      commandId,
+    }),
+};

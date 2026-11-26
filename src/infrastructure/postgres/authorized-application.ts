@@ -1,3 +1,4 @@
+import { runCriteriaOperation } from './run-criteria';
 import { scopedMaterialUsage } from './material-usage';
 import { readBootstrap, saveBootstrap, initializeReasoning } from './study-bootstrap';
 import { PostgresStudyCreation } from './study-creation';
@@ -125,6 +126,17 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
    if(!r)throw new ApplicationError('NOT_FOUND','Resource unavailable or access denied.');
    await policy.require(principal,action,r.study_id);return r.study_id;
   };
+    if (op.startsWith('run.criteria.'))
+      return runCriteriaOperation(
+        sql,
+        principalId,
+        op,
+        text(input.runId),
+        input.input,
+        createHash('sha256')
+          .update(JSON.stringify([principalId, op, input.commandId]))
+          .digest('hex'),
+      );
   let sid:string|undefined;
   const configurationRequest=op==='configuration.execute'?await authorizeConfigurationMutation(sql,principalId,input.request):undefined;
   if(configurationRequest)input.request=configurationRequest;
@@ -174,7 +186,7 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
   // They must not change the outer command into a read-only transaction.
   const joined={query:async <R extends import('./sql-database').SqlRow>(query:string,args?:unknown[])=>query==='SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY'?{rows:[] as R[],rowCount:0}:sql.query<R>(query,args)};
   const transactionDb:SqlDatabase={query:joined.query,transaction:work=>work(joined),close:async()=>{}};
-  const repositories=createProductionSliceRepositories(transactionDb,configuration);
+  const repositories=createProductionSliceRepositories(transactionDb,configuration,principalId);
   repositories.measurement=new PostgresMeasurementRepository(transactionDb,principalId);
   const app=new DxtApplication(repositories,[],[],{},new PostgresConfigurationAuthoring(transactionDb));
   if(op==='measurement.query'){
