@@ -2,7 +2,7 @@
 
 Status: **DESIGN / MIGRATION REVIEW ONLY — NOT APPROVED FOR APPLICATION**.
 
-This proposal follows [the safety correction 7145097572](https://github.com/Naeun-Ouh/dxt-lims/issues/16#issuecomment-7145097572), which supersedes historical `ABSENT` backfill. The SQL exists only under `docs/proposals/issue-16`; it is not registered in the application migration sequence. No application code, UAT database, migration ledger, authorization policy or scientific record was changed. PR #12 remains unmerged.
+This proposal follows [the safety correction 7145097572](https://github.com/Naeun-Ouh/dxt-lims/issues/16#issuecomment-7145097572), which supersedes historical `ABSENT` backfill. The SQL exists only under `docs/proposals/issue-16`; it is not registered in the application migration sequence. No application migration, UAT database, live authorization grant or scientific record was changed. The isolated branch integrates the reviewed PR #21 runtime baseline for parity tests. PR #12 remains unmerged.
 
 ## CURRENT SCHEMA
 
@@ -10,7 +10,7 @@ This proposal follows [the safety correction 7145097572](https://github.com/Naeu
 - `engineer_evaluation.context_id` and `decision.context_id` already store exact immutable UUID references. Migration 008 adoption and migration 015 initial-criteria receipts also reference this identity.
 - `readReasoningContext()` joins Run → current Study/package context; it cannot distinguish creation absence, unknown legacy provenance, selected criteria or later interpretation.
 - `PostgresRunRepository.create` already uses a transaction, locks the Study, checks source fingerprint/readiness, calls `insertSnapshot`, updates the idempotency receipt and reads back before commit.
-- Existing explicit capability `MANAGE_REASONING_CONTEXT` requires a grant. Admin/Study owner does not automatically receive that scientific capability. This proposal does not change that policy.
+- All nine scientific actions use explicit grants under PR #21. Proposed SQL now calls one `dxt_explicit_scientific_access_reason` policy; responsibility/Admin alone does not grant CREATE_RUN or reasoning authoring. Runtime must switch to the same helper in a future coordinated release.
 
 ## FAILURE MODE
 
@@ -125,7 +125,7 @@ Rollback before COMMIT is transactional and tested. After new revision/adoption 
 | `ON CONFLICT` against compatibility view | **Not supported**; repository search found no such current caller. Future upserts must use explicit revision/selection commands |
 | New revision selected by Run | New resolver uses revision table; legacy view intentionally does not expose it |
 
-No new nullability is introduced in saved Evaluation/Decision provenance. Their old IDs are neither rewritten nor backfilled with a new context. Existing legacy authoring routes retain their existing authorization guards; the compatibility insert trigger does not add a new public API or grant a capability.
+No new nullability is introduced in saved Evaluation/Decision provenance. Their old IDs are neither rewritten nor backfilled with a new context. Legacy insert shape is preserved for the protected deployer only. The proposed server ACL denies direct legacy-view/table DML; existing bootstrap/adoption writes must be adapted to validated trusted commands before rollout. See the runtime inventory.
 
 ## TEST MATRIX / VALIDATION
 
@@ -157,7 +157,7 @@ The runner ignores DATABASE_URL, allocates a free local port, creates a fresh Po
 | Definition/revision/selection/origin/adoption update/delete; origin truncate | Rejected |
 | Legacy INSERT + uniqueness + receipt FK | Existing write contract retained |
 
-Native PostgreSQL 18.6 validation: PASS. Exact execution log and final SQL hash are recorded in [validation.md](./validation.md). This is one native integration test containing the checks above, not a claim that a new deployed feature or Human UAT passed. Full product build/test reruns are unnecessary for documentation/proposal-only code; current PR #12 regression is a separate workstream.
+Native PostgreSQL 18.7 validation: see the current evidence record. Exact execution log and final SQL hash are recorded in [validation.md](./validation.md). This is one native integration test containing the checks above, not a claim that a new deployed feature or Human UAT passed. Full product build/test reruns are unnecessary for documentation/proposal-only code; current PR #12 regression is a separate workstream.
 
 ## RISKS / ARCHITECTURE REVIEW REQUIRED
 
@@ -168,3 +168,14 @@ Native PostgreSQL 18.6 validation: PASS. Exact execution log and final SQL hash 
 5. The tests exercise actual baseline migrations and repository-generated historical rows, but cannot prove compatibility of external SQL consumers, production ACLs or unsupported historical exports. Inventory those before production migration; ON CONFLICT/view FK users require explicit remediation.
 
 Human acceptance: **NOT RUN**. No new UI delivered by this design PR. Remaining executable work after Architecture reviews exact SQL: implement the approved repository/read/write contract on a focused branch, rerun full and native contracts, then prepare bounded Human UAT. Do not merge or apply this candidate as part of unrelated Actual/Measurement or Sample lifecycle work.
+
+## PR #21 integration review update
+
+Latest decisions: [PR #21 7180748191](https://github.com/Naeun-Ouh/dxt-lims/pull/21#issuecomment-7180748191), [Issue #1 7180749019](https://github.com/Naeun-Ouh/dxt-lims/issues/1#issuecomment-7180749019).
+
+- [Exact coordinated runtime proposal and inventory](./runtime-integration.md) covers all Run writers/delegates, legacy view read/write/ACL changes, trusted actor/payload validation, optional criteria, active vs historical projections and expected context/sequence authoring. These runtime changes are **not implemented** by this design PR.
+- SQL role-precedence mismatch fixed: responsible/Admin with explicit grants pass; roles alone fail. Proposed origin CREATE_RUN now requires the explicit capability too.
+- Shared nine-action helper is tested against reviewed PR #21 runtime plus NULL hardening. No live grants are changed.
+- [Proposed trusted-server ACL](./trusted-server-acl.PROPOSED.sql) is separate from runtime end-user capabilities. Restricted-role tests prove untrusted actors cannot call privileged functions, impersonate by GUC, SET ROLE or directly insert legacy/new records. Existing production role/ACL census remains required.
+- Proposed authoring guard shares the adoption Run lock and rejects stale context/sequence; native tests observe lock contention. Existing repository authoring still requires future adaptation; SQL primitive tests do not imply completed lifecycle integration.
+- Migration 016 remains here only, unregistered. Sample schema proposal 017 remains a separate approval gate. No merges or deployment.

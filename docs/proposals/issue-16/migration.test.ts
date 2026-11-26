@@ -16,6 +16,7 @@ import { lifecycleAuthoringProfiles } from '@/src/mock/lifecycle-authoring';
 import { provisionMeasurementReferences } from '@/src/infrastructure/postgres/measurement-references';
 import { provisionReasoningContexts } from '@/src/infrastructure/postgres/reasoning-context';
 import { productionMeasurementContract } from '@/tests/postgres-measurement-contract';
+import { scientificPolicyContract } from './scientific-policy-contract';
 import { productionReasoningContract } from '@/tests/postgres-reasoning-contract';
 
 void test('Issue 16 proposed migration on disposable PostgreSQL: compatibility, provenance and concurrent adoption', async () => {
@@ -101,6 +102,8 @@ void test('Issue 16 proposed migration on disposable PostgreSQL: compatibility, 
       "INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT study_id::text,study_id,'review-author','MANAGE_REASONING_CONTEXT','review-author' FROM study",
     );
 
+    await q("INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT study_id::text||'-create',study_id,'review-author','CREATE_RUN','review-author' FROM study");
+
     const sql = await readFile(
       'docs/proposals/issue-16/016_run_reasoning_provenance.PROPOSED.sql',
       'utf8',
@@ -176,6 +179,7 @@ void test('Issue 16 proposed migration on disposable PostgreSQL: compatibility, 
         r.configuration_package_version_id === original.package_version_id,
     )!;
     assert.ok(template);
+    await scientificPolicyContract(pool, db, original.study_id);
     const definition = original.id;
     const a = randomUUID();
     const b = randomUUID();
@@ -259,7 +263,7 @@ void test('Issue 16 proposed migration on disposable PostgreSQL: compatibility, 
         await client.query('BEGIN');
         await client.query(insertRun, [record]);
         await client.query(
-          'INSERT INTO run_reasoning_origin(run_id,state,context_id,principal_id,evidence) VALUES($1,$2,$3,$4,$5)',
+          'SELECT record_run_reasoning_origin($1,$2,$3,$4,$5)',
           [record.run_id, state, context, actor, 'Isolated contract creation'],
         );
         await client.query('COMMIT');
@@ -395,6 +399,30 @@ void test('Issue 16 proposed migration on disposable PostgreSQL: compatibility, 
       ).rows[0].n,
       1,
     );
+    // Proposed authoring/adoption share one Run lock; no uncommitted stale write.
+    await q("INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) VALUES('review-evaluation',$1,'review-author','AUTHOR_EVALUATION','review-author')",[original.study_id]);
+    const authoring=await pool.connect();
+    try {
+      await authoring.query('BEGIN');
+      await authoring.query('SELECT assert_run_reasoning_authoring($1,$2,0,$3,$4)',[selectedA,a,'review-author','AUTHOR_EVALUATION']);
+      const waitingAdoption=adopt(selectedA,b,0);
+      // Verify PostgreSQL reports a waiter, rather than assuming timing is proof.
+      let waiting=false;
+      for(let attempt=0;attempt<100;attempt++){
+        waiting=(await q("SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE pid<>pg_backend_pid() AND wait_event_type='Lock' AND query LIKE '%append_run_reasoning_adoption%') waiting")).rows[0].waiting;
+        if(waiting)break;
+        await new Promise(resolve=>setTimeout(resolve,10));
+      }
+      assert.equal(waiting,true,'Adoption must wait while authoring owns Run lock');
+      await authoring.query('COMMIT');
+      await waitingAdoption;
+    } finally {await authoring.query('ROLLBACK');authoring.release();}
+    await assert.rejects(q('SELECT assert_run_reasoning_authoring($1,$2,0,$3,$4)',[selectedA,a,'review-author','AUTHOR_EVALUATION']),/Interpretation changed/);
+    await q('SELECT assert_run_reasoning_authoring($1,$2,1,$3,$4)',[selectedA,b,'review-author','AUTHOR_EVALUATION']);
+    await assert.rejects(q('SELECT assert_run_reasoning_authoring($1,$2,1,$3,$4)',[selectedA,b,'review-admin','AUTHOR_EVALUATION']),/explicit capability/);
+    await assert.rejects(q('SELECT assert_run_reasoning_authoring($1,$2,NULL,$3,$4)',[selectedA,b,'review-author','AUTHOR_EVALUATION']),/Interpretation changed/);
+    console.log('PASS proposed authoring guard: exact context/sequence, denied actor, observed Run-lock contention, stale authoring after adoption');
+
     const historical = template.run_id;
     await adopt(historical, b, 0);
     assert.equal((await resolve(historical)).origin_state, 'UNKNOWN_LEGACY');

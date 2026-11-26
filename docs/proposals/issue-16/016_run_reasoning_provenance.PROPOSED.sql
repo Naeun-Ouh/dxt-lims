@@ -3,6 +3,24 @@
 BEGIN;
 LOCK TABLE reasoning_context, experiment_run IN SHARE ROW EXCLUSIVE MODE;
 
+-- Single proposed scientific policy. Runtime must call this helper in the coordinated
+-- release; legacy dxt_study_access_reason remains a discovery/administration resolver.
+CREATE FUNCTION dxt_explicit_scientific_access_reason(pid text,sid uuid,act text)
+RETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+ WITH visibility AS (SELECT public.dxt_study_access_reason(pid,sid,'VIEW_RUN') reason)
+ SELECT CASE
+ WHEN act IS NULL OR act NOT IN ('CREATE_RUN','EDIT_RUN_PLAN','RECORD_ACTUAL','RECORD_MEASUREMENT',
+  'MANAGE_MEASUREMENT_VALIDITY','AUTHOR_EVALUATION','AUTHOR_DECISION','AUTHOR_NEXT_ACTION','MANAGE_REASONING_CONTEXT') THEN 'MISSING_CAPABILITY'
+ WHEN NOT EXISTS(SELECT 1 FROM public.auth_principal WHERE id=pid AND active) THEN 'CONTEXT_UNAVAILABLE'
+ WHEN reason IS NULL THEN 'CONTEXT_UNAVAILABLE'
+ WHEN reason NOT IN ('RESPONSIBLE_USER','RESPONSIBLE_DEPARTMENT','AREA_SCOPE','MANAGED_ORG_SCOPE','EXPLICIT_GRANT','ADMIN') THEN reason
+ WHEN EXISTS(SELECT 1 FROM public.study_access_grant g WHERE g.study_id=sid AND g.action=act AND g.active
+  AND (g.expires_at IS NULL OR g.expires_at>statement_timestamp())
+  AND (g.principal_id=pid OR EXISTS(SELECT 1 FROM public.auth_membership m
+   WHERE m.principal_id=pid AND NOT m.managed AND m.unit_id=g.unit_id))) THEN 'EXPLICIT_GRANT'
+ ELSE 'MISSING_CAPABILITY' END FROM visibility
+$$;
+
 -- Keep UUIDs and every existing FK. PostgreSQL tracks the renamed table by OID.
 ALTER TABLE reasoning_context RENAME TO reasoning_criteria_revision;
 CREATE TABLE reasoning_criteria_definition (
@@ -55,13 +73,14 @@ CREATE TRIGGER immutable_legacy_reasoning_context INSTEAD OF UPDATE OR DELETE ON
 -- Server repository entry point, after exact-reference/payload validation.
 -- UUID is the idempotent immutable revision identity; never overwrite its payload.
 CREATE FUNCTION create_reasoning_criteria_revision(p_id uuid,p_definition uuid,p_study uuid,p_package text,
- p_expected integer,p_actor text,p_payload jsonb) RETURNS uuid LANGUAGE plpgsql AS $$
+ p_expected integer,p_actor text,p_payload jsonb) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE previous reasoning_criteria_revision; current_revision integer;
 BEGIN
  IF p_id IS NULL OR p_definition IS NULL OR p_study IS NULL OR p_package IS NULL OR p_expected IS NULL OR p_expected<0 OR p_actor IS NULL OR p_payload IS NULL THEN
    RAISE EXCEPTION 'Complete explicit criteria revision input is required' USING ERRCODE='22004';
  END IF;
- IF dxt_study_access_reason(p_actor,p_study,'MANAGE_REASONING_CONTEXT') IS DISTINCT FROM 'EXPLICIT_GRANT' THEN
+ IF jsonb_typeof(p_payload) IS DISTINCT FROM 'object' THEN RAISE EXCEPTION 'Criteria payload must be an object' USING ERRCODE='22023'; END IF;
+ IF dxt_explicit_scientific_access_reason(p_actor,p_study,'MANAGE_REASONING_CONTEXT') IS DISTINCT FROM 'EXPLICIT_GRANT' THEN
    RAISE EXCEPTION 'Criteria authoring requires explicit capability' USING ERRCODE='42501';
  END IF;
  INSERT INTO reasoning_criteria_definition VALUES(p_definition,p_study,p_package) ON CONFLICT(id) DO NOTHING;
@@ -119,16 +138,16 @@ BEGIN
  IF TG_TABLE_NAME='run_reasoning_origin' THEN
    IF NEW.state='UNKNOWN_LEGACY' THEN RAISE EXCEPTION 'UNKNOWN_LEGACY is migration-only'; END IF;
  END IF;
- access_reason:=dxt_study_access_reason(NEW.principal_id,sid,
+ access_reason:=dxt_explicit_scientific_access_reason(NEW.principal_id,sid,
    CASE WHEN TG_TABLE_NAME='run_reasoning_origin' THEN 'CREATE_RUN' ELSE 'MANAGE_REASONING_CONTEXT' END);
- IF access_reason IS NULL OR access_reason NOT IN ('RESPONSIBLE_USER','RESPONSIBLE_DEPARTMENT','AREA_SCOPE','MANAGED_ORG_SCOPE','EXPLICIT_GRANT','ADMIN') THEN
+ IF access_reason IS DISTINCT FROM 'EXPLICIT_GRANT' THEN
    RAISE EXCEPTION 'Reasoning action denied' USING ERRCODE='42501';
  END IF;
  IF NEW.context_id IS NOT NULL THEN
    IF NOT EXISTS(SELECT 1 FROM reasoning_criteria_revision WHERE id=NEW.context_id AND study_id=sid AND package_version_id=pin) THEN
      RAISE EXCEPTION 'Criteria do not match exact Run Study/package' USING ERRCODE='23514';
    END IF;
-   IF dxt_study_access_reason(NEW.principal_id,sid,'MANAGE_REASONING_CONTEXT') IS DISTINCT FROM 'EXPLICIT_GRANT' THEN
+   IF dxt_explicit_scientific_access_reason(NEW.principal_id,sid,'MANAGE_REASONING_CONTEXT') IS DISTINCT FROM 'EXPLICIT_GRANT' THEN
      RAISE EXCEPTION 'Criteria selection requires explicit capability' USING ERRCODE='42501';
    END IF;
  END IF;
@@ -148,14 +167,14 @@ CREATE TRIGGER check_run_reasoning_adoption BEFORE INSERT ON run_reasoning_inter
 -- The caller passes the server-resolved Principal, NEVER a browser-provided actor.
 -- Same command is replayed before checking stale sequence; mismatched retry conflicts.
 CREATE FUNCTION append_run_reasoning_adoption(p_id uuid,p_run uuid,p_context uuid,p_expected bigint,
- p_actor text,p_command text,p_hash text,p_rationale text) RETURNS uuid LANGUAGE plpgsql AS $$
+ p_actor text,p_command text,p_hash text,p_rationale text) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE previous run_reasoning_interpretation_adoption; sid uuid;
 BEGIN
  IF p_id IS NULL OR p_run IS NULL OR p_context IS NULL OR p_expected IS NULL OR p_expected<0 OR p_actor IS NULL OR p_command IS NULL OR p_hash IS NULL OR p_rationale IS NULL THEN
    RAISE EXCEPTION 'Complete explicit interpretation input is required' USING ERRCODE='22004';
  END IF;
  SELECT study_id INTO STRICT sid FROM experiment_run WHERE run_id=p_run FOR UPDATE;
- IF dxt_study_access_reason(p_actor,sid,'MANAGE_REASONING_CONTEXT') IS DISTINCT FROM 'EXPLICIT_GRANT' THEN
+ IF dxt_explicit_scientific_access_reason(p_actor,sid,'MANAGE_REASONING_CONTEXT') IS DISTINCT FROM 'EXPLICIT_GRANT' THEN
    RAISE EXCEPTION 'Criteria selection requires explicit capability' USING ERRCODE='42501';
  END IF;
  SELECT * INTO previous FROM run_reasoning_interpretation_adoption WHERE run_id=p_run AND command_id=p_command;
@@ -197,4 +216,41 @@ CREATE VIEW run_reasoning_resolution AS
  FROM run_reasoning_origin o LEFT JOIN LATERAL (
    SELECT context_id,sequence FROM run_reasoning_interpretation_adoption WHERE run_id=o.run_id ORDER BY sequence DESC LIMIT 1
  ) a ON true;
+-- Server-only origin command. Never grant direct origin/adoption/revision DML.
+CREATE FUNCTION record_run_reasoning_origin(p_run uuid,p_state text,p_context uuid,p_actor text,p_evidence text)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+BEGIN
+ INSERT INTO run_reasoning_origin(run_id,state,context_id,principal_id,evidence)
+ VALUES(p_run,p_state,p_context,p_actor,p_evidence);
+END $$;
+
+-- Proposed authoring guard: caller MUST invoke inside the same transaction as the
+-- Evaluation/Decision/Next Action write, holding this Run lock until COMMIT.
+CREATE FUNCTION assert_run_reasoning_authoring(p_run uuid,p_context uuid,p_expected bigint,p_actor text,p_action text)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE sid uuid; current_context uuid; current_sequence bigint;
+BEGIN
+ SELECT study_id INTO STRICT sid FROM experiment_run WHERE run_id=p_run FOR UPDATE;
+ IF p_action IS NULL OR p_action NOT IN ('AUTHOR_EVALUATION','AUTHOR_DECISION','AUTHOR_NEXT_ACTION')
+ OR dxt_explicit_scientific_access_reason(p_actor,sid,p_action) IS DISTINCT FROM 'EXPLICIT_GRANT' THEN
+  RAISE EXCEPTION 'Scientific authoring requires explicit capability' USING ERRCODE='42501';
+ END IF;
+ SELECT interpretation_context_id,interpretation_sequence INTO current_context,current_sequence
+ FROM run_reasoning_resolution WHERE run_id=p_run;
+ IF p_context IS NULL OR p_expected IS NULL OR current_context IS DISTINCT FROM p_context OR current_sequence IS DISTINCT FROM p_expected THEN
+  RAISE EXCEPTION 'Interpretation changed; reread before authoring' USING ERRCODE='40001';
+ END IF;
+END $$;
+
+-- No anonymous/browser SQL entry points. Actual login memberships/old ACL census are
+-- a separate deployment gate; see trusted-server-acl.PROPOSED.sql. SECURITY DEFINER
+-- owner must be a protected deployer role, never the serving application login.
+REVOKE ALL ON reasoning_criteria_definition,reasoning_criteria_revision,study_legacy_reasoning_selection,
+ reasoning_context,run_reasoning_origin,run_reasoning_interpretation_adoption,run_reasoning_resolution FROM PUBLIC;
+REVOKE ALL ON FUNCTION dxt_explicit_scientific_access_reason(text,uuid,text),
+ create_reasoning_criteria_revision(uuid,uuid,uuid,text,integer,text,jsonb),
+ append_run_reasoning_adoption(uuid,uuid,uuid,bigint,text,text,text,text),
+ record_run_reasoning_origin(uuid,text,uuid,text,text),
+ assert_run_reasoning_authoring(uuid,uuid,bigint,text,text),
+ insert_legacy_reasoning_context(),check_run_reasoning_binding(),require_run_reasoning_origin() FROM PUBLIC;
 COMMIT;
