@@ -6,6 +6,14 @@ Authority: PR22 comment7181024719, PR17 comment7181025200, Issue1 comment7181025
 
 PR12 Run Draft + PR21 explicit scientific authority + PR19 generic Actual/Measurement + PR20 non-applicability + PR18 material usage, followed by shared authority016, reasoning017 and Sample018. Local branch integration is not a GitHub PR merge. The root working checkout and existing UAT databases are preserved.
 
+## Migration and authorization boundary
+
+Migration order is `016_shared_scientific_authority` → `017_run_reasoning_provenance` → `018_sample_lifecycle`. The shared prerequisite is independently reviewable in [PR #23](https://github.com/Naeun-Ouh/dxt-lims/pull/23), commit `9b570f228aad1cd1a0ec4c96f9b03ebfba829ce7`. Sample and reasoning approvals remain separate; ordering does not combine their production rollout gates.
+
+The migration runner refuses new lifecycle migrations without `DXT_SCHEMA_STAGE=disposable-development`. The disposable harness creates a new empty PostgreSQL cluster, ignores inherited application database variables, records exact SQL checksums, and provisions only labeled agent principals and explicit grants. Existing UAT clusters and permissions are not used.
+
+The trusted server resolves the principal. Request bodies cannot choose their author or gain privileges from Study responsibility. No production role provisioning or deployment is performed. Final evidence distinguishes database-owner test execution from any separately verified restricted-role contracts.
+
 ## Required agent verification
 
 | Boundary | Required evidence |
