@@ -1496,5 +1496,13 @@
   "Copy this Run through Run Draft and review changed condition values before creating.": "실험 차수 초안에서 이 차수를 복사한 후 변경되는 조건값을 확인하고 생성해 주세요.",
   "Keep the existing Plan interpretation. To use the new condition priority, copy this Run and review the changes.": "기존 계획의 적용 기준은 유지됩니다. 새 조건 우선순위를 사용하려면 이 실험 차수를 복사하고 변경 내용을 확인해 주세요.",
   "A condition name does not match the selected reference information. Reload the draft and check the Operation conditions.": "조건 이름이 선택한 기준정보와 일치하지 않습니다. 초안을 다시 불러오고 공정 조건을 확인해 주세요.",
-  "Condition": "조건"
+  "Condition": "조건",
+  "Actual is read-only. Ask the Study manager for permission to record execution.": "실제 기록은 읽기 전용입니다. 실행 기록 권한은 스터디 관리자에게 요청해 주세요.",
+  "Measurement is read-only. Ask the Study manager for permission to record results.": "계측은 읽기 전용입니다. 결과 기록 권한은 스터디 관리자에게 요청해 주세요.",
+  "No Measurement plan exists for this Run. Record Actual for this process-only Run, or configure Measurement when creating a subsequent Run.": "이 실험 차수에는 계측 계획이 없습니다. 공정 실행 결과를 실제 탭에 기록하거나, 다음 실험 차수를 생성할 때 계측 계획을 설정해 주세요.",
+  "The saved evidence has changed. Keep your entered values, reload the latest evidence and try again.": "저장된 기록이 변경되었습니다. 입력값을 보관한 후 최신 기록을 불러와 다시 시도해 주세요.",
+  "This Run or its Measurement definitions are unavailable. Ask the Study manager to check the experiment configuration.": "실험 차수 또는 계측 기준정보를 사용할 수 없습니다. 스터디 관리자에게 실험 기준정보 확인을 요청해 주세요.",
+  "Could not load saved execution or Measurement evidence. Check your connection and access, then reload.": "저장된 실행 또는 계측 기록을 불러오지 못했습니다. 연결과 접근 권한을 확인한 후 다시 불러와 주세요.",
+  "Could not save Actual. Check the Operation, applicable Subject and execution times, then try again.": "실제 기록을 저장하지 못했습니다. 공정, 적용 대상, 실행 시간을 확인한 후 다시 시도해 주세요.",
+  "Could not save Measurement. Check the selected Operation, parameter, value and measurement location, then try again.": "계측을 저장하지 못했습니다. 선택한 공정, 계측항목, 값과 계측 위치를 확인한 후 다시 시도해 주세요."
 }

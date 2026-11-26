@@ -1,4 +1,5 @@
 import { conditionPrecedenceContract } from './postgres-condition-precedence-contract';
+import { genericLifecycleContract } from './postgres-generic-lifecycle-contract';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
@@ -229,6 +230,7 @@ export async function runDraftContract(
     saved,
     'source Run is unchanged',
   );
+  await genericLifecycleContract(db, call, study.id, saved, run2);
   const finalBlank = await preview(source);
   assert.equal(
     finalBlank.snapshot.subjects.length,

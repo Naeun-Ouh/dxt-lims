@@ -99,14 +99,14 @@ export type DecisionCommand = {
 
 export function createEmptyLifecycleState(
   snapshot: RunPlanningSnapshot,
-  profile: LifecycleAuthoringProfile,
+  profile?: LifecycleAuthoringProfile,
 ): AuthoredLifecycleState {
   return {
     version: 1,
     runId: snapshot.id,
-    studyId: profile.studyId,
-    studyLabel: profile.studyLabel,
-    workspaceContextLabel: profile.workspaceContextLabel,
+    studyId: profile?.studyId ?? (snapshot.series.id.replace(/^series-/, '') as SeriesSlug),
+    studyLabel: profile?.studyLabel ?? snapshot.series.name,
+    workspaceContextLabel: profile?.workspaceContextLabel ?? snapshot.workspaceContextLabel ?? snapshot.area,
     snapshot: structuredClone(snapshot),
     actualEvidence: [],
     measurementResults: subjectMeasurementResultSetSchema.parse({

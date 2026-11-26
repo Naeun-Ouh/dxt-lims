@@ -59,7 +59,7 @@ export interface ExecutionRepository {
 }
 
 export type MeasurementRecord = { version: number; record: SubjectMeasurementResultSet };
-export type MeasurementDatasetEntry = { dataset: SubjectMeasurementResultSet['datasets'][number]; parameterIds: string[]; subjectIds: string[] };
+export type MeasurementDatasetEntry = { studySlug?: string; dataset: SubjectMeasurementResultSet['datasets'][number]; parameterIds: string[]; subjectIds: string[] };
 export interface MeasurementRepository {
   getCatalog(packageVersionId: string): Promise<ReferenceCatalog>;
   listDatasets(): Promise<MeasurementDatasetEntry[]>;

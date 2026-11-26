@@ -637,5 +637,13 @@
   "Copy this Run through Run Draft and review changed condition values before creating.": "Copy this Run through Run Draft and review changed condition values before creating.",
   "Keep the existing Plan interpretation. To use the new condition priority, copy this Run and review the changes.": "Keep the existing Plan interpretation. To use the new condition priority, copy this Run and review the changes.",
   "A condition name does not match the selected reference information. Reload the draft and check the Operation conditions.": "A condition name does not match the selected reference information. Reload the draft and check the Operation conditions.",
-  "Condition": "Condition"
+  "Condition": "Condition",
+  "Actual is read-only. Ask the Study manager for permission to record execution.": "Actual is read-only. Ask the Study manager for permission to record execution.",
+  "Measurement is read-only. Ask the Study manager for permission to record results.": "Measurement is read-only. Ask the Study manager for permission to record results.",
+  "No Measurement plan exists for this Run. Record Actual for this process-only Run, or configure Measurement when creating a subsequent Run.": "No Measurement plan exists for this Run. Record Actual for this process-only Run, or configure Measurement when creating a subsequent Run.",
+  "The saved evidence has changed. Keep your entered values, reload the latest evidence and try again.": "The saved evidence has changed. Keep your entered values, reload the latest evidence and try again.",
+  "This Run or its Measurement definitions are unavailable. Ask the Study manager to check the experiment configuration.": "This Run or its Measurement definitions are unavailable. Ask the Study manager to check the experiment configuration.",
+  "Could not load saved execution or Measurement evidence. Check your connection and access, then reload.": "Could not load saved execution or Measurement evidence. Check your connection and access, then reload.",
+  "Could not save Actual. Check the Operation, applicable Subject and execution times, then try again.": "Could not save Actual. Check the Operation, applicable Subject and execution times, then try again.",
+  "Could not save Measurement. Check the selected Operation, parameter, value and measurement location, then try again.": "Could not save Measurement. Check the selected Operation, parameter, value and measurement location, then try again."
 }

@@ -6,6 +6,8 @@ import {
 } from '../measurement/subject-measurement';
 
 export type AnalysisMeasurementSource = {
+  /** Canonical navigation metadata; never used as scientific or saved-filter identity. */
+  studySlug?: string;
   studyId: string;
   studyLabel: string;
   workspaceContextLabel: string;
