@@ -22,6 +22,8 @@ export async function authorizationContract(db:SqlDatabase){
  await db.query("INSERT INTO auth_membership VALUES ('viewer','dept',false),('leader','part',true),('module-leader','module',true),('area-user','area',false),('outsider','other-dept',false)");
  await db.query("INSERT INTO study_access(study_id,responsible_user_id,responsible_department_id) SELECT study_id,'owner','dept' FROM study");
  await db.query("INSERT INTO study_module_access SELECT study_id,'module' FROM study_access");
+ // These actors exercise authorized lifecycle behavior; responsibility alone is insufficient.
+ await db.query("INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT study_id::text||action,study_id,'owner',action,'admin' FROM study CROSS JOIN unnest(ARRAY['CREATE_RUN','EDIT_RUN_PLAN']) action");
  const slugs=['dts-improvement','adhesion-material-optimization'] as const;
  const ids=(await db.query<{study_id:string;series_slug:string}>('SELECT study_id,series_slug FROM study')).rows;
  const photoId=ids.find(s=>s.series_slug===slugs[0])!.study_id;
