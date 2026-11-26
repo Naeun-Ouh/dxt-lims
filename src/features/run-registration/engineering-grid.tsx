@@ -722,9 +722,11 @@ export default function EngineeringGrid({
           <button
             className={workspaceMode === 'EVALUATION' ? 'active' : ''}
             disabled={
-              !resolvedMeasurements ||
-              !resolvedCatalog ||
-              resolvedBindings.length === 0
+              !production && (
+                !resolvedMeasurements ||
+                !resolvedCatalog ||
+                resolvedBindings.length === 0
+              )
             }
             onClick={() => changeMode('EVALUATION')}
           >

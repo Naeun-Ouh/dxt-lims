@@ -413,3 +413,25 @@
   justify-content: center;
   cursor: pointer;
 }
+
+/* Essential affordances for persisted Sample authoring; shared DXT tokens. */
+.sample-runtime-page :is(input:not([type='checkbox']), select, textarea, .entry-button) {
+  border: 1px solid var(--dxt-border);
+  background: var(--dxt-surface);
+  color: var(--dxt-text);
+}
+.sample-runtime-page .entry-button.primary:not(:disabled) {
+  background: var(--dxt-brand);
+  border-color: var(--dxt-brand);
+  color: #fff;
+}
+.sample-revision-form .bootstrap-controls > label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dxt-space-1);
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.sample-revision-form .bootstrap-controls :is(input, select, textarea) { width: 100%; }
+.sample-runtime-page :is(input, select, textarea)[aria-invalid='true'] { border-color: var(--dxt-error); }
+.sample-runtime-page :is(input, select, textarea, button):disabled { opacity: .6; cursor: not-allowed; }

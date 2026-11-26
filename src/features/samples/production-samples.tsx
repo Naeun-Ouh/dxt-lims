@@ -82,7 +82,7 @@ export default function ProductionSamples({
       catalogShell
       contextLabel="MATERIAL / SAMPLE MASTER"
     >
-      <main className="catalog-page dxt-density">
+      <main className="catalog-page dxt-density sample-runtime-page">
         <div className="dxt-toolbar">
           <div>
             <Link href="/samples">{t('samples')}</Link>

@@ -42,7 +42,7 @@ Record exact route, locale, action, observed result and confusion separately fro
 
 ## Final automated result — 2026-11-26
 
-**Runtime implementation and automated checks PASS. Browser verification is BLOCKED, not passed. Human acceptance is NOT RUN.** The Mac is locked and CUA automatic unlock failed; the user has been asked to unlock it. No alternate browser-control path was used to bypass this condition. KO/EN UI implementations exist, but layout, editable controls, dialog interaction and locale switching still require browser verification before claiming complete end-to-end acceptance.
+**Initial verification snapshot (superseded by the follow-up below): runtime automated checks PASS; browser BLOCKED; Human acceptance NOT RUN.** The Mac is locked and CUA automatic unlock failed; the user has been asked to unlock it. No alternate browser-control path was used to bypass this condition. KO/EN UI implementations exist, but layout, editable controls, dialog interaction and locale switching still require browser verification before claiming complete end-to-end acceptance.
 
 | Check | Result | Evidence |
 |---|---|---|
@@ -103,11 +103,48 @@ These are **AGENT TEST ONLY**, not existing Human UAT acceptance environments. N
 
 ## Remaining gates and deferred scope
 
-- No unresolved **confirmed runtime P1 defect** remains in the exercised contracts. Browser verification is an unresolved validation blocker; UI completeness/KO–EN layout is not asserted.
-- Unlock Mac, then run bounded browser checks on these new routes: editable form submission, exact revision picker/clear, Plan lock, historic interpretation display, locale switch and denied controls. Human acceptance remains a separate gate.
+- The browser-discovered Evaluation navigation blocker is fixed and regression-covered. No unresolved confirmed P1 remains in the exercised paths; this is not a claim of complete product or Human acceptance.
+- The Mac lock is resolved. Bounded browser checks are recorded below. Exact revision picker/clear and the full Human UAT matrix remain separate acceptance work; they were not manually exercised in this follow-up.
 - Production migration rollout and environment-specific trusted server roles/ACL census remain unapproved and unperformed. The current owner-backed development server is not evidence of a production least-privilege deployment; focused restricted-role contracts are reported separately.
 - Sample and reasoning deployment gates remain separate. `PropertyDefinitionId` is persisted under the existing property aggregate, not an authoritative master-binding claim. Supplier/material identity is not invented.
 - Creation currently records explicit ABSENT. Criteria may be authored/adopted after Run creation; no pre-creation criteria picker is claimed. Legacy UNKNOWN_LEGACY is never guessed or backfilled.
 - P2/P3 visual polish and broader Sample property-master integration remain follow-up work. No existing UAT data, live permission or historical scientific record was modified.
 
 Machine-readable checked statuses, routes, source attestation and final SQL hashes: `docs/dxt-runtime-integration-evidence.json`.
+
+
+## Approved-policy follow-up — 2026-11-26
+
+Authority: latest explicit user approval and Issue #1 frontend minimum-policy comment7181556471. Retained the approved prospective `SUBJECT_FIRST_V1` implementation from PR12 commit `2e1a1b2fa28255fb02b92509aef8c9582fe4d6cc`: Subject value/role precedence, common fallback, zero validity, order independence, legacy interpretation preservation, copy disclosure, effective Actual Recipe and exact reference validation. No resolver, schema, authorization or historical data changes were needed in this follow-up.
+
+### Minimal corrections
+
+- Persisted Run Evaluation navigation previously required already-loaded measurement/Target bindings. Actual/Measurement load stages do not load those bindings, so the tab stayed disabled even with existing criteria; criteria-free Runs also could not reach optional criteria authoring. Production navigation now opens the Evaluation workspace independently. Existing permission checks, evidence prerequisites and save boundaries remain unchanged. Fixture-only navigation retains its existing gate.
+- Sample registration/revision controls now reuse existing DXT border/background/primary-action tokens. Server validation paths are converted to KO/EN visible field labels; the Effective date field exposes invalid state. No new layout framework or design refactor.
+
+### Bounded AGENT browser evidence (not Human acceptance)
+
+All actions used only the newly provisioned AGENT database on ports59769/59772/59773. No existing Human UAT environment, live grant or production migration was touched.
+
+| Check | Observation |
+|---|---|
+| Sample registration, KO | Created `AGENT-BROWSER-PILOT-1126`, ID `f63fe9e9-3ae6-418d-88dd-f26a256acd7e`, through the form; persisted Revision1 readback. |
+| Sample revision, EN | Created Revision2 with request `AGENT-BROWSER-REV2`; reloaded persisted date/request. Revision1 still shows its original date and absent request. No properties/scientific values invented. |
+| Form input automation limitation | Initial datetime `fill` changed the displayed DOM value without updating React state; save returned validation and preserved inputs. A native keyboard event updated state and the form saved. Recorded as an automation limitation, not Human usability evidence. |
+| Specimen historical interpretation | Run2 displays current criteria Revision2 plus original Revision1 Evaluation and Decision/Hold in history. |
+| Wafer Actual/Measurement | Actual Recipe `EXP-R01` matches Plan; Focus `0` remains valid. Measurement BCD `0 nm` reloaded; second Subject is N/A rather than Missing. |
+| Evaluation navigation regression | Actual → Measurement → Evaluation works after fix. Criteria-free Specimen Run1 Plan → Evaluation opens optional criteria UI and explains that execution/Measurement remain available. No criteria were created for this Run. |
+| Read-only principal | Sample Create Revision disabled with explicit reason; Evaluation criteria controls and Save Evaluation disabled; read-only message visible. |
+| Denied principal | Sample detail exposes no Sample information; localized unavailable/no-access message and Retry only. |
+| Analysis | Table-first, Save Analysis label, value0 vs N/A rows, result-selected right Inspector, KO/EN locale switch. |
+| 1440×900 viewport | Evaluated EN Evaluation and KO Analysis screenshots; visible layout has no severe clipping/overlap. This is a bounded check, not a full responsive-screen audit. Viewport restored afterward. |
+
+The writer app and both permission variants received only changed frontend files from this branch. Existing AGENT HTTP proof remains valid for backend workflows; browser actions above supplement rather than replace it. Human acceptance remains **NOT RUN**.
+
+### Validation and remaining work
+
+Final outcomes are in the machine-readable evidence under `approvedPolicyFollowup`. Logs: `tmp/pilot-followup-tests.log`, `tmp/pilot-followup-native.log`, `tmp/pilot-followup-types.log`, `tmp/pilot-followup-lint.log`, `tmp/pilot-followup-build.log`.
+
+One intermediate full run hit `configuration_activation_check1` (activation interval constraint) in an unchanged PGlite configuration contract. The isolated contract rerun passed; the failure log is retained as `tmp/pilot-followup-tests-prior-failure.log`. No timestamp constraint was weakened and no unrelated configuration code was changed. Root cause is not established; retain this as a regression stability follow-up even if the final full rerun passes.
+
+Deferred: environment badge still says Mock environment on the disposable PostgreSQL UI; some criteria labels/secondary controls need wording/visual polish. These do not bypass authorization or affect persistence. No P2/P3 redesign was performed. Exact Sample picker/clear browser coverage and Human acceptance remain required before claiming full UI acceptance. Production migration gates stay separate and all PRs remain unmerged.

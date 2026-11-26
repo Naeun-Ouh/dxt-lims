@@ -52,3 +52,32 @@ void test('translated option labels always retain explicit untranslated values',
     for (const option of source.matchAll(/<option(?=\s|>)([^>]*?)>\s*\{t\(/g)) assert.match(option[1], /\bvalue=/, `${file}: translated options must not use display text as their value`);
   }
 });
+
+void test('Sample validation identifies visible fields without exposing technical paths', async () => {
+  const { sampleValidationLabel } = await import('../src/shared/i18n/sample-messages');
+  assert.equal(sampleValidationLabel('ko', 'aggregate.revision.effectiveAt'), '적용일');
+  assert.equal(sampleValidationLabel('en', 'aggregate.revision.effectiveAt'), 'Effective date');
+  assert.equal(sampleValidationLabel('ko', 'aggregate.composition.nodes.1.referenceId'), '조성 노드 2 · 정확한 참조');
+  assert.equal(sampleValidationLabel('en', 'aggregate.properties.0.value'), 'Properties 1 · Value');
+  for (const locale of ['ko', 'en'] as const) {
+    assert.doesNotMatch(sampleValidationLabel(locale, 'internal.database.secret'), /internal|database|secret/);
+  }
+});
+
+void test('persisted Run Evaluation entry is reachable before criteria and evidence load in KO/EN', async () => {
+  const { createBrowserApplication } = await import('../src/application/dxt-application-provider');
+  const { DxtApplication } = await import('../src/application/dxt-application');
+  const { httpConfigurationAuthoring } = await import('../src/infrastructure/http/http-repositories');
+  const base = createBrowserApplication();
+  const application = new DxtApplication(base.application.repositories, [], [], {}, httpConfigurationAuthoring);
+  const model = createExperimentWorkspace(structuredClone(runPlanningScenarios.PHOTO), configurationRepository);
+  for (const locale of ['ko', 'en'] as const) {
+    const html = renderToStaticMarkup(<LocaleProvider initialLocale={locale} persist={false}>
+      <DxtApplicationProvider value={{...base, application}}><EngineeringGridView model={model} seriesSlug="test" returnHref="/studies" /></DxtApplicationProvider>
+    </LocaleProvider>);
+    const label = locale === 'ko' ? '평가' : 'Evaluation';
+    const button = [...html.matchAll(/<button([^>]*)>([^<]*)<\/button>/g)].find((match) => match[2] === label);
+    assert.ok(button, label);
+    assert.doesNotMatch(button[1], /disabled/, 'criteria authoring must be accessible without pre-existing criteria');
+  }
+});

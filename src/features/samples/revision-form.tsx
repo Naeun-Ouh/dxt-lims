@@ -10,6 +10,7 @@ import {
 } from '@/src/infrastructure/http/sample-client';
 import {
   sampleText,
+  sampleValidationLabel,
   type SampleMessage,
 } from '@/src/shared/i18n/sample-messages';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -138,7 +139,7 @@ export function SampleRevisionForm({
           : 'error';
   return (
     <form
-      className="sample-section"
+      className="sample-section sample-revision-form"
       onSubmit={(e) => {
         e.preventDefault();
         void save();
@@ -199,6 +200,7 @@ export function SampleRevisionForm({
             <input
               type="datetime-local"
               required
+              aria-invalid={error?.fields.some(f => f.path === 'aggregate.revision.effectiveAt') || undefined}
               value={effectiveLocal}
               onChange={(e) => setEffectiveLocal(e.target.value)}
             />
@@ -641,7 +643,7 @@ export function SampleRevisionForm({
           <p>{t(errorKey)}</p>
           {error.fields.map((f) => (
             <p key={f.path}>
-              <code>{f.path}</code> · {t('invalid')}
+              <strong>{sampleValidationLabel(locale, f.path)}</strong> · {t('invalid')}
             </p>
           ))}
         </div>

@@ -1,5 +1,5 @@
 {
-  "status": "AUTOMATED RUNTIME PASS; BROWSER VALIDATION BLOCKED; HUMAN ACCEPTANCE NOT RUN",
+  "status": "AUTOMATED RUNTIME PASS; BOUNDED AGENT BROWSER PASS; HUMAN ACCEPTANCE NOT RUN",
   "date": "2026-11-26",
   "runtimeSourceCommit": "ec0ba85ce2c9076dff936c885195868e0e437483",
   "branches": {
@@ -435,5 +435,48 @@
     "viewer": "http://127.0.0.1:59772",
     "denied": "http://127.0.0.1:59773"
   },
-  "scope": "Only fresh AGENT TEST ONLY environment. No existing UAT data, live permissions, production migrations or GitHub merges."
+  "scope": "Only fresh AGENT TEST ONLY environment. No existing UAT data, live permissions, production migrations or GitHub merges.",
+  "approvedPolicyFollowup": {
+    "date": "2026-11-26",
+    "baseCommit": "50f3af1d2f0258a0b5ccaacc1606455db882e186",
+    "authority": "User approval; Issue1 frontend minimum policy7181556471",
+    "retainedConditionPolicyCommit": "2e1a1b2fa28255fb02b92509aef8c9582fe4d6cc",
+    "repositoryTests": {
+      "passed": 367,
+      "failed": 0
+    },
+    "nativePostgresIntegration": "PASS — PostgreSQL18.7 isolated cluster; no backend changes after validation",
+    "trackedTypeScript": "PASS",
+    "changedFileLint": "PASS",
+    "productionBuild": "PASS",
+    "diffCheck": "PASS",
+    "browser": "BOUNDED PASS — Sample register/revise/history; Specimen historical criteria; Wafer Actual/Measurement/Evaluation navigation; no-criteria Run; read-only and denied; Analysis Table/N-A/Inspector; KO/EN",
+    "browserSampleId": "f63fe9e9-3ae6-418d-88dd-f26a256acd7e",
+    "browserViewport": "1440x900; restored afterward",
+    "humanAcceptance": "NOT RUN",
+    "remainingBrowserCoverage": [
+      "Exact Sample Revision picker/clear",
+      "Full Human UAT acceptance matrix"
+    ],
+    "regressionObservation": "One intermediate PGlite configuration_activation interval-constraint failure; isolated rerun and final full suite PASS. Root cause unconfirmed; original failure preserved, no constraint weakened.",
+    "sqlHashesUnchanged": true,
+    "existingUatModified": false,
+    "livePermissionsModified": false,
+    "productionMigrationsApplied": false,
+    "prsMerged": false,
+    "runtimeSourceAttestation": {
+      "59769": {
+        "compared": 292,
+        "mismatches": []
+      },
+      "59772": {
+        "compared": 292,
+        "mismatches": []
+      },
+      "59773": {
+        "compared": 292,
+        "mismatches": []
+      }
+    }
+  }
 }

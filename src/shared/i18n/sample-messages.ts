@@ -9,6 +9,7 @@ const labels = {
   saveRevision: ['Save Revision', '개정 저장'],
   cancel: ['Cancel', '취소'],
   search: ['Search', '검색'],
+  input: ['Input', '입력값'],
   code: ['Sample code', '샘플 코드'],
   name: ['Name', '이름'],
   org: ['Owning organization', '소유 조직'],
@@ -129,4 +130,24 @@ const labels = {
 export type SampleMessage = keyof typeof labels;
 export function sampleText(locale: Locale, key: SampleMessage) {
   return labels[key][locale === 'ko' ? 1 : 0];
+}
+
+/** Turn server field locations into researcher-facing labels, never raw paths. */
+export function sampleValidationLabel(locale: Locale, path: string): string {
+  const field: Record<string, SampleMessage> = {
+    owningOrgId: 'org', sampleCode: 'code', name: 'name', description: 'description',
+    effectiveAt: 'effective', registrationSource: 'source', requestNumber: 'request',
+    developmentItemNumber: 'development', label: 'label', nodeType: 'type',
+    referenceId: 'reference', parentNodeId: 'parent', childNodeId: 'child',
+    ratio: 'ratio', unit: 'unit', value: 'value', valueType: 'type',
+    propertyDefinitionId: 'definition', materialNodeId: 'node',
+  };
+  const parts = path.split('.');
+  const key = field[parts.at(-1) ?? ''] ?? 'input';
+  const collection = parts.findIndex(p => p === 'nodes' || p === 'edges' || p === 'properties');
+  if (collection >= 0 && /^\d+$/.test(parts[collection + 1] ?? '')) {
+    const group = parts[collection] as 'nodes' | 'edges' | 'properties';
+    return `${sampleText(locale, group)} ${Number(parts[collection + 1]) + 1} · ${sampleText(locale, key)}`;
+  }
+  return sampleText(locale, key);
 }
