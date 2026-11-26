@@ -30,6 +30,7 @@ export const requestSchema = z.discriminatedUnion('operation', [
  z.object({operation:z.literal('study.list'),query:discoveryQuerySchema.optional()}),
  z.object({operation:z.literal('dashboard.query'),query:discoveryQuerySchema.optional()}),
  z.object({operation:z.literal('run.summaries'),query:discoveryQuerySchema.optional()}),
+ z.object({operation:z.literal('material.usage'),query:discoveryQuerySchema.optional()}),
  z.object({operation:z.literal('search.query'),query:discoveryQuerySchema.optional(),kind:z.enum(['ALL','STUDY','RUN','SAVED_ANALYSIS']).default('ALL')}),
  z.object({operation:z.literal('study.edit'),slug:studySlugSchema,displayName:z.string().trim().min(1).max(200),intent:z.string().max(4000),expectedVersion:z.number().int().positive()}),
  z.object({operation:z.literal('study.permissions'),slug:studySlugSchema}),

@@ -645,5 +645,19 @@
   "This Run or its Measurement definitions are unavailable. Ask the Study manager to check the experiment configuration.": "This Run or its Measurement definitions are unavailable. Ask the Study manager to check the experiment configuration.",
   "Could not load saved execution or Measurement evidence. Check your connection and access, then reload.": "Could not load saved execution or Measurement evidence. Check your connection and access, then reload.",
   "Could not save Actual. Check the Operation, applicable Subject and execution times, then try again.": "Could not save Actual. Check the Operation, applicable Subject and execution times, then try again.",
-  "Could not save Measurement. Check the selected Operation, parameter, value and measurement location, then try again.": "Could not save Measurement. Check the selected Operation, parameter, value and measurement location, then try again."
+  "Could not save Measurement. Check the selected Operation, parameter, value and measurement location, then try again.": "Could not save Measurement. Check the selected Operation, parameter, value and measurement location, then try again.",
+  "Recorded material Plan assignments": "Recorded material Plan assignments",
+  "Reference detail": "Reference detail",
+  "This exact material reference is not a verified Sample Revision link.": "This exact material reference is not a verified Sample Revision link.",
+  "Sample registration and revision history are not available yet. No demo Sample records are shown here.": "Sample registration and revision history are not available yet. No demo Sample records are shown here.",
+  "This Sample detail cannot be verified. Review recorded material assignments below or return to Samples.": "This Sample detail cannot be verified. Review recorded material assignments below or return to Samples.",
+  "The table shows material assignments recorded in accessible Run Plans. Planned use is not evidence of actual consumption or a verified Sample Revision link.": "The table shows material assignments recorded in accessible Run Plans. Planned use is not evidence of actual consumption or a verified Sample Revision link.",
+  "Could not load material assignments. Check your connection and access, then try again.": "Could not load material assignments. Check your connection and access, then try again.",
+  "No material Plan assignments are visible in your current access scope.": "No material Plan assignments are visible in your current access scope.",
+  "{0} assignments": "{0} assignments",
+  "Pagination": "Pagination",
+  "Common material assignment": "Common material assignment",
+  "Planned value": "Planned value",
+  "Search": "Search",
+  "Material": "Material"
 }

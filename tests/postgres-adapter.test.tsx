@@ -1,4 +1,5 @@
 import { explicitScientificContract } from './postgres-explicit-scientific-contract';
+import { materialUsageContract } from './postgres-material-usage-contract';
 import { studyBootstrapContract } from './postgres-study-bootstrap-contract';
 import { studyCreationContract } from './postgres-study-creation-contract';
 import {ProductionHome} from '@/src/features/experiment-home/production-home';
@@ -322,3 +323,4 @@ void test('Study bootstrap: generic first Run and initial reasoning authorizatio
 });
 
 void test('Explicit scientific authorization: responsibility separation, revocation and transition inventory',async()=>{const s=await withDatabase();try{await explicitScientificContract(s.database);}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
+void test("Material usage: authoritative assignments, exact refs, permission-scoped search/count/page and no writes",async()=>{const s=await withDatabase();try{await materialUsageContract(s.database,await productionMeasurementContract(s.database));}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
