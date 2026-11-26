@@ -52,8 +52,7 @@ if (action === 'create') {
   const dir = await mkdtemp(join(root, 'tmp/agent-integration-'));
   const dbPort = await port(),
     data = join(dir, 'data'),
-    socket = join(dir, 'socket');
-  await mkdir(socket);
+    socket = await mkdtemp('/tmp/dxt-agent-socket-');
   await run(join(pgBin, 'initdb'), [
     '-D',
     data,
@@ -80,6 +79,7 @@ if (action === 'create') {
     postgresBin: pgBin,
     databaseUrl,
     dbPort,
+    socket,
     sourceHead: (await run('git', ['rev-parse', 'HEAD'])).stdout.trim(),
   };
   await writeFile(
