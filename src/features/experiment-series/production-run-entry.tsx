@@ -11,6 +11,7 @@ import type {
 import { EntryShell } from './entry-shell';
 import { RunDraftEditor } from './run-draft-editor';
 import { RunDraftActions } from './run-draft-actions';
+import { ConditionCopyNotice } from './condition-copy-notice';
 import { RunCreationReview } from './run-creation-review';
 import {
   DraftFeedbackContext,
@@ -236,6 +237,7 @@ function RunDraftPage({
               'Execution only. Target and Evaluation Criteria are not configured in this flow.',
             )}
           </p>
+          {context && <ConditionCopyNotice preview={context} />}
           {draft && context?.catalog && (
             <fieldset className="draft-content" disabled={busy || reviewing}>
               <DraftFeedbackContext.Provider

@@ -3,6 +3,7 @@ import { measurementPointSchema } from '@/src/domain/reference';
 import type { ReferenceCatalog } from '@/src/domain/reference';
 import type { BootstrapOperationOption } from './study-bootstrap';
 import { ApplicationError } from './repository-ports';
+import { prospectiveConditions } from './condition-resolution';
 import { validateStudySetupItem } from '@/src/features/experiment-series/study-setup-model';
 import type { RunPlanningSnapshot } from '@/src/features/run-registration/planning-model';
 
@@ -98,6 +99,7 @@ export function materializeRunDraft(
         (d) => d.applicabilityId === item.applicabilityId,
       );
       if (!def) return fail('Assignment is not applicable.');
+      if (item.subjectId !== null && !item.value.trim()) continue;
       // Empty/invalid values remain visible in Preview readiness; Create rejects them.
       let referenceId = def.referenceId;
       if (def.editor === 'REFERENCE')
@@ -141,7 +143,7 @@ export function materializeRunDraft(
         });
     }
   });
-  return snapshot;
+  return prospectiveConditions(snapshot);
 }
 export function draftValueProblems(
   draft: RunDraft,
@@ -150,6 +152,7 @@ export function draftValueProblems(
   const missing: string[] = [];
   draft.operations.forEach((op, index) => {
     for (const item of op.items) {
+      if (item.subjectId !== null && !item.value.trim()) continue;
       const def = options
         .find((o) => o.id === op.optionId)
         ?.operation.items.find(

@@ -1,3 +1,4 @@
+import { prospectiveConditions, conditionInterpretationChanges, legacyConditionAmbiguities } from '@/src/application/condition-resolution';
 import { executionOptions } from './study-bootstrap';
 import { materializeRunDraft, draftValueProblems } from '@/src/application/run-draft';
 import { readMeasurementCatalog } from './measurement-references';
@@ -39,6 +40,7 @@ import type { SqlDatabase, SqlSession } from './sql-database';
 
 type StudyRow = { study_id: string; series_slug: SeriesSlug };
 type RunRootRow = {
+  planning_context: {conditionResolution?: RunPlanningSnapshot['conditionResolution']};
   run_id: string; run_domain_id: string; series_slug: SeriesSlug; series_domain_id: string;
   study_name: string; run_number: number; configuration_package_version_id: string;
   experiment_type_profile_version_id: string; subject_type_revision_id: string;
@@ -223,6 +225,7 @@ async function readRun(session: SqlSession, where: string, parameters: unknown[]
     subjectOps.rows.filter((item) => item.subject_domain_id === subject.subject_domain_id).map((item) => item.operation_domain_id),
   ]));
   const snapshot: RunPlanningSnapshot = {
+    ...(row.planning_context?.conditionResolution ? {conditionResolution: row.planning_context.conditionResolution} : {}),
     id: row.run_domain_id, configurationPackageVersionId: row.configuration_package_version_id,
     experimentTypeProfileVersionId: row.experiment_type_profile_version_id,
     subjectTypeRevisionId: row.subject_type_revision_id,
@@ -254,13 +257,13 @@ async function insertSnapshot(session: SqlSession, study: StudyRow, snapshot: Ru
     run_id, run_domain_id, study_id, run_number, configuration_package_version_id,
     experiment_type_profile_version_id, subject_type_revision_id, display_name,
     experiment_type, area, workspace_context_label, created_at, intent, provenance_kind,
-    provenance_label, provenance_source_id, candidate_subjects, manufacturing_context, delta, study_name)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18::jsonb,$19::jsonb,$20)`,
+    provenance_label, provenance_source_id, candidate_subjects, manufacturing_context, delta, study_name, planning_context)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18::jsonb,$19::jsonb,$20,$21::jsonb)`,
     [runId, snapshot.id, study.study_id, snapshot.runNumber, snapshot.configurationPackageVersionId,
       snapshot.experimentTypeProfileVersionId, snapshot.subjectTypeRevisionId, snapshot.name,
       snapshot.experimentType, snapshot.area, snapshot.workspaceContextLabel ?? null, snapshot.createdAt.length === 10 ? `${snapshot.createdAt}T00:00:00.000Z` : snapshot.createdAt,
       snapshot.intent, snapshot.provenance.kind, snapshot.provenance.label, snapshot.provenance.sourceId,
-      JSON.stringify(snapshot.candidateSubjects ?? null), JSON.stringify(snapshot.manufacturingContext ?? null), JSON.stringify(snapshot.delta), snapshot.series.name]);
+      JSON.stringify(snapshot.candidateSubjects ?? null), JSON.stringify(snapshot.manufacturingContext ?? null), JSON.stringify(snapshot.delta), snapshot.series.name, JSON.stringify({ranges:[],manualFocus:[],conditionResolution:snapshot.conditionResolution})]);
   await insertPlanChildren(session,runId,snapshot,registry);
   return runId;
 }
@@ -296,6 +299,8 @@ async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPl
       await session.query('INSERT INTO run_subject_operation (run_subject_id, run_operation_id, run_id) VALUES ($1,$2,$3)', [runSubjectId, runOperationId, runId]);
     }
   }
+  const assignmentScopes=new Set<string>();
+  const displayedDefinitions=new Map<string,string>();
   for (const assignment of snapshot.assignments) {
     const assignmentId = randomUUID();
     const step = snapshot.steps.find((item) => item.id === assignment.processStepId);
@@ -305,6 +310,14 @@ async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPl
     const rule=rules.find(item=>item.id===resolved?.applicabilityRuleId);
     const descriptor = registry.definitionDescriptors.find((item) => item.revisionId === rule?.definitionRevisionId);
     if (!rule || !descriptor) throw new ApplicationError('VALIDATION', 'Assignment has no exact definition in its pinned package.');
+    if(snapshot.conditionResolution){
+      if(assignment.label!==resolved!.label)throw new ApplicationError('VALIDATION','Condition name must match its exact definition.');
+      const scope=JSON.stringify([assignment.processStepId,rule.id,assignment.subjectId,assignment.positionId]);
+      const display=JSON.stringify([assignment.processStepId,assignment.kind,assignment.label]);
+      if(assignmentScopes.has(scope))throw new ApplicationError('VALIDATION','Duplicate assignment.');
+      if(displayedDefinitions.has(display)&&displayedDefinitions.get(display)!==rule.id)throw new ApplicationError('VALIDATION','Conditions with the same name cannot be resolved unambiguously.');
+      assignmentScopes.add(scope);displayedDefinitions.set(display,rule.id);
+    }
     const valueType = descriptor.editorKey === 'NUMBER' ? 'NUMBER' : descriptor.editorKey === 'BOOLEAN' ? 'BOOLEAN'
       : descriptor.editorKey === 'REFERENCE' ? 'REFERENCE' : 'TEXT';
     const numeric = valueType === 'NUMBER' ? Number(assignment.value.trim().split(/\s+/)[0]) : null;
@@ -396,10 +409,14 @@ async function previewPersistedCreation(session:SqlSession,raw:RunCreationReques
     if(request.source==='EXISTING_RUN')snapshot={...snapshot,provenance:{kind:'EXISTING_CONFIGURATION',label:`Existing Run #${previous.runNumber}`,sourceId:previous.id},assignments:snapshot.assignments.map(a=>({...a,provenance:'EXISTING_CONFIGURATION'}))};
   }
   const sourceFingerprint=hash(comparableStudyData({...snapshot,createdAt:undefined}));
+  const legacySourceAmbiguous=legacyConditionAmbiguities(snapshot);
+  const prospective=prospectiveConditions(snapshot);
+  const sourceChanges=conditionInterpretationChanges(snapshot,prospective);
+  snapshot=prospective;
   if(request.draft && request.sourceFingerprint!==sourceFingerprint)throw new ApplicationError('CONFLICT','Creation source changed. Review a fresh preview before creating.');
   if(!request.draft && !request.includeDraftOptions){
     const readiness=request.source==='BLANK' ? {status:'NOT_READY' as const,missing:['Add and save at least one Subject.','Add and save ordered Operations.']} : await creationReadiness(session,request.seriesSlug,snapshot);
-    return {snapshot,sourceFingerprint,fingerprint:hash(comparableStudyData({snapshot:{...snapshot,createdAt:undefined},sourceFingerprint})),readiness:{status:readiness.status,missing:readiness.missing}};
+    return {snapshot,sourceChanges,legacySourceAmbiguous,sourceFingerprint,fingerprint:hash(comparableStudyData({snapshot:{...snapshot,createdAt:undefined},sourceFingerprint})),readiness:{status:readiness.status,missing:readiness.missing}};
   }
   const setup=(await readSetup(session,request.seriesSlug as SeriesSlug))!;
   const choices=await executionOptions(session,{...setup,configurationPackageVersionId:snapshot.configurationPackageVersionId,experimentTypeProfileVersionId:snapshot.experimentTypeProfileVersionId,subjectTypeRevisionId:snapshot.subjectTypeRevisionId,area:snapshot.area});
@@ -411,7 +428,7 @@ async function previewPersistedCreation(session:SqlSession,raw:RunCreationReques
     readiness.missing.push(...draftValueProblems(request.draft,choices.options));
     readiness.status=readiness.missing.length?'NOT_READY':'READY';
   }
-  return {snapshot,sourceFingerprint,fingerprint:hash(comparableStudyData({snapshot:{...snapshot,createdAt:undefined},sourceFingerprint})),readiness:{status:readiness.status,missing:readiness.missing},options:choices.options,catalog:choices.catalog};
+  return {snapshot,sourceChanges,legacySourceAmbiguous,sourceFingerprint,fingerprint:hash(comparableStudyData({snapshot:{...snapshot,createdAt:undefined},sourceFingerprint})),readiness:{status:readiness.status,missing:readiness.missing},options:choices.options,catalog:choices.catalog};
 }
 
 export class PostgresRunRepository implements RunRepository {
@@ -477,7 +494,10 @@ export class PostgresRunRepository implements RunRepository {
           : 'previousRunId' in request
             ? createNextRunPreview(previous!, `run-${randomUUID()}-${allocated}`, preview!.changed.map(c=>({assignmentId:c.assignmentId,after:c.after}))).snapshot
             : request;
-        const snapshot = renumberSnapshot(input, allocated);
+        const prospective=prospectiveConditions(input);
+        if(!('entry' in request) && conditionInterpretationChanges(input,prospective).length)
+          throw new ApplicationError('VALIDATION','Copy this Run through Run Draft and review changed condition values before creating.');
+        const snapshot = renumberSnapshot(prospective, allocated);
         const execution='entry' in request && (request.entry.draft || request.entry.source==='BLANK') ? entryPreview!.readiness : await creationReadiness(session,study.series_slug,snapshot);
         if(execution.status!=='READY')throw new ApplicationError('VALIDATION', 'contextId' in execution ? 'Study lifecycle not ready. Review the saved Study criteria.' : 'Complete and save the required execution conditions before creating a Run.');
         await session.query('UPDATE study SET next_run_number = $2, aggregate_version = aggregate_version + 1 WHERE study_id = $1', [study.study_id, allocated + 1]);
@@ -517,7 +537,7 @@ export class PostgresRunRepository implements RunRepository {
       const snapshot=validatePlanEdit(current,record.snapshot,configuration);
       for(const table of ['run_measurement_plan','run_assignment','run_subject_operation','run_operation','run_subject'])await session.query(`DELETE FROM ${table} WHERE run_id=$1`,[root.run_id]);
       await insertPlanChildren(session,root.run_id,snapshot,configuration.getConfigurationRegistry());
-      await session.query(`UPDATE experiment_run SET display_name=$2,intent=$3,candidate_subjects=$4::jsonb,manufacturing_context=$5::jsonb,delta=$6::jsonb,planning_context=$7::jsonb,aggregate_version=aggregate_version+1 WHERE run_id=$1`,[root.run_id,snapshot.name,snapshot.intent,JSON.stringify(snapshot.candidateSubjects??null),JSON.stringify(snapshot.manufacturingContext??null),JSON.stringify(snapshot.delta),JSON.stringify({ranges:record.ranges,manualFocus:record.manualFocus})]);
+      await session.query(`UPDATE experiment_run SET display_name=$2,intent=$3,candidate_subjects=$4::jsonb,manufacturing_context=$5::jsonb,delta=$6::jsonb,planning_context=$7::jsonb,aggregate_version=aggregate_version+1 WHERE run_id=$1`,[root.run_id,snapshot.name,snapshot.intent,JSON.stringify(snapshot.candidateSubjects??null),JSON.stringify(snapshot.manufacturingContext??null),JSON.stringify(snapshot.delta),JSON.stringify({ranges:record.ranges,manualFocus:record.manualFocus,conditionResolution:snapshot.conditionResolution})]);
       await session.query("INSERT INTO idempotency_record(idempotency_record_id,command_scope,idempotency_key,request_hash,status,result_run_id,completed_at) VALUES($1,$2,$3,$4,'SUCCEEDED',$5,now())",[randomUUID(),scope,command.commandId,requestHash,root.run_id]);
     });}catch(error){throw persistenceError('Save Plan failed.',error);}
   }

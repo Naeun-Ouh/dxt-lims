@@ -625,5 +625,17 @@
   "The condition value applies to all Subjects this Operation applies to. Use “Set differently by Subject” only when a Subject needs a different planned condition.": "The condition value applies to all Subjects this Operation applies to. Use “Set differently by Subject” only when a Subject needs a different planned condition.",
   "The condition value is used for all applicable Subjects.": "The condition value is used for all applicable Subjects.",
   "Subject-specific values are retained when hidden.": "Subject-specific values are retained when hidden.",
-  "{0} Subject-specific condition values retained.": "{0} Subject-specific condition values retained."
+  "{0} Subject-specific condition values retained.": "{0} Subject-specific condition values retained.",
+  "This existing Plan contains overlapping condition scopes. Its saved interpretation is preserved; copying it requires reviewing effective values.": "This existing Plan contains overlapping condition scopes. Its saved interpretation is preserved; copying it requires reviewing effective values.",
+  "Copied condition values": "Copied condition values",
+  "The source Run is unchanged. In this new Run, Subject-specific values and roles take priority; blank overrides use the common condition value.": "The source Run is unchanged. In this new Run, Subject-specific values and roles take priority; blank overrides use the common condition value.",
+  "Effective values changed by copying. Review the final draft values below before creating.": "Effective values changed by copying. Review the final draft values below before creating.",
+  "Source Run": "Source Run",
+  "Copied value": "Copied value",
+  "Overlapping scopes exist in the source. No effective value or role changes were found when copying.": "Overlapping scopes exist in the source. No effective value or role changes were found when copying.",
+  "More than one condition has the same name in this Operation. Ask the configuration administrator to resolve the ambiguity.": "More than one condition has the same name in this Operation. Ask the configuration administrator to resolve the ambiguity.",
+  "Copy this Run through Run Draft and review changed condition values before creating.": "Copy this Run through Run Draft and review changed condition values before creating.",
+  "Keep the existing Plan interpretation. To use the new condition priority, copy this Run and review the changes.": "Keep the existing Plan interpretation. To use the new condition priority, copy this Run and review the changes.",
+  "A condition name does not match the selected reference information. Reload the draft and check the Operation conditions.": "A condition name does not match the selected reference information. Reload the draft and check the Operation conditions.",
+  "Condition": "Condition"
 }

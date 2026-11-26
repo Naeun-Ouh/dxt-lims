@@ -174,6 +174,7 @@ export async function studyBootstrapContract(db: SqlDatabase) {
     await db.query(
       "UPDATE configuration_access_grant SET active=true WHERE principal_id='bootstrap-owner'",
     );
+    await db.query("INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT $1,study_id,'bootstrap-owner','CREATE_RUN','bootstrap-owner' FROM study WHERE series_slug=$2", [randomUUID(), slug]);
     const empty = await load();
     assert.equal(empty.readiness.status, 'NOT_READY');
     assert.equal(empty.subjects.length, 0);
@@ -318,6 +319,7 @@ export async function studyBootstrapContract(db: SqlDatabase) {
         areaDefinitionRevisionId: selected.areaDefinitionRevisionId,
       },
     })) as StudyIdentity;
+    await db.query("INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT $1,study_id,'bootstrap-owner','CREATE_RUN','bootstrap-owner' FROM study WHERE series_slug=$2",[randomUUID(),exploratorySlug]);
     const exploratorySave = {
       operation: 'study.bootstrap.save',
       slug: exploratorySlug,

@@ -1,3 +1,4 @@
+import { conditionPrecedenceContract } from './postgres-condition-precedence-contract';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
@@ -28,6 +29,9 @@ export async function runDraftContract(
     },
     commandId: randomUUID(),
   })) as StudyIdentity;
+  await assert.rejects(owner({operation:'run.preview',input:{seriesSlug:study.slug,source:'BLANK'}}),/access denied/,'creation/responsibility alone cannot author a Run');
+  await db.query("INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT $1,study_id,'bootstrap-owner','CREATE_RUN','bootstrap-owner' FROM study WHERE series_slug=$2",[randomUUID(),study.slug]);
+  await db.query("INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT $1,study_id,'bootstrap-owner','EDIT_RUN_PLAN','bootstrap-owner' FROM study WHERE series_slug=$2",[randomUUID(),study.slug]);
   const preview = (request: RunCreationRequest) =>
     owner({
       operation: 'run.preview',
@@ -231,4 +235,5 @@ export async function runDraftContract(
     0,
     'Blank does not copy prior Run or Study Subjects',
   );
+  await conditionPrecedenceContract(db, owner, study.slug, blank);
 }
