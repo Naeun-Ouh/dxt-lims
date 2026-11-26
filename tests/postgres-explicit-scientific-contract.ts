@@ -162,6 +162,19 @@ export async function explicitScientificContract(db: SqlDatabase) {
   ]);
   // Legacy responsible reason is still inventoried; explicit authority survives transition.
   const ownerGrant = await grant('owner', 'CREATE_RUN');
+  // Adversarial dependency failure: SQL NULL must never fall through to a valid grant.
+  // DDL is rolled back inside this disposable contract, restoring the original resolver.
+  const rollbackNullResolver = new Error('rollback injected NULL visibility');
+  await assert.rejects(db.transaction(async sql => {
+    await sql.query("CREATE OR REPLACE FUNCTION dxt_study_access_reason(pid text,sid uuid,act text) RETURNS text LANGUAGE sql STABLE AS 'SELECT NULL::text'");
+    for (const action of scientificStudyActions) {
+      const denied = await new PostgresAuthorization(sql).authorize(await resolvePrincipal(sql, 'explicit-owner'), action, sid);
+      assert.equal(denied.effect, 'DENY', `NULL visibility: ${action}`);
+      assert.equal(denied.reason, 'CONTEXT_UNAVAILABLE');
+    }
+    throw rollbackNullResolver;
+  }), error => error === rollbackNullResolver);
+  assert.equal((await decision('owner', 'CREATE_RUN')).reason, 'EXPLICIT_GRANT', 'test restores the real visibility function');
   const preserved = (await inventoryImplicitScientificAccess(db)).find(
     (row) => row.study_id === sid && row.action === 'CREATE_RUN',
   );

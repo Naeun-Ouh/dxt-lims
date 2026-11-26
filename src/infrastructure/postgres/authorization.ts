@@ -13,6 +13,7 @@ export class PostgresAuthorization implements AuthorizationService {
   const query = scientific ? `
    WITH visibility AS (SELECT dxt_study_access_reason($1,$2,'VIEW_RUN') reason)
    SELECT CASE
+    WHEN reason IS NULL THEN 'CONTEXT_UNAVAILABLE'
     WHEN reason NOT IN ('RESPONSIBLE_USER','RESPONSIBLE_DEPARTMENT','AREA_SCOPE','MANAGED_ORG_SCOPE','EXPLICIT_GRANT','ADMIN') THEN reason
     WHEN EXISTS (
      SELECT 1 FROM study_access_grant g WHERE g.study_id=$2 AND g.action=$3 AND g.active
