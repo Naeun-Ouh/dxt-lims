@@ -29,6 +29,9 @@ export async function runDraftContract(
     },
     commandId: randomUUID(),
   })) as StudyIdentity;
+  await assert.rejects(owner({operation:'run.preview',input:{seriesSlug:study.slug,source:'BLANK'}}),/access denied/,'creation/responsibility alone cannot author a Run');
+  await db.query("INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT $1,study_id,'bootstrap-owner','CREATE_RUN','bootstrap-owner' FROM study WHERE series_slug=$2",[randomUUID(),study.slug]);
+  await db.query("INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT $1,study_id,'bootstrap-owner','EDIT_RUN_PLAN','bootstrap-owner' FROM study WHERE series_slug=$2",[randomUUID(),study.slug]);
   const preview = (request: RunCreationRequest) =>
     owner({
       operation: 'run.preview',

@@ -1,4 +1,4 @@
-import {authorizationPolicyVersion} from '@/src/application/authorization';
+import {authorizationPolicyVersion, scientificStudyActions} from '@/src/application/authorization';
 import type { AuthorizationService,AuthorizationDecision,Principal,StudyAction,StudyPermissions } from '@/src/application/authorization';
 import { ApplicationError } from '@/src/application/repository-ports';
 import type { SqlSession } from './sql-database';
@@ -6,7 +6,25 @@ export const allowReasons=['RESPONSIBLE_USER','RESPONSIBLE_DEPARTMENT','AREA_SCO
 export class PostgresAuthorization implements AuthorizationService {
  constructor(private readonly sql:SqlSession){}
  async authorize(principal:Principal,action:StudyAction,studyId:string):Promise<AuthorizationDecision>{
-  const r=(await this.sql.query<{reason:string;version:string|null}>(`SELECT dxt_study_access_reason($1,$2,$3) reason,(SELECT version FROM study_access WHERE study_id=$2) version`,[principal.principalId,studyId,action])).rows[0];
+  // Historical SQL functions still describe the legacy role policy for inventory.
+  // Protected scientific commands and permission projections use this boundary only.
+  // Keep discovery/resource checks before capability checks, including for admins.
+  const scientific = scientificStudyActions.some(candidate => candidate === action);
+  const query = scientific ? `
+   WITH visibility AS (SELECT dxt_study_access_reason($1,$2,'VIEW_RUN') reason)
+   SELECT CASE
+    WHEN reason NOT IN ('RESPONSIBLE_USER','RESPONSIBLE_DEPARTMENT','AREA_SCOPE','MANAGED_ORG_SCOPE','EXPLICIT_GRANT','ADMIN') THEN reason
+    WHEN EXISTS (
+     SELECT 1 FROM study_access_grant g WHERE g.study_id=$2 AND g.action=$3 AND g.active
+     AND (g.expires_at IS NULL OR g.expires_at>statement_timestamp())
+     AND (g.principal_id=$1 OR EXISTS (
+      SELECT 1 FROM auth_membership m WHERE m.principal_id=$1 AND NOT m.managed AND m.unit_id=g.unit_id
+     ))
+    ) THEN 'EXPLICIT_GRANT'
+    ELSE 'MISSING_CAPABILITY'
+   END reason,(SELECT version FROM study_access WHERE study_id=$2) version FROM visibility
+  ` : `SELECT dxt_study_access_reason($1,$2,$3) reason,(SELECT version FROM study_access WHERE study_id=$2) version`;
+  const r=(await this.sql.query<{reason:string;version:string|null}>(query,[principal.principalId,studyId,action])).rows[0];
   return {effect:allowReasons.includes(r.reason)?'ALLOW':'DENY',reason:r.reason,principalId:principal.principalId,action,studyId,policyVersion:authorizationPolicyVersion,contextVersion:r.version===null?null:Number(r.version)};
  }
  async require(principal:Principal,action:StudyAction,studyId:string){

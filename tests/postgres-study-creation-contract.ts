@@ -1,3 +1,5 @@
+import { PostgresAuthorization, resolvePrincipal } from '@/src/infrastructure/postgres/authorization';
+import { scientificStudyActions } from '@/src/application/authorization';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { authorizedOperation } from '@/src/infrastructure/postgres/authorized-application';
@@ -206,6 +208,14 @@ export async function studyCreationContract(db: SqlDatabase) {
   for (const [key, value] of Object.entries(input))
     assert.equal(saved[key as keyof StudyIdentity], value);
   assert.equal(saved.responsibleUserId, 'creator');
+  const createdId = (await db.query<{study_id:string}>('SELECT study_id FROM study WHERE series_slug=$1', [saved.slug])).rows[0].study_id;
+  const creator = await resolvePrincipal(db, 'creator');
+  for (const action of scientificStudyActions) {
+    const decision = await new PostgresAuthorization(db).authorize(creator, action, createdId);
+    assert.equal(decision.effect, 'DENY', `creator must not inherit ${action}`);
+    assert.equal(decision.reason, 'MISSING_CAPABILITY');
+  }
+  assert.equal((await db.query('SELECT * FROM study_access_grant WHERE study_id=$1', [createdId])).rows.length, 0, 'creation never synthesizes scientific grants');
   assert.equal(saved.visibility, 'RESPONSIBLE_DEPARTMENT');
   assert.equal(saved.setupRevision, 1);
   assert.deepEqual(await (await api('creator', request)).json(), saved);

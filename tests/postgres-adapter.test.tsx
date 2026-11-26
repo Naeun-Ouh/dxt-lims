@@ -1,3 +1,4 @@
+import { explicitScientificContract } from './postgres-explicit-scientific-contract';
 import { studyBootstrapContract } from './postgres-study-bootstrap-contract';
 import { studyCreationContract } from './postgres-study-creation-contract';
 import {ProductionHome} from '@/src/features/experiment-home/production-home';
@@ -299,7 +300,7 @@ void test('Saved Analysis sharing UI uses server permissions and explains source
 void test("Dashboard Authorization: scoped policy, search, aggregate leakage, calendar, organization and generic evidence",async()=>{const s=await withDatabase();try{await dashboardAuthorizationContract(s.database,await productionMeasurementContract(s.database));}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
 
 void test('Production Home uses scoped projections without fixture counts or names',()=>{
- const html=renderToStaticMarkup(<ProductionHome studies={[]} dashboard={{counts:{studies:0,runs:0,activeRuns:0,thisWeek:0,needReview:0,measurements:0,savedAnalyses:0},continueWorking:null,recent:[],calendar:[],calendarTotal:0,groups:[],diagnostics:{principalId:'viewer',projection:'dashboard.query',scope:{kind:'MY'},policyVersion:'organization-discovery-v5'}}}/>);
+ const html=renderToStaticMarkup(<ProductionHome studies={[]} dashboard={{counts:{studies:0,runs:0,activeRuns:0,thisWeek:0,needReview:0,measurements:0,savedAnalyses:0},continueWorking:null,recent:[],calendar:[],calendarTotal:0,groups:[],diagnostics:{principalId:'viewer',projection:'dashboard.query',scope:{kind:'MY'},policyVersion:'explicit-scientific-authoring-v6'}}}/>);
  assert.match(html,/No personal experiment work/);assert.match(html,/No accessible Studies/);
  assert.ok(!html.includes('DTS Improvement'));assert.ok(!html.includes('Run 18'));
 });
@@ -319,3 +320,5 @@ void test('Study bootstrap: generic first Run and initial reasoning authorizatio
     await rm(s.directory, { recursive: true, force: true });
   }
 });
+
+void test('Explicit scientific authorization: responsibility separation, revocation and transition inventory',async()=>{const s=await withDatabase();try{await explicitScientificContract(s.database);}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});

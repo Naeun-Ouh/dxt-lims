@@ -1,3 +1,4 @@
+import { explicitScientificContract } from './postgres-explicit-scientific-contract';
 import { studyBootstrapContract } from './postgres-study-bootstrap-contract';
 import { studyCreationContract } from './postgres-study-creation-contract';
 import {dashboardAuthorizationContract} from './postgres-dashboard-authorization-contract';
@@ -92,6 +93,7 @@ void test('native PostgreSQL 18 executes the Production Adapter slice through no
     assert.match(version.rows[0].server_version, /^18\./);
     assert.deepEqual(await application.repositories.run.getSnapshot(created.id), created);
     await runRepositoryContract(application.repositories.run, created, 'native-shared-contract');
+    await explicitScientificContract(database);
     await authorizationContract(database);
     await scientificAuthorizationContract(database);
     const measurementProof=await productionMeasurementContract(database);
