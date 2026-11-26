@@ -59,8 +59,8 @@ export async function genericLifecycleContract(
   })) as PlanningWorkspaceRecord;
   assert.equal(
     ownerPermissions.scientificPermissions?.canRecordActual,
-    true,
-    'Existing responsible-user policy grants science; not changed by Issue 15',
+    false,
+    'Study responsibility alone does not grant scientific write permission',
   );
   const command = {
     id: randomUUID(),
