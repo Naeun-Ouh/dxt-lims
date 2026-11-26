@@ -108,7 +108,7 @@ async function exactProvenance(
     record: unknown;
     payload: import('@/src/application/study-readiness').StudyReasoningContext;
   }>(
-    `SELECT e.domain_id record_id,e.context_id,c.revision,c.payload,e.payload record FROM ${table} e JOIN reasoning_criteria_revision c ON c.id=e.context_id WHERE e.run_id=$1 ORDER BY e.domain_id`,
+    `SELECT e.domain_id record_id,e.context_id,c.revision,c.payload,${kind==='decision'?"e.payload || jsonb_build_object('decision',e.payload->'decision' || jsonb_build_object('nextAction',a.payload))":'e.payload'} record FROM ${table} e JOIN reasoning_criteria_revision c ON c.id=e.context_id ${kind==='decision'?'LEFT JOIN next_action a ON a.decision_id=e.id':''} WHERE e.run_id=$1 ORDER BY e.domain_id`,
     [rid],
   );
   return result.rows.map((r) => ({

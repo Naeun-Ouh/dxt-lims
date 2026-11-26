@@ -684,5 +684,12 @@
   "Selected Evaluation or Next Action references are unavailable.": "Selected Evaluation or Next Action references are unavailable.",
   "Check the numeric Target, unit, measurement point and Evaluation reference.": "Check the numeric Target, unit, measurement point and Evaluation reference.",
   "Select Evaluation Criteria and explain the change.": "Select Evaluation Criteria and explain the change.",
-  "Create revision of selected criteria": "Create revision of selected criteria"
+  "Create revision of selected criteria": "Create revision of selected criteria",
+  "Reload Evaluation Criteria before saving.": "Reload Evaluation Criteria before saving.",
+  "Configure or select Evaluation Criteria before evaluating results.": "Configure or select Evaluation Criteria before evaluating results.",
+  "You do not have permission to record Next Action.": "You do not have permission to record Next Action.",
+  "Could not save Evaluation. Check your permission and selected results, then try again.": "Could not save Evaluation. Check your permission and selected results, then try again.",
+  "Scientific authoring permission is required.": "Scientific authoring permission is required.",
+  "Choose criteria for this Run’s experiment references.": "Choose criteria for this Run’s experiment references.",
+  "Selected Evaluation criteria are unavailable.": "Selected Evaluation criteria are unavailable."
 }
