@@ -50,9 +50,9 @@ export async function saveConclusionRecord(
     decision.experimentRunId !== runId ||
     decision.conclusion !== command.conclusion.trim() ||
     decision.reason !== command.reason.trim() ||
-    decision.nextAction?.nextActionTypeDefinitionId !==
+    (decision.nextAction?.nextActionTypeDefinitionId ?? '') !==
       command.nextActionTypeDefinitionId ||
-    decision.nextAction?.note !== command.nextActionNote.trim() ||
+    (decision.nextAction?.note ?? '') !== command.nextActionNote.trim() ||
     JSON.stringify(context?.engineerEvaluationIds) !==
       JSON.stringify(command.evaluationIds) ||
     context?.targetAchievementReferences.length !==
