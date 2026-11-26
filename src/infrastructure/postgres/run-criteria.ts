@@ -123,7 +123,7 @@ export async function readRunCriteria(
       measurement_point: string;
       parameter_definition_ids: string[];
     }>(
-      'SELECT measurement_point,parameter_definition_ids FROM run_measurement_plan WHERE run_id=$1',
+      'SELECT m.measurement_point,ARRAY(SELECT p.parameter_definition_id FROM run_measurement_plan_parameter p WHERE p.measurement_plan_id=m.measurement_plan_id ORDER BY p.ordinal) parameter_definition_ids FROM run_measurement_plan m WHERE m.run_id=$1',
       [r.run_id],
     )
   ).rows;
@@ -184,7 +184,7 @@ export async function runCriteriaOperation(
       const parsed = criteriaSaveSchema.safeParse(raw);
       if (!parsed.success)
         fail('Check the Target values and selected references.');
-      const input = parsed.data;
+      const input = parsed.data!;
       if (
         input.criteria.packageVersionId !== r.configuration_package_version_id
       )
@@ -231,7 +231,7 @@ export async function runCriteriaOperation(
           measurement_point: string;
           parameter_definition_ids: string[];
         }>(
-          'SELECT measurement_point,parameter_definition_ids FROM run_measurement_plan WHERE run_id=$1',
+          'SELECT m.measurement_point,ARRAY(SELECT p.parameter_definition_id FROM run_measurement_plan_parameter p WHERE p.measurement_plan_id=m.measurement_plan_id ORDER BY p.ordinal) parameter_definition_ids FROM run_measurement_plan m WHERE m.run_id=$1',
           [r.run_id],
         )
       ).rows;
@@ -279,7 +279,7 @@ export async function runCriteriaOperation(
       const parsed = criteriaAdoptSchema.safeParse(raw);
       if (!parsed.success)
         fail('Select Evaluation Criteria and explain the change.');
-      const input = parsed.data;
+      const input = parsed.data!;
       const chosen = (
         await sql.query<{ payload: StudyReasoningContext }>(
           'SELECT payload FROM reasoning_criteria_revision WHERE id=$1 AND study_id=$2 AND package_version_id=$3',
@@ -291,7 +291,7 @@ export async function runCriteriaOperation(
           measurement_point: string;
           parameter_definition_ids: string[];
         }>(
-          'SELECT measurement_point,parameter_definition_ids FROM run_measurement_plan WHERE run_id=$1',
+          'SELECT m.measurement_point,ARRAY(SELECT p.parameter_definition_id FROM run_measurement_plan_parameter p WHERE p.measurement_plan_id=m.measurement_plan_id ORDER BY p.ordinal) parameter_definition_ids FROM run_measurement_plan m WHERE m.run_id=$1',
           [r.run_id],
         )
       ).rows;

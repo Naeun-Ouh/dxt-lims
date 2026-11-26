@@ -382,9 +382,7 @@ export async function materializePersistedStudy(session: SqlSession, slug: strin
 }
 
 /** Bounded bootstrap policy: legacy seeded workspaces retain their existing contract. */
-async function creationReadiness(session:SqlSession,slug:string,snapshot:RunPlanningSnapshot) {
-  const bootstrap=await session.query(`SELECT 1 FROM study s JOIN study_setup_command_receipt r USING(study_id) WHERE s.series_slug=$1 AND r.command_id LIKE 'study-create:%' LIMIT 1`,[slug]);
-  if(!bootstrap.rowCount)return studyReadiness(session,slug,snapshot.configurationPackageVersionId);
+async function creationReadiness(session:SqlSession,_slug:string,snapshot:RunPlanningSnapshot) {
   return executionReadiness(snapshot,await hydrateConfigurationPackages(session,[snapshot.configurationPackageVersionId]),await readMeasurementCatalog(session,snapshot.configurationPackageVersionId)).execution;
 }
 
