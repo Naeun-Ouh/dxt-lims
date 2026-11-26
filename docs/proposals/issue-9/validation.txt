@@ -1,0 +1,24 @@
+▶ Sample proposal: native PostgreSQL18, disposable cluster, explicit permissions and exact immutable provenance
+  ✔ default deny: owner membership/admin/creator inference; NULL and other org fail closed (8.204458ms)
+  ✔ atomic identity+first revision, existing aggregate schemas, zero, idempotency, no implicit author rights (26.288125ms)
+  ✔ org namespace uniqueness, immutable rows, CAS race and authoritative old revision readback (31.791875ms)
+  ✔ explicit cross-org grants, revoked/expired/inactive principals, exact resource and unit scopes (8.937375ms)
+  ✔ exact material mapping, preserved old unresolved usage, copy pins old revision not latest (12.650541ms)
+  ✔ current Plan writer delete/reinsert preserves stable linkage; explicit changed revision appends history (16.802791ms)
+  ✔ creator/admin cannot link without explicit capability; invalid commands rollback assignment and mapping (14.149958ms)
+  ✔ new Run copy retains exact revision under CREATE_RUN, not current latest (5.942666ms)
+  ✔ legacy replacement cannot fabricate linkage; malformed snapshots and truncate fail (7.178709ms)
+  ✔ PUBLIC/untrusted role cannot forge actor, directly mutate tables or run entry functions (5.006916ms)
+  ✔ trusted service execute-only boundary can call commands but cannot mutate or create tables (6.680209ms)
+  ✔ readback on new connection preserves exact historical revision and links (3.478875ms)
+✔ Sample proposal: native PostgreSQL18, disposable cluster, explicit permissions and exact immutable provenance (1544.533417ms)
+ℹ 18.7 (Postgres.app)
+ℹ SQL sha256 b88d7433517e7b69b6997571043b0d620695c2e5afa3bd0ecf2d2f83651b9c49
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1725.69675
