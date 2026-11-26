@@ -66,7 +66,7 @@ for (const route of manifest.routes) {
   assert.equal(criteria.origin, 'ABSENT');
   const read = await repository<PlanningWorkspaceRecord>('viewer', { operation: 'run.planning', runId: run.id });
   assert.equal(read.canEditPlan, false);
-  await repository('denied', { operation: 'run.get', runId: run.id }, 403);
+  await repository('denied', { operation: 'run.get', runId: run.id }, 404);
 }
 const result = { label: 'AGENT HTTP CHECKS — HUMAN ACCEPTANCE NOT RUN', sampleId: id, revisionIds: [revisionId, revised.revision.id], evidence };
 await writeFile(join(directory, 'http-evidence.json'), JSON.stringify(result, null, 2));
