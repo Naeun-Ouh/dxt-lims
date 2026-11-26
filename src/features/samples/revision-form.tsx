@@ -541,7 +541,12 @@ export function SampleRevisionForm({
                   <select
                     value={String(p.value)}
                     onChange={(e) =>
-                      update({ value: e.target.value === 'true' })
+                      update({
+                        value:
+                          e.target.value === ''
+                            ? ''
+                            : e.target.value === 'true',
+                      })
                     }
                   >
                     <option value="">—</option>
