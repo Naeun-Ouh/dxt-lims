@@ -14,11 +14,9 @@ export function SampleSelectionDetail({
 }) {
   const { locale } = useLocale();
   const [value, setValue] = useState<SampleRevisionChoice | null>(null),
-    [failed, setFailed] = useState(false);
+    [failed, setFailed] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
-    setValue(null);
-    setFailed(false);
     if (revisionId && !denied)
       void sampleRequest<SampleRevisionChoice>({
         operation: 'selection',
@@ -28,15 +26,17 @@ export function SampleSelectionDetail({
           if (active) setValue(v);
         })
         .catch(() => {
-          if (active) setFailed(true);
+          if (active) setFailed(revisionId);
         });
     return () => {
       active = false;
     };
   }, [revisionId, denied]);
-  if (denied || failed) return <span>{sampleText(locale, 'denied')}</span>;
+  if (denied || failed === revisionId)
+    return <span>{sampleText(locale, 'denied')}</span>;
   if (!revisionId) return <span>{sampleText(locale, 'unlinked')}</span>;
-  if (!value) return <span>{sampleText(locale, 'loading')}</span>;
+  if (!value || value.id !== revisionId)
+    return <span>{sampleText(locale, 'loading')}</span>;
   return (
     <Link
       href={`/samples/${encodeURIComponent(value.sampleId)}/revisions/${value.revision}`}

@@ -194,6 +194,8 @@ ALTER TABLE dxt_sample.run_assignment_link ALTER COLUMN mapping_id DROP NOT NULL
 ALTER TABLE dxt_sample.run_assignment_link ALTER COLUMN source_assignment_row_id DROP NOT NULL;
 ALTER TABLE dxt_sample.run_assignment_link ADD COLUMN selection_state text NOT NULL DEFAULT 'SELECTED'
  CHECK(selection_state IN ('SELECTED','CLEARED','REMOVED'));
+ALTER TABLE dxt_sample.run_assignment_link ADD CHECK((selection_state='SELECTED')=(mapping_id IS NOT NULL));
+ALTER TABLE dxt_sample.run_assignment_link ADD CHECK(selection_state='REMOVED' OR source_assignment_row_id IS NOT NULL);
 CREATE TABLE dxt_sample.assignment_selection (
  run_id uuid NOT NULL REFERENCES public.experiment_run(run_id),
  assignment_domain_id text NOT NULL,
@@ -203,6 +205,14 @@ CREATE TABLE dxt_sample.assignment_selection (
  PRIMARY KEY(run_id,assignment_domain_id),
  CHECK((selection_state='SELECTED')=(mapping_id IS NOT NULL))
 );
+-- Fixed no-argument lock entrypoint avoids granting authorization-table DML to backend.
+CREATE FUNCTION dxt_sample.lock_policy() RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+ SET search_path=pg_catalog,dxt_sample,public,pg_temp AS $$
+BEGIN
+ LOCK TABLE public.auth_principal,public.auth_org_unit,public.auth_membership,
+  dxt_sample.access_grant,public.study_access,public.study_access_grant,
+  public.study_module_access IN SHARE MODE;
+END $$;
 -- Dedicated function owner must be NOLOGIN/NOSUPERUSER, with narrowly scoped underlying SELECT/INSERT.
 -- Runtime requires a trusted backend role with scoped SELECT plus INSERT/UPDATE on current
 -- selection/history/mapping tables. Never grant these privileges to browser/client roles.

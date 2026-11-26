@@ -20,6 +20,7 @@ export function applyGridPlanEdits(snapshot:RunPlanningSnapshot,rows:Engineering
    const selectedReference=existing?.referenceId??base.referenceId;
    const option=definition.options.find(o=>o.value===value&&o.referenceId===selectedReference)??definition.options.find(o=>o.value===value);
    const item={...base,...existing,id:existing?.id??`${base.id}:subject:${subject.id}`,processStepId:row.operation.sourceOperationId,subjectId:subject.id,positionId:null,value,intentRole:roles[row.id]??existing?.intentRole??base.intentRole,referenceId:option?.referenceId??selectedReference};
+   if(item.kind==='MATERIAL'&&item.referenceId!==selectedReference){item.sampleRevisionId=null;item.sampleAccessDenied=false;}
    assignments=existing?assignments.map(a=>a.id===existing.id?item:a):[...assignments,item];
   }
  }

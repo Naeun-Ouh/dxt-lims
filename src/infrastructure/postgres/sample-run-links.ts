@@ -81,7 +81,7 @@ export async function syncSampleSelections(
       );
     return;
   }
-  await sql.query('LOCK TABLE dxt_sample.access_grant IN SHARE MODE');
+  await sql.query('SELECT dxt_sample.lock_policy()');
   const root = (
     await sql.query<{ study_id: string }>(
       'SELECT study_id FROM experiment_run WHERE run_id=$1 FOR UPDATE',
