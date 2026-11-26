@@ -1,4 +1,5 @@
 'use client';
+import { legacyConditionAmbiguities } from '@/src/application/condition-resolution';
 import { ParticipationEditor } from './participation-editor';
 import { editOperationParticipation } from './participation';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -101,10 +102,10 @@ export default function EngineeringGrid({
   const baseModel = useMemo(
     () =>
       persistedPlan
-        ? gridPlanningContext(
+        ? { ...gridPlanningContext(
             persistedPlan,
             application.repositories.configuration,
-          )
+          ), explicitAssignments: inputModel.explicitAssignments }
         : {
             ...inputModel,
             configurationRepository: application.repositories.configuration,
@@ -147,6 +148,10 @@ export default function EngineeringGrid({
           }
         : baseModel,
     [baseModel, participationDraft, workspaceMode],
+  );
+  const legacyConditionWarning = useMemo(
+    () => legacyConditionAmbiguities(model.snapshot),
+    [model.snapshot],
   );
   const changeMode = (
     mode: 'PLAN' | 'ACTUAL' | 'MEASUREMENT' | 'EVALUATION',
@@ -416,7 +421,9 @@ export default function EngineeringGrid({
     const matchesFilter = (row: EngineeringGridRow) => {
       const role = roles[row.id] ?? row.role;
       return filter === 'VARIED'
-        ? role === 'VARIED'
+        ? (row.subjectRoles && roles[row.id] === undefined
+          ? Object.values(row.subjectRoles).includes('VARIED')
+          : role === 'VARIED')
         : filter === 'CHANGED'
           ? Object.keys(dirty).some((key) => key.startsWith(`${row.id}:`)) ||
             model.snapshot.delta.items.some(
@@ -670,6 +677,11 @@ export default function EngineeringGrid({
         className={`engineering-grid-page plan-final-page lifecycle-final-page mode-${workspaceMode.toLowerCase()}`}
       >
         <h1 className="plan-screen-title">{t('Engineering Grid')}</h1>
+        {legacyConditionWarning && (
+          <p role="note">
+            {t('This existing Plan contains overlapping condition scopes. Its saved interpretation is preserved; copying it requires reviewing effective values.')}
+          </p>
+        )}
         <nav
           className="engineering-grid-modes"
           aria-label={t('Experiment lifecycle')}
@@ -1608,8 +1620,22 @@ function GridRow(props: {
           props.activeSubjectId === subject.id ? 'active-subject' : '',
         ].join(' ');
         const label = `${row.definition?.label} ${subject.displayLabel}`;
+        const clearedOverride = row.subjectRoles &&
+          props.dirty[key] !== undefined && !props.dirty[key].trim();
+        const cellRole = props.role !== row.role || clearedOverride
+          ? props.role
+          : row.subjectRoles?.[subject.id];
         return (
           <td key={subject.id} className={className}>
+            {row.subjectRoles && (
+              <span
+                className={`plan-intent-label ${cellRole === 'VARIED' ? 'varied' : ''}`}
+                aria-label={t(cellRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed')}
+                title={t(cellRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed')}
+              >
+                {cellRole === 'VARIED' ? 'V' : 'F'}
+              </span>
+            )}
             <span className="grid-cell-state" aria-hidden="true">
               {props.errors[key]
                 ? '!'

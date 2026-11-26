@@ -36,6 +36,7 @@ export type StudyCreationContext = Pick<
   | 'areaDefinitionRevisionId'
 > & {
   label: string;
+  subjectLabel?: string;
   experimentType: string;
   area: string;
 };

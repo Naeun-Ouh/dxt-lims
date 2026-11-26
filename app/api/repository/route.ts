@@ -1,3 +1,4 @@
+import { bootstrapSetupSchema, initialReasoningSchema } from '@/src/application/study-bootstrap';
 import { studyCreateSchema, studySlugSchema } from '@/src/application/study-creation';
 import {discoveryQuerySchema} from '@/src/application/discovery';
 import {savedAnalysisSharingSchema} from '@/src/application/saved-analysis-access';
@@ -15,13 +16,17 @@ import { z } from 'zod';
 import { productionRequest } from '@/src/infrastructure/postgres/server-composition';
 import { ApplicationError } from '@/src/application/repository-ports';
 
-const slug = z.enum(['dts-improvement', 'cmp-stability', 'adhesion-material-optimization']);
+// Persisted slugs are generic; legacy facade signatures retain their display-scenario type.
+const slug = studySlugSchema.transform(value => value as import('@/src/features/experiment-series/run-entry-model').SeriesSlug);
 const strings=z.array(z.string().min(1)).max(10000).optional();
 const measurementQuery=z.object({savedAnalysisId:z.string().min(1).optional(),runIds:strings,datasetIds:strings,parameterDefinitionIds:strings,subjectIds:strings,siteIdentities:strings,coordinateDefinitionIds:strings,validity:z.enum(['INCLUDED','EXCLUDED']).optional(),limit:z.number().int().min(1).max(10000).optional()});
 export const requestSchema = z.discriminatedUnion('operation', [
  z.object({operation:z.literal('study.creation.options')}),
  z.object({operation:z.literal('study.create'),input:studyCreateSchema,commandId:z.string().min(1).max(200)}),
  z.object({operation:z.literal('study.identity'),slug:studySlugSchema}),
+ z.object({operation:z.literal('study.bootstrap.load'),slug:studySlugSchema}),
+ z.object({operation:z.literal('study.bootstrap.save'),slug:studySlugSchema,input:bootstrapSetupSchema,commandId:z.string().min(1).max(200)}),
+ z.object({operation:z.literal('study.reasoning.initialize'),slug:studySlugSchema,input:initialReasoningSchema,commandId:z.string().min(1).max(200)}),
  z.object({operation:z.literal('study.list'),query:discoveryQuerySchema.optional()}),
  z.object({operation:z.literal('dashboard.query'),query:discoveryQuerySchema.optional()}),
  z.object({operation:z.literal('run.summaries'),query:discoveryQuerySchema.optional()}),
@@ -78,7 +83,7 @@ export async function handleRepositoryRequest(request:Request,execute:typeof pro
   } catch (error) {
     if (error instanceof z.ZodError) return response({error:'Invalid repository request.'},400);
     if (error instanceof ApplicationError) return response({error:error.message,code:error.code},error.code==='FORBIDDEN'?403:error.code==='NOT_FOUND'?404:409);
-    return response({error:'Production repository request failed.'},503);
+    return response({error:'Could not complete this action. Check your input and try again.',code:'PERSISTENCE'},503);
   }
 }
 export async function dispatchRepository(app: import('@/src/application/dxt-application').DxtApplication, raw:Record<string,unknown>):Promise<unknown>{

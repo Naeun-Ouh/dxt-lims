@@ -6,9 +6,12 @@ import { createExperimentWorkspace } from '@/src/features/run-registration/works
 import { resolvedVariableDefinitions } from '@/src/features/run-registration/variable-model';
 import { validateVariableValue } from '@/src/features/run-registration/applicability';
 import type { ConfigurationRegistrySource } from '@/src/domain/reference';
+import { prospectiveConditions } from './condition-resolution';
 
 /** Values and intentional variation are independent. Existing source identity never changes. */
 export function validatePlanEdit(current:RunPlanningSnapshot,next:RunPlanningSnapshot,configuration:ConfigurationRegistrySource){
+  if(current.conditionResolution!==next.conditionResolution)throw new ApplicationError('VALIDATION','Plan condition resolution must remain unchanged.');
+  if(current.conditionResolution==='SUBJECT_FIRST_V1')next=prospectiveConditions(next);
   for(const key of ['id','configurationPackageVersionId','experimentTypeProfileVersionId','subjectTypeRevisionId','runNumber','createdAt','area','experimentType'] as const)
     if(current[key]!==next[key])throw new ApplicationError('VALIDATION',`Plan edit cannot change ${key}.`);
   if(JSON.stringify(current.series)!==JSON.stringify(next.series)||JSON.stringify(current.provenance)!==JSON.stringify(next.provenance))throw new ApplicationError('VALIDATION','Plan source identity must remain unchanged.');
@@ -24,9 +27,16 @@ export function validatePlanEdit(current:RunPlanningSnapshot,next:RunPlanningSna
   if(new Set(next.assignments.map(a=>a.id)).size!==next.assignments.length)throw new ApplicationError('VALIDATION','Duplicate assignment identity.');
   if(!next.steps.length||next.steps.some(step=>!step.context))throw new ApplicationError('VALIDATION','Persisted exact Operation context is required.');
   const model=createExperimentWorkspace(next,configuration);
+  const scopes=new Set<string>();
   for(const a of next.assignments){
     const definition=resolvedVariableDefinitions(model,a.processStepId??'').find(d=>d.assignmentKind===a.kind&&(d.assignmentReferenceId===a.referenceId||d.options.some(o=>o.referenceId===a.referenceId)));
     if(!definition||a.positionId||!['FIXED','VARIED'].includes(a.intentRole))throw new ApplicationError('VALIDATION','Plan assignment is not applicable in its exact pinned context.');
+    if(next.conditionResolution){
+      if(a.label!==definition.label)throw new ApplicationError('VALIDATION','Condition name must match its exact definition.');
+      const scope=JSON.stringify([a.processStepId,definition.applicabilityId,a.subjectId,a.positionId]);
+      if(scopes.has(scope))throw new ApplicationError('VALIDATION','Duplicate assignment.');
+      scopes.add(scope);
+    }
     validateVariableValue(definition,a.value);
     if(definition.editor==='REFERENCE'&&!definition.options.some(o=>o.value===a.value&&o.referenceId===a.referenceId))throw new ApplicationError('VALIDATION','Reference value must match its exact revision.');
   }

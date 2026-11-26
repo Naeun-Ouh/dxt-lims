@@ -1,0 +1,391 @@
+/* DXT's bounded enterprise grid family. Ant Design is a pattern reference,
+   not a dependency. No scientific state is inferred by these presentation tokens. */
+:root {
+  --dxt-brand: #2d5f7f;
+  --dxt-text: #203548;
+  --dxt-muted: #526779;
+  --dxt-surface: #fff;
+  --dxt-border: #dbe3eb;
+  --dxt-header: #f2f5f8;
+  --dxt-hover: #f7f9fb;
+  --dxt-selected: #eaf3fa;
+  --dxt-disabled: #eef1f4;
+  --dxt-success: #237448;
+  --dxt-warning: #8c5915;
+  --dxt-error: #b23838;
+  --dxt-radius: 4px;
+  --dxt-control-height: 32px;
+  --dxt-font-size: 12px;
+  --dxt-space-1: 4px;
+  --dxt-space-2: 8px;
+  --dxt-space-3: 12px;
+  --dxt-space-4: 16px;
+  --dxt-cell-padding: 8px 10px;
+}
+.dxt-grid-scroll {
+  min-width: 0;
+  max-width: 100%;
+  overflow: auto;
+  max-height: 560px;
+  overscroll-behavior: contain;
+  border: 1px solid var(--dxt-border);
+  border-radius: var(--dxt-radius);
+}
+.dxt-grid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--dxt-text);
+  font-size: var(--dxt-font-size);
+  line-height: 1.5;
+}
+.dxt-grid th,
+.dxt-grid td {
+  padding: var(--dxt-cell-padding);
+  text-align: left;
+  vertical-align: top;
+  font-size: inherit;
+  line-height: inherit;
+  border: 0;
+  border-bottom: 1px solid var(--dxt-border);
+  overflow-wrap: anywhere;
+}
+.dxt-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--dxt-header);
+  font-weight: 600;
+}
+.dxt-grid tbody th {
+  font-weight: 600;
+}
+.dxt-grid tbody tr:hover {
+  background: var(--dxt-hover);
+}
+.dxt-grid tbody tr.is-selected,
+.dxt-grid tbody tr:focus-within {
+  background: var(--dxt-selected);
+}
+.dxt-grid small {
+  display: block;
+  margin-top: var(--dxt-space-1);
+  font-weight: 400;
+  color: var(--dxt-muted);
+}
+.dxt-cell-text {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.dxt-status {
+  display: inline-block;
+  max-width: 100%;
+  padding: 2px 6px;
+  border: 1px solid var(--dxt-border);
+  border-radius: var(--dxt-radius);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+  background: var(--dxt-header);
+  color: var(--dxt-muted);
+}
+.dxt-status-info {
+  color: var(--dxt-brand);
+  background: var(--dxt-selected);
+}
+.dxt-status-success {
+  color: var(--dxt-success);
+  background: #f0faf3;
+  border-color: #b9dec8;
+}
+.dxt-status-warning {
+  color: var(--dxt-warning);
+  background: #fffaeb;
+  border-color: #ead5a8;
+}
+.dxt-status-error {
+  color: var(--dxt-error);
+  background: #fff2f0;
+  border-color: #e9b8b8;
+}
+.dxt-density .entry-button,
+.dxt-density input:not([type='checkbox']),
+.dxt-density select {
+  min-height: var(--dxt-control-height);
+  border-radius: var(--dxt-radius);
+  font-size: 13px;
+  padding: 5px 10px;
+}
+.dxt-density select {
+  padding-right: 28px;
+}
+.dxt-density .dxt-grid input:not([type='checkbox']),
+.dxt-density .dxt-grid select,
+.dxt-density .dxt-grid .entry-button {
+  font-size: var(--dxt-font-size);
+}
+.dxt-density input[type='checkbox'] {
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--dxt-brand);
+}
+.dxt-density :is(input, select, textarea, button):focus-visible,
+.dxt-grid-scroll:focus-visible {
+  outline: 2px solid var(--dxt-brand);
+  outline-offset: 2px;
+}
+.dxt-density :is(input, select, textarea, button):disabled {
+  background: var(--dxt-disabled);
+  color: #76818d;
+  cursor: not-allowed;
+  opacity: 1;
+}
+.dxt-density :is(input, textarea):read-only {
+  background: var(--dxt-hover);
+}
+.dxt-density .entry-button.dxt-action-text {
+  color: var(--dxt-brand);
+  border-color: transparent;
+  background: transparent;
+  min-width: 28px;
+}
+.dxt-density .entry-button.dxt-action-danger {
+  color: var(--dxt-error);
+  border-color: transparent;
+  background: transparent;
+}
+.dxt-density .entry-button.dxt-action-selected {
+  background: var(--dxt-selected);
+  color: var(--dxt-brand);
+  border-color: var(--dxt-brand);
+}
+.dxt-density .entry-button:not(:disabled):hover {
+  border-color: var(--dxt-brand);
+}
+.dxt-density .entry-button.dxt-action-danger:hover {
+  border-color: var(--dxt-error);
+  background: #fff2f0;
+}
+.dxt-density [aria-invalid='true'] {
+  border-color: var(--dxt-error) !important;
+}
+.dxt-grid small.dxt-text-error {
+  color: var(--dxt-error);
+}
+.dxt-density [role='alert'] {
+  border: 1px solid #e9b8b8;
+  background: #fff2f0;
+  padding: var(--dxt-space-2);
+  border-radius: var(--dxt-radius);
+}
+.dxt-density fieldset {
+  padding: var(--dxt-space-3);
+  margin: var(--dxt-space-3) 0;
+  border-color: var(--dxt-border);
+  border-radius: var(--dxt-radius);
+}
+.dxt-density .draft-content {
+  padding: 0;
+}
+.dxt-density .draft-flow-actions {
+  gap: var(--dxt-space-2);
+}
+.draft-measurement-table {
+  min-width: 960px;
+}
+.draft-measurement-table th:nth-child(1) {
+  width: 170px;
+}
+.draft-measurement-table th:nth-child(2) {
+  width: 150px;
+}
+.draft-measurement-table th:nth-child(3) {
+  width: 200px;
+}
+.draft-measurement-table th:nth-child(4) {
+  width: 65px;
+}
+.draft-measurement-table th:nth-child(5) {
+  width: 200px;
+}
+.draft-measurement-table th:nth-child(6) {
+  width: 190px;
+}
+.operation-master-detail-trigger {
+  width: 100%;
+}
+.dxt-density .operation-master-header,
+.dxt-density .operation-master-footer {
+  padding: var(--dxt-space-4);
+}
+.dxt-density .operation-master-filters {
+  padding: var(--dxt-space-3) var(--dxt-space-4);
+  gap: var(--dxt-space-3);
+}
+.dxt-density .operation-master-results {
+  margin: 0 var(--dxt-space-4) var(--dxt-space-3);
+}
+@media (max-width: 760px) {
+  .dxt-density .operation-master-footer {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .dxt-density .operation-master-footer p {
+    flex-basis: 100%;
+  }
+}
+
+.dxt-density .entry-button:disabled {
+  color: #89939e;
+  border-color: var(--dxt-border);
+  background: var(--dxt-disabled);
+  cursor: not-allowed;
+}
+
+.dxt-density .dxt-grid .entry-button {
+  white-space: nowrap;
+}
+
+.dxt-grid .draft-grid-actions {
+  flex-wrap: nowrap;
+}
+
+/* One table keeps Operation and Subject rows aligned during horizontal scrolling. */
+.draft-subject-add {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.draft-subject-add label {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.draft-subject-table th:last-child {
+  width: 90px;
+}
+.draft-matrix-scroll {
+  max-height: 640px;
+}
+.draft-matrix {
+  min-width: 100%;
+}
+.draft-matrix :is(th, td) {
+  box-sizing: border-box;
+  border-right: 1px solid var(--dxt-border);
+}
+.draft-matrix .matrix-operation {
+  background: #eaf0f5;
+}
+.draft-matrix .matrix-operation :is(th, td) {
+  vertical-align: middle;
+}
+.draft-matrix .matrix-subject {
+  background: #fff;
+}
+.draft-matrix .matrix-na {
+  background: #f1f3f5;
+  color: var(--dxt-muted);
+}
+.draft-matrix .matrix-common {
+  border-left: 2px solid #9db4c5;
+  background: #f6f9fc;
+}
+.draft-matrix .matrix-condition th {
+  background: #fafbfd;
+  vertical-align: middle;
+}
+.draft-matrix .matrix-unit {
+  font-weight: 400;
+  color: var(--dxt-muted);
+}
+.draft-matrix .matrix-participation {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 400;
+}
+.draft-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+}
+.draft-condition-cell {
+  display: grid;
+  gap: 6px;
+}
+.draft-condition-cell input,
+.draft-condition-cell select {
+  width: 100%;
+  min-width: 0;
+}
+.draft-cell-role {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.draft-cell-role select {
+  flex: 1;
+}
+.draft-common-reference {
+  min-height: 54px;
+}
+/* Frozen reference block; compact mode frees space for more Subject columns. */
+@media (min-width: 1100px) {
+  .draft-matrix :is(th, td):nth-child(1) {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix :is(th, td):nth-child(2) {
+    position: sticky;
+    left: 44px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix .matrix-operation td:nth-child(3),
+  .draft-matrix thead th:nth-child(3) {
+    position: sticky;
+    left: 210px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix.with-attributes .matrix-operation td:nth-child(4),
+  .draft-matrix.with-attributes thead th:nth-child(4) {
+    position: sticky;
+    left: 300px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix.with-attributes .matrix-operation td:nth-child(5),
+  .draft-matrix.with-attributes thead th:nth-child(5) {
+    position: sticky;
+    left: 380px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix.with-attributes .matrix-operation td:nth-child(6),
+  .draft-matrix.with-attributes thead th:nth-child(6) {
+    position: sticky;
+    left: 470px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix.with-attributes .matrix-operation td:nth-child(7),
+  .draft-matrix.with-attributes thead th:nth-child(7) {
+    position: sticky;
+    left: 550px;
+    z-index: 2;
+    background: var(--dxt-header);
+  }
+  .draft-matrix thead th:nth-child(-n + 3),
+  .draft-matrix.with-attributes thead th:nth-child(-n + 7) {
+    z-index: 4;
+  }
+}

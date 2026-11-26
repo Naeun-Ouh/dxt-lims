@@ -40,11 +40,11 @@ export function DxtApplicationProvider({ children, value, adapter = 'browser' }:
       const configuration = new AuthoringRuntimeConfiguration(await response.json());
       const application=new DxtApplication(createHttpRepositories(configuration),[],[],{},httpConfigurationAuthoring);
       if(active)setOwned({application,configurationCommands:productionConfigurationCommands(application)});
-    }).catch(() => { if (active) setError('Production repository unavailable. No fallback was loaded.'); });
+    }).catch(() => { if (active) setError('Could not load the workspace. Check your connection or contact the Study manager, then try again.'); });
     return () => { active = false; };
   }, [adapter, owned]);
   if (error) return <main role="alert">{t(error)}</main>;
-  if (!owned) return <main>{t('Loading repository…')}</main>;
+  if (!owned) return <main>{t('Loading workspace…')}</main>;
   return <Context.Provider value={owned}>{children}</Context.Provider>;
 }
 

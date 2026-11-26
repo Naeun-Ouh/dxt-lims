@@ -171,7 +171,7 @@ export function CreateStudy({
             <section>
               <h2>{t('Experiment Setup')}</h2>
               <label className="entry-field">
-                {t('Exact configuration context')}
+                {t('Experiment reference information')}
                 <select
                   value={contextIndex}
                   onChange={(e) => setContextIndex(e.target.value)}
@@ -183,6 +183,7 @@ export function CreateStudy({
                   ))}
                 </select>
               </label>
+              <p>{t('Experiment reference information help')}</p>
               {context && (
                 <dl>
                   <dt>{t('Domain')}</dt>
@@ -190,7 +191,7 @@ export function CreateStudy({
                   <dt>{t('Area')}</dt>
                   <dd>{context.area}</dd>
                   <dt>{t('Subject')}</dt>
-                  <dd>{context.subjectTypeRevisionId}</dd>
+                  <dd>{context.subjectLabel}</dd>
                 </dl>
               )}
               <p>

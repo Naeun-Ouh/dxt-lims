@@ -53,6 +53,8 @@ export type PlanDelta = {
   after: string | null;
 };
 export type RunPlanningSnapshot = {
+  /** Absent means frozen legacy array-order interpretation. Set only at new Run creation. */
+  conditionResolution?: 'SUBJECT_FIRST_V1';
   id: string;
   configurationPackageVersionId: string;
   experimentTypeProfileVersionId: string;
@@ -436,6 +438,19 @@ export function effectiveAssignments(
   snapshot: RunPlanningSnapshot,
   subjectId: string,
 ) {
+  if (snapshot.conditionResolution === 'SUBJECT_FIRST_V1') {
+    const result: Record<string, SetupAssignment> = {};
+    // Two explicit passes: scope, never input order or value truthiness, selects the winner.
+    for (const scope of [null, subjectId]) {
+      for (const item of snapshot.assignments) {
+        if (item.subjectId !== scope || item.positionId ||
+            (scope !== null && !item.value.trim()) ||
+            (item.processStepId && !snapshot.subjectOperationIds[subjectId]?.includes(item.processStepId))) continue;
+        result[`${item.processStepId}:${item.kind}:${item.label}`] = item;
+      }
+    }
+    return result;
+  }
   return snapshot.assignments
     .filter((a) => a.subjectId === null || a.subjectId === subjectId)
     .reduce<Record<string, SetupAssignment>>((result, item) => {
@@ -478,6 +493,8 @@ export function assignmentSummary(
 }
 export function validatePlanningSnapshot(snapshot: RunPlanningSnapshot) {
   const errors: string[] = [];
+  if (snapshot.conditionResolution !== undefined && snapshot.conditionResolution !== 'SUBJECT_FIRST_V1')
+    errors.push('Unsupported condition resolution');
   const subjectIds = new Set(snapshot.subjects.map((subject) => subject.id));
   const stepIds = new Set(snapshot.steps.map((s) => s.id));
   if (subjectIds.size !== snapshot.subjects.length)

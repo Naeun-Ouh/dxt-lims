@@ -51,6 +51,7 @@ export async function authorizationContract(db:SqlDatabase){
   for(const source of ['STUDY_DEFAULT','PREVIOUS_RUN','EXISTING_RUN','BLANK'] as const){
    const input={seriesSlug:slug,source,...(source==='EXISTING_RUN'?{sourceRunId:first!.id}:{})};
    const preview=await call('owner',{operation:'run.preview',input}) as AuthoritativeRunPreview;
+   if(source==='BLANK'){assert.equal(preview.readiness.status,'NOT_READY');assert.equal((await api('owner',{operation:'run.create.preview',input,fingerprint:preview.fingerprint,command:{commandId:randomUUID()}})).status,409);continue;}
    const command={commandId:randomUUID()};
    const created=await call('owner',{operation:'run.create.preview',input,fingerprint:preview.fingerprint,command}) as RunPlanningSnapshot;
    assert.equal(created.subjectTypeRevisionId,setup.subjectTypeRevisionId);

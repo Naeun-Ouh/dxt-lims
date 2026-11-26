@@ -12,6 +12,7 @@ import type { EngineerEvaluationRecord, EvaluationTargetBinding } from './evalua
 import { plannedMeasurementIdentity } from './measurement-grid-model';
 import type { RunPlanningSnapshot } from './planning-model';
 import type { ExperimentWorkspaceModel } from './workspace-model';
+import { resolvedVariableDefinitions } from './variable-model';
 
 export type LifecycleAuthoringProfile = {
   studyId: SeriesSlug;
@@ -133,6 +134,24 @@ export function recordActualExecution(
   if (command.status === 'COMPLETED' && !command.endedAt)
     throw new Error('Completion time is required for a completed execution.');
   const plan = projectOperationExecution(model, operation, subject, []);
+  const recipeDefinition =
+    model.snapshot.conditionResolution === 'SUBJECT_FIRST_V1'
+      ? resolvedVariableDefinitions(model, operation.id).find(
+          (definition) => definition.assignmentKind === 'RECIPE',
+        )
+      : undefined;
+  const plannedRecipe = recipeDefinition
+    ? plan.comparisons.find((item) => item.key === recipeDefinition.id)
+    : undefined;
+  const observedRecipe =
+    model.snapshot.conditionResolution === 'SUBJECT_FIRST_V1'
+      ? (command.recipe ??
+        (plannedRecipe
+          ? (command.actualOverrides[plannedRecipe.key] ??
+            plannedRecipe.planned ??
+            '')
+          : operation.recipe))
+      : (command.recipe ?? operation.recipe);
   const observedValues = plan.comparisons
     .filter((item) => item.key !== 'equipment' && item.label !== 'Recipe')
     .flatMap((item) => {
@@ -146,7 +165,7 @@ export function recordActualExecution(
       processStepId: operation.id,
       plannedExecutionItemId: plannedExecutionIdentity(state.runId, subject.id, operation.id),
       observedOperation: operation.name,
-      observedRecipe: command.recipe ?? operation.recipe,
+      observedRecipe,
       equipment: command.equipment ?? operation.equipment,
       startedAt: command.startedAt,
       endedAt: command.endedAt,
