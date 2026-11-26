@@ -10,6 +10,7 @@ try {
     ['tests/condition-copy-review.test.tsx', 'condition-copy-review.test.cjs', 'cjs'],
     ['tests/condition-consumers.test.ts', 'condition-consumers.test.cjs', 'cjs'],
     ['tests/generic-lifecycle.test.ts', 'generic-lifecycle.test.cjs', 'cjs'],
+    ['tests/analysis-applicability.test.tsx', 'analysis-applicability.test.cjs', 'cjs'],
     ['tests/run-draft-grid.test.tsx', 'run-draft-grid.test.cjs', 'cjs'],
     ['tests/execution-readiness.test.ts', 'execution-readiness.test.cjs', 'cjs'],
     ['tests/study-bootstrap-feedback.test.ts', 'study-bootstrap-feedback.test.cjs', 'cjs'],
