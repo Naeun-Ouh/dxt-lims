@@ -1,0 +1,105 @@
+npm WARN logfile could not be created: Error: EPERM: operation not permitted, open '/Users/naeunouh/.npm/_logs/2026-11-26T22_13_13_313Z-debug-0.log'
+
+> dxt-lims@0.1.0 build
+> vinext build
+
+
+  vinext build  (Vite 8.0.13)
+
+[1/5] analyze client references...
+[2Ktransforming...✓ 505 modules transformed.
+rendering chunks...
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - rsc:virtual-client-package (27%)
+  - alias (17%)
+  - vinext:og-inline-fetch-assets (13%)
+  - vinext:css-data-url (10%)
+  - vinext:middleware-server-only (10%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+
+✓ built in 3.86s
+[2/5] analyze server references...
+[2Ktransforming...✓ 604 modules transformed.
+rendering chunks...
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - vinext:middleware-server-only (21%)
+  - vinext:og-inline-fetch-assets (21%)
+  - alias (12%)
+  - rsc:virtual-client-package (10%)
+  - vinext:css-data-url (5%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+
+✓ built in 4.26s
+[3/5] build rsc environment...
+[2Ktransforming...✓ 552 modules transformed.
+rendering chunks...
+computing gzip size...
+✓ built in 8.11s
+[4/5] build client environment...
+[2Ktransforming...✓ 2346 modules transformed.
+rendering chunks...
+computing gzip size...
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - vinext:middleware-server-only (34%)
+  - rsc:virtual-client-package (13%)
+  - alias (12%)
+  - vinext:css-data-url (9%)
+  - vinext:jsx-in-js (8%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+
+✓ built in 10.72s
+[5/5] build ssr environment...
+[2Ktransforming...✓ 608 modules transformed.
+rendering chunks...
+computing gzip size...
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - vinext:og-inline-fetch-assets (20%)
+  - vinext:middleware-server-only (18%)
+  - rsc:virtual-client-package (13%)
+  - alias (11%)
+  - vinext:css-data-url (9%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+
+✓ built in 3.73s
+[0m
+  Route (app)
+  ┌ ƒ /                                                             
+  ├ ? /analysis                                                     
+  ├ λ /api/recipe-sources                                           
+  ├ λ /api/repository                                               
+  ├ λ /api/samples                                                  
+  ├ ? /reference                                                    
+  ├ ƒ /reference/conditions/:conditionCode                          
+  ├ ƒ /reference/experiment-types/:typeCode/areas/:areaCode         
+  ├ ƒ /reference/measurement-operations/:operationCode              
+  ├ ? /runs/new                                                     
+  ├ ? /samples                                                      
+  ├ ƒ /samples/:sampleCode                                          
+  ├ ƒ /samples/:sampleCode/revisions/:revision                      
+  ├ ƒ /series/:seriesSlug                                           
+  ├ ƒ /series/:seriesSlug/runs/:runNumber/engineering-grid          
+  ├ ? /series/adhesion-material-optimization                        
+  ├ ? /series/adhesion-material-optimization/runs/3/engineering-grid
+  ├ ? /series/adhesion-material-optimization/runs/4/engineering-grid
+  ├ ? /series/cmp-stability                                         
+  ├ ? /series/cmp-stability/runs/12/engineering-grid                
+  ├ ? /series/cmp-stability/runs/12/workspace                       
+  ├ ? /series/cmp-stability/runs/13/engineering-grid                
+  ├ ? /series/dts-improvement                                       
+  ├ ? /series/dts-improvement/analysis                              
+  ├ ƒ /series/dts-improvement/runs/:runId                           
+  ├ ƒ /series/dts-improvement/runs/:runId/data-preparation          
+  ├ ? /series/dts-improvement/runs/18/engineering-grid              
+  ├ ? /series/dts-improvement/runs/18/workspace                     
+  ├ ? /series/dts-improvement/runs/19/engineering-grid              
+  ├ ƒ /studies                                                      
+  └ ƒ /studies/new                                                  
+
+  λ API  ƒ Dynamic  ? Unknown
+
+  ? Some routes could not be classified. vinext currently uses static analysis
+    and cannot detect dynamic API usage (headers(), cookies(), etc.) at build time.
+    Automatic classification will be improved in a future release.
+
+  Build complete. Run `vinext start` to start the production server.
+

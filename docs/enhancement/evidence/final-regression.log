@@ -1,0 +1,580 @@
+✔ Group Delta: subject override records inherited Group value and role, never unrelated common value (1.395125ms)
+✔ Group Delta: repeated edits preserve original value and original role together (0.292958ms)
+✔ Group Delta: rename and Skip are separate explicit changes; old writers cannot discard design (1.559584ms)
+✔ Group Delta: removing an edited assignment preserves the original role provenance (0.271541ms)
+✔ Group Delta: new scope repeated edits retain original absence, not invented prior values (0.363708ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 144.550042
+✔ upgrade preserves legacy excluded interpretation and stable operation identities (1.726042ms)
+✔ subject > group > common inherits empty values and preserves 0, invalid, false and role (0.481834ms)
+✔ explicit grouping and removal never turn unassigned into Skip; overrides survive (0.44725ms)
+✔ group duplication copies conditions without sharing identity or changing original (0.156292ms)
+✔ rendering legacy groups is read-only until explicit conversion and KO/EN distinguish states (11.236125ms)
+✔ 1000 Operations × 25 Subjects begins with 50 collapsed summaries and no condition inputs (35.294334ms)
+✔ warning text is explicitly non-blocking and translated without changing identifiers (1.237291ms)
+✔ Source condition copy retains exact revisions and explicit CLEAR but uses fresh identity (0.384166ms)
+✔ V2 accessible descriptions and Subject guidance distinguish allocation, Skip and missing (2.190625ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 247.531708
+✔ Group membership is explicit: COMMON is not Base; deleting Group is UNASSIGNED, not Skip (6.305ms)
+✔ Subject > Group > common resolves value and role together, independently of storage order, including zero/false (1.169709ms)
+✔ Missing and Unassigned warn without blocking; structural invalidity remains distinct (3.190541ms)
+✔ 1200 Operations x 25 Subjects resolves bounded state without expanding Group condition storage (188.491958ms)
+✔ Planned Skip preserves unexpected Actual evidence and has no fabricated planned/default condition (4.502291ms)
+✔ Missing V2 Plan rows stay editable and value-only Subject edits retain inherited Group intent (9.996167ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 503.519375
+✔ old revision copies full data independently and allocates latest + 1, retaining false and zero (1.715917ms)
+✔ clone source and optional change reason are validated without requiring a reason (7.365209ms)
+✔ KO and EN revision form expose source, next number, original data and optional reason (16.691291ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 222.404167
+✔ Recipe Source: Subject > Group > Operation and order-independent inheritance (0.798959ms)
+✔ Recipe Source: CLEAR and permission denial stop inheritance without pretending Missing (1.840959ms)
+✔ Recipe Source: exact Recipe/Parameter identity and distinct Source slots (0.826083ms)
+✔ Recipe Source: rejects duplicate scope, invalid empty selection and mixed scope (0.87925ms)
+✔ Recipe Source: copies independent binding and Operation identities with exact revisions unchanged (0.384083ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 111.598542
+✔ copy policy is prospective, discloses legacy effective value and role changes without rewriting source (2.422583ms)
+✔ copy confirmation shows changed values and final effective values in KO/EN without authoring (11.945208ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 137.400042
+✔ V1 Plan and Actual consumers preserve zero and effective Subject intent in either order (16.893625ms)
+✔ V1 Plan clearing restores common value and role; invalid nonblank input remains explicit (10.18875ms)
+✔ V1 non-applicable Subject stays N/A and rejects cell edits regardless of override (6.042167ms)
+✔ Legacy consumers retain historical order and common role with no prospective cell badges (6.013375ms)
+✔ V1 Actual Recipe acquisition follows effective Subject Recipe and explicit commands, legacy unchanged (8.332833ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 251.995375
+✔ persisted generic lifecycle reads exact Run without profile, reasoning, or implicit initialization (4.710917ms)
+✔ lifecycle messages distinguish actionable permission/conflict from infrastructure detail (0.506ms)
+✔ Measurement entry offers only the exact configured step parameters and point (0.55675ms)
+✔ Analysis entry keeps exact persisted Study identity instead of a generic route slug (0.564333ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 292.428417
+✔ Wafer and Specimen distinguish applicable Missing, non-applied N/A and numeric zero from exact plan scope (2.055708ms)
+✔ same parameter at repeated Operations stays scoped by exact planned execution and measurement point (0.414417ms)
+✔ real out-of-plan evidence is retained with original IDs and official inclusion/exclusion (10.42675ms)
+✔ Subject-only filtering retains authorized dataset context for a non-applied expectation with no acquired values (0.886667ms)
+✔ unknown legacy, unplanned, ambiguous and mismatched contexts never infer non-application (0.513417ms)
+✔ disjoint parameters do not invent expectations at unrelated Operations; unexpected values remain visible (0.227583ms)
+✔ exact snapshot metadata preserves split/merge membership without treating an absent membership record as false (0.720833ms)
+✔ Saved Analysis keeps exact evidence pins and restores N/A without inventing source references (1.996917ms)
+✔ KO/EN table shows explicit N/A and Operation scope; chart counts only genuinely Missing rows (4.234709ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 229.314791
+✔ required/optional metadata shows missing participation coverage without fabricating values (23.797875ms)
+✔ KO/EN format feedback preserves literal values, units and persisted role (7.663667ms)
+✔ Measurement grid exposes supporting prerequisites and never adds them automatically (1.836459ms)
+✔ Subject removal prunes only its participation and scoped conditions (0.867667ms)
+✔ Unified matrix renders objects and scoped assignments without changing scope or value order (3.950542ms)
+✔ Create-first actions need no preview, remain retryable after invalid input, and never render a durable confirm (1.431709ms)
+✔ authoritative errors locate exact scoped conditions without marking non-applicable Subjects missing (0.627292ms)
+✔ common invalid values attach to their editable cell and feedback renders next to the input (1.8905ms)
+✔ creation review preserves snapshot and shows subjects, order, application, conditions and final-only action (3.0925ms)
+✔ Clearing a Subject condition inherits common value without writing an empty assignment (0.288625ms)
+✔ Common-only conditions stay collapsed; existing Subject values are visible without mutation (4.366584ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 228.009292
+✔ Execution prerequisites never manufacture scientific values or require Target/Next Action (2.86575ms)
+✔ Optional Evaluation Criteria accept no Next Action without changing explicit Target requirements (14.019125ms)
+✔ Researcher errors are actionable and never expose raw technical failure text (22.2785ms)
+✔ Approved intent labels retain unchanged persisted enums and comparison definition (0.122375ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 225.512542
+✔ Setup schema preflight identifies missing fields without changing scientific payloads (5.112083ms)
+✔ Invalid missing-Operation API request fails before application/repository dispatch (37.258584ms)
+✔ Saved process-only Setup explains the actual missing Measurement prerequisite and next action (0.449959ms)
+✔ Busy, unsaved/failed-save state, permission and closure remain distinct blockers (0.423208ms)
+✔ Unavailable exact references block Target with remediation, without creating defaults (0.252042ms)
+✔ All prerequisite explanations translate in KO/EN, and VARIED values retain their semantics with the approved label (0.901417ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 239.604
+✔ Bootstrap contracts admit generic slugs but require explicit Subjects, Operations and Targets (2.313209ms)
+✔ Explicit Study projection does not invent unchecked Plan variables; legacy projection remains unchanged (8.47375ms)
+✔ Bootstrap primary actions and readiness explanations have KO/EN labels (0.258375ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 176.545583
+✔ Study creation only succeeds after a matching authoritative identity read (2.417667ms)
+✔ Study creation and persisted identity use KO/EN labels without invented ownership or scientific defaults (18.060667ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 273.052291
+✔ validation stays pending until the authoritative exact result completes; duplicate requests coalesce (3.457333ms)
+✔ a rejected revalidation immediately withdraws prior PASS and supports retry (1.765333ms)
+✔ sync validator errors and unauthorized rejections never become PASS (0.23675ms)
+✔ wrong exact-version results cannot pass (1.038458ms)
+✔ late completion for a previous selection or repository snapshot does not validate the current session (1.008334ms)
+✔ PHOTO and CMP exact packages use the existing validator without configuration mutation (2.535ms)
+✔ deep-link and review initial render never call commands or show PASS, in KO and EN (65.291333ms)
+✔ scope permission projection disables validation and activation for a denied viewer (15.931791ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 348.7035
+✔ Run judgment is independent from Criteria, individual Evaluation and missing results (10.267708ms)
+✔ evaluation-only permission remains independent from decision permission (2.084458ms)
+✔ read-only workspace has no editable forms and a disabled primary save action (0.949583ms)
+✔ Korean and English keep explicit draft and save boundaries (4.598834ms)
+✔ Evaluation edits never gate independent Run judgment or fabricate evaluation evidence (1.023584ms)
+✔ Run judgment with optional empty rationale persists without a result or evaluation (1.968833ms)
+✔ failed, unauthorized, empty or stale save acknowledgements cannot produce success (0.668459ms)
+✔ Complete Run saves existing Decision/Next Action evidence, preserves raw result and Plan, and creates no Run (0.989958ms)
+✔ Next Run conclusion produces a preview; only explicit create invokes Run creation and returns its number (2.165ms)
+✔ decision-only permission can use an existing exact Evaluation without enabling evaluation editing (1.184167ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 212.8105
+✔ 25-wafer branch/rejoin is membership lineage, with ten excluded wafers throughout (1.801958ms)
+✔ single and multi-subject changes are immutable and preserve assignments/other operations (0.58075ms)
+✔ readonly edits and unknown subject/operation IDs are rejected (0.463709ms)
+✔ new downstream operation inherits previous participants; explicit membership and subsequent deltas win (1.750125ms)
+✔ Actual projection excludes every nonparticipant from missing counts (104.94375ms)
+✔ unexpected Actual with null planned identity remains traceable and flagged without missing expectations (37.311167ms)
+✔ planned Measurement exists before acquisition; only 15 participating Subjects are pending (3.790833ms)
+✔ out-of-plan Measurement observations remain visible even if excluded from effective summary (0.10925ms)
+✔ compact bilingual participation editor supports 25 checkboxes and readonly Apply (1.838167ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 300.158834
+✔ Series Explorer scale projection supports 100+ latest-first Runs without domain records (1.427958ms)
+✔ Series defaults materialize independent Run snapshots with exact reference revisions (0.241458ms)
+✔ Run override, ad-hoc configuration, and next Run provenance remain explicit (0.166125ms)
+✔ validated seed has 14 typed scalar conditions and one native material condition per run (0.111666ms)
+✔ Run 4 changes energy and the exact sample revision (1.095208ms)
+✔ Run 3 exposes the sample substitution as a material delta (0.257667ms)
+✔ same sample code with a different pinned revision is still a material change (0.179917ms)
+✔ baseline has no predecessor values (0.121583ms)
+✔ new condition outside type recommendations works without a Run schema change (3.633583ms)
+✔ removed conditions are explicit deltas (3.921375ms)
+✔ unit and definition revisions are not silently treated as unchanged (2.744ms)
+✔ same reference code in another governance scope is a separate condition concept (14.011083ms)
+✔ inheritance copies values and native revision references without reusing instance IDs (0.295542ms)
+✔ measurement and evaluation presentation come from configured definitions (0.385625ms)
+✔ new measurement renders from configuration and zero baselines are not divided by zero (2.649708ms)
+✔ type mismatches and invalid configured options are rejected (2.815375ms)
+✔ dangling references and cross-run attachment are rejected (5.463625ms)
+✔ duplicate concepts, usage bindings and cyclic lineage are rejected (6.692833ms)
+✔ a native sample revision can be reused across different series and projects (2.608917ms)
+✔ native sample search, revision history and usage history are independent of external systems (0.264375ms)
+✔ native property image evidence need not belong to an experiment run (2.749375ms)
+✔ sample master contains requested revision histories and exact D035 run usages (0.11ms)
+✔ nested revision comparison finds D035 ratio and sample property changes (1.361834ms)
+✔ material fingerprints are deterministic and ignore record IDs (0.4585ms)
+✔ ExperimentSeries has no project owner and can exist without a Project relation (2.212667ms)
+✔ Projects and experiment series form an explicit many-to-many relationship (2.135625ms)
+✔ intent fields are optional while targets may reference measurement definitions (4.013875ms)
+✔ criteria remain distinct from targets and recorded decision assessments (2.700583ms)
+✔ configured criteria must be represented in a recorded Decision (2.29325ms)
+✔ Reference Studio classifies Process areas without adding Run fields (0.110125ms)
+✔ condition definitions separate subject context and support explicit references and scopes (0.075875ms)
+✔ measurement selection resolves coordinate collection requirements (0.081292ms)
+✔ Run operation plans preserve a one-to-many process-step boundary (2.194542ms)
+✔ CMP registration drafts pin exact definitions and SampleRevision (1.60325ms)
+✔ supporting collection parameters resolve without becoming engineer selections (0.085125ms)
+✔ next Run concepts carry the ordered operation snapshot without reusing step IDs (0.103791ms)
+✔ one physical wafer preserves continuity across changing observed lot and slot identities (0.100833ms)
+✔ execution events preserve actual context separately from intended process steps (0.048083ms)
+✔ manufacturing identity changes do not contribute to ExperimentDelta (0.860958ms)
+✔ planned execution uses wafer by process-step grain and keeps process and measurement roles explicit (0.087625ms)
+✔ Reference Studio operation role is explicit rather than inferred from names (0.050167ms)
+✔ site measurement values retain wafer, parameter, coordinates, and source context (0.125583ms)
+✔ wafer summaries preserve site-value lineage and source versus DXT origin (0.293583ms)
+✔ measurement operations use reusable operation-specific coordinate sets (0.135667ms)
+✔ measurement exclusions preserve 100 raw BCD sites and produce one 97-point effective state (1.223791ms)
+✔ latest validity decision can include an excluded point again without altering raw data (0.097791ms)
+✔ standard representative statistics use effective values and retain source summary separately (0.340542ms)
+✔ manual wafer and site measurements are normal MeasurementValues with preserved coordinates (0.079792ms)
+✔ MeasurementGroup references observations without copying or calculating them (0.112958ms)
+✔ arithmetic preparation matches identical Sites and keeps unequal input counts visible (0.081083ms)
+✔ all four structured arithmetic operators execute without arbitrary formulas (1.769292ms)
+✔ saved recipe retains logic but does not bind execution datasets (0.050458ms)
+✔ wafer analysis composes comparable wafers across Runs with typed provenance (0.1325ms)
+✔ analysis keeps missing derived results empty and reports only plottable wafers (0.128667ms)
+✔ SavedAnalysis crosses Series without a Series owner (1.357833ms)
+✔ Series targets, engineer evaluation, and configured Next Action remain distinct (0.061708ms)
+✔ material and resource usage support wafer-aware operation context (0.048333ms)
+✔ repeated measurement executions retain PRE POST and remeasurement identity (0.067417ms)
+✔ saved analysis pins explicit wafer membership and lightweight view configuration (0.153792ms)
+✔ experimental intent role is shared without collapsing explicit assignment identities (0.085875ms)
+✔ target achievement is recomputed projection over target and observed result references (0.0945ms)
+✔ saved analysis pins datasets and representative results without copying values (0.089333ms)
+✔ SITE analysis grain requires site references under explicitly selected wafers (0.960333ms)
+✔ experiment Position and measurement Site remain separate with no implicit mapping (0.078125ms)
+✔ Series Workspace projection supports optional defaults, zero-or-many Runs, and multiple targets (0.13775ms)
+✔ Series Workspace keeps multiple summary results without mandatory closure (0.049625ms)
+✔ Series Run projection is latest-first and presents semantic delta rather than a full snapshot (0.104708ms)
+✔ Series default measurement plan contains intent only and no acquisition technology (0.176333ms)
+✔ Run Planning scenarios are independent full snapshots with valid Subject by Operation connectivity (0.358125ms)
+✔ common settings specialize through wafer overrides without mutating defaults (0.157833ms)
+✔ Run Planning preserves explicit recipe material resource and variable roles (0.088416ms)
+✔ Material usage can remain wafer-wide or carry an optional process-step association (0.093958ms)
+✔ Operation wafer and Position condition specialization remains separate from Measurement Site (0.075ms)
+✔ Measurement plans preserve PRE POST intent and exclude acquisition provenance (0.064ms)
+✔ Run delta spans explicit setup categories without becoming the stored snapshot (0.158875ms)
+✔ Run Planning additions preserve Series Workspace and cross-Series Analysis projections (0.043291ms)
+✔ varied setup presentation summarizes Subject assignments instead of a common value (0.246916ms)
+✔ CMP pressure and slurry preserve explicit varied assignments (0.085709ms)
+✔ workspace selection preserves operation and subject across view changes (0.274667ms)
+✔ Variable Composer creates sequence and group assignments without changing assignment kind (0.253459ms)
+✔ workspace projections support common collapsing focus filtering and both areas (0.170667ms)
+✔ workspace resolution and varied versus changed remain independent state (0.089209ms)
+✔ Reference options resolve from selected Operation applicability without cross-area mixing (1.322333ms)
+✔ selected Operation provides Area context for future multi-area Runs (0.071125ms)
+✔ scope range overlay normalizes reverse drag and preserves manufacturing history (0.486ms)
+✔ scope confirmation requires actual selected wafers and supports range collections (0.145833ms)
+✔ staged scope subjects can change after a provisional range without mutating source or confirmed references (0.477542ms)
+✔ inline FIXED and VARIED edits project through the same assignments and retain typed references (0.560292ms)
+✔ manual focus augments varied and measurement focus within the selected experiment (0.1245ms)
+✔ Run planning persistence round-trips scope and variables and rejects wrong Run or invalid references (15.601083ms)
+✔ Add Variable options are operation-specific and sequence supports arbitrary selected wafers (1.007708ms)
+✔ Recipe Material and Resource intent stays editable without collapsing typed assignments (0.480375ms)
+✔ configuration packages validate exact revisions before activation (2.01275ms)
+✔ Run pinning preserves historical package semantics and never substitutes latest (0.291209ms)
+✔ PHOTO and CMP use one resolver while their package definitions stay isolated (0.156459ms)
+✔ workspace assignments pin exact references resolved by the Run package (0.188334ms)
+✔ equal-specificity applicability conflicts fail deterministically (0.893917ms)
+✔ configured roles are defaults; explicit assignments and value differences do not infer intent (2.078292ms)
+✔ configuration repository exposes ACTIVE artifacts as immutable exact versions (1.177417ms)
+✔ definition authoring always creates a new immutable revision (2.219ms)
+✔ atomic package activation preserves historical Run pins (5.638958ms)
+✔ invalid package activation rolls back atomically (1.83975ms)
+✔ repository-backed resolver accepts exact pins only and shares the PHOTO CMP path (2.494584ms)
+✔ Reference Studio applicability projection exposes Energy and Pressure through one structured model (1.219667ms)
+✔ Reference Studio context summary is generated from selected applicability data (26.237375ms)
+✔ Reference Studio resolver preview returns the workspace resolver output for an exact pin (0.581584ms)
+✔ Reference Studio package summary preserves exact manifest access and historical safety (0.954291ms)
+✔ Reference Studio refined projections contain no scenario-name branches (0.171584ms)
+ℹ tests 108
+ℹ suites 0
+ℹ pass 108
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 338.414833
+✔ Korean is default and each translation preserves interpolation slots (9.002333ms)
+✔ canonical terminology and scientific interpolation remain separate (2.312458ms)
+✔ English and Korean Plan preserve identical control values, grid identity and scientific snapshot (26.591ms)
+✔ translated option labels always retain explicit untranslated values (2.8875ms)
+✔ Sample validation identifies visible fields without exposing technical paths (0.370083ms)
+✔ persisted Run Evaluation entry is reachable before criteria and evidence load in KO/EN (16.769834ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 321.888708
+✔ Sample catalog and detail localize labels without changing material identifiers or values (22.348958ms)
+✔ Studio views and package review are read-only on render and use repository exact versions (203.726458ms)
+✔ Sample revision screens preserve exact revision data, nested composition and usage isolation in both locales (20.008958ms)
+✔ Draft revision presentation uses actual status and empty usage without inventing activation or QC evidence (4.194084ms)
+✔ Production Samples never render fixture identity or claim verified Sample usage (2.5145ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 531.5095
+✔ Run source and resolved preview have distinct actions without changing the snapshot (12.773167ms)
+✔ Readiness and missing Existing Run selection still block creation/review (4.900459ms)
+✔ Study creation denies users without explicit creation grants (1.532416ms)
+✔ Study filters only narrow the provided authorized list and never manufacture metadata (3.396708ms)
+✔ English and Korean use the same preview values and source identifiers (5.819ms)
+✔ Preview units are presentation metadata from the exact package, with no latest fallback (1.531709ms)
+✔ Study FINAL shell shares navigation and uses repository counts in both locales (5.229208ms)
+✔ Run list retains exact destinations and lifecycle state; review retains assignment kinds (22.633042ms)
+✔ Home FINAL empty projection retains navigation and empty calendar structure in both locales (5.2285ms)
+✔ Home FINAL preserves server counts, exact links and recorded periods rather than design sample data (2.9955ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 328.70125
+✔ exact Saved Analysis entry never renders default Study results before the requested identity resolves (8.727208ms)
+✔ historical Run routes request their exact identity instead of the latest Run (0.252416ms)
+✔ Production legacy workspace redirects preserve exact Run identity (0.403625ms)
+✔ Production canonical prototype URLs never mount fixture authoring components (0.220958ms)
+✔ expand/collapse is independent selection state and has explicit accessible affordance (1.563958ms)
+✔ collapsed summaries advertise unique variables and exclude base Recipe (0.638667ms)
+✔ CMP matrix renders actual wafer columns, varied values and merged fixed editors (10.922959ms)
+✔ SubjectRef renders without wafer fields and PhysicalWafer projects through the semiconductor adapter (3.958166ms)
+✔ generic applicability resolution is name-agnostic and respects subject type and grain (0.321375ms)
+✔ typed variable validation rejects invalid numbers and unknown references (5.499666ms)
+✔ configured role yields to explicit role and differing subject values do not infer intent (0.36775ms)
+✔ Engineering Grid projection scales to 100 Operations and 25 SubjectRef columns (17.730458ms)
+✔ Engineering Grid reusable projection has no scenario or variable-name branches (0.184292ms)
+✔ planned Operation resolves to immutable actual execution by explicit planned item identity (0.864208ms)
+✔ actual execution projects by generic SubjectRef and preserves source provenance (11.517542ms)
+✔ Recipe Equipment and comparable variable values expose MATCH and CHANGED independently (3.285458ms)
+✔ missing actual remains null and does not alter VARIED experimental intent (0.503125ms)
+✔ resolved planning defaults remain comparable when no explicit snapshot assignment exists (0.505834ms)
+✔ observed Lot change preserves resolved PhysicalWafer continuity (0.497542ms)
+✔ PHOTO Run 18 and CMP Run 12 actual scenarios resolve without reusable name branches (25.329041ms)
+✔ measurement values resolve by SubjectRef with Parameter and Unit definitions (1.313042ms)
+✔ Site measurement preserves Site identity and never becomes experiment Position (0.221916ms)
+✔ missing measurement stays absent rather than becoming zero (0.159ms)
+✔ raw values remain immutable while exclusion remains attached as validity state (0.570542ms)
+✔ MeasurementExecution remains distinct from linked process Execution evidence (0.103292ms)
+✔ measurement provenance preserves source acquisition dataset and raw/derived origin (0.148042ms)
+✔ CMP measurement keeps PRE and POST as distinct MeasurementExecutions with lineage (0.220708ms)
+✔ reusable measurement projection contains no semiconductor scenario branches (0.110209ms)
+✔ target achievement pins the configured Target and exact representative result (0.332375ms)
+✔ target calculation distinguishes achieved, out of range, and invalid configuration (0.097167ms)
+✔ missing result and non-comparable result remain explicit (0.085458ms)
+✔ Site observations never substitute for a Subject summary target (0.084042ms)
+✔ engineer interpretation remains separate and can disagree with achievement (0.130916ms)
+✔ PHOTO and CMP evaluations preserve measurement-point lineage (0.312709ms)
+✔ reusable evaluation projection contains no scenario or parameter-name branches (0.100167ms)
+✔ Next Action links Engineer Evaluation and Target Achievement without changing either (0.211708ms)
+✔ configured Next Action preserves scientific rationale and has no PMS fields (0.070334ms)
+✔ Create Next Run uses previous-run resolver semantics and creates a complete snapshot (0.486916ms)
+✔ next Run UX projection separates inherited context from explicit delta (0.103208ms)
+✔ PHOTO and CMP use different configured scientific continuation paths (0.081333ms)
+✔ next Run preview rejects unknown changes and never mutates the source Plan (0.441333ms)
+✔ reusable Decision continuation has no scenario or scientific-name branches (0.112292ms)
+✔ Evaluation FINAL presents result, comment and conclusion without losing continuation actions (2.906625ms)
+✔ Additional Measurement preview renders selected scientific context and local CTA (0.902208ms)
+✔ PHOTO Next Run action opens the inherited and changed delta preview (1.622333ms)
+✔ technical provenance remains in Details while the primary reasoning flow stays semantic (1.070791ms)
+✔ role transitions use selected wafers, update shared projections, and preserve source operations (0.743208ms)
+✔ measurement expands to planning context rather than a variable matrix (0.458792ms)
+✔ shared editor isolates PHOTO/CMP and edited context restores without duplicating history (4.78725ms)
+✔ Operation backbone has six context columns and no duplicated subject values (6.916417ms)
+✔ strict scope mode suppresses editing in both range and subject stages and restores planning unchanged (6.934334ms)
+✔ scope side panel keeps actions separate from subject candidates and includes coded boundaries (1.98125ms)
+✔ Home links Study names and exact current Run projections independently (1.001084ms)
+✔ Study detail exposes a dedicated Runs view and shares one component for PHOTO and CMP (0.222458ms)
+✔ Run creation sources stay concise and contain no PMS semantics (0.136875ms)
+✔ inherited preview explains the source and compact inherited setup (0.2865ms)
+✔ Study Default and Previous Run materialize explicit provenance (0.501833ms)
+✔ new Run is an independent full snapshot and leaves its source immutable (0.368292ms)
+✔ new Run preserves the exact Configuration Package pin (0.297584ms)
+✔ empty Study Run list provides a first-Run action instead of an empty table (0.163958ms)
+✔ Definition Grid stands alone and Inspector is closed by default (0.165542ms)
+✔ Definition Inspector is optional depth with usage and collapsed technical details (0.125209ms)
+✔ shared Inspector drawer has a true closed state (1.16775ms)
+✔ Reference Studio reusable Definition surface has no scenario-name branches (0.327292ms)
+✔ Study page exposes Overview Experiment Setup and Runs as one context (0.262833ms)
+✔ Study Setup projects an Operation to Item hierarchy (1.290208ms)
+✔ Study Add Item uses the authoritative package and applicability resolver (1.492166ms)
+✔ non-applicable Study items are excluded by exact context (1.030541ms)
+✔ Definition metadata controls Study value editors and validation (1.037959ms)
+✔ Study Default materializes selected defaults into Run creation (1.155208ms)
+✔ Study-created Run is independent and preserves exact package provenance (0.764708ms)
+✔ later Study Setup edits do not mutate a historical Run and affect a future Run (1.236875ms)
+✔ Study Item Inspector is optional and closed by default (0.226542ms)
+✔ PHOTO and CMP share one name-agnostic Study Setup component (1.313042ms)
+✔ Reference Applicability and Package use optional shared Inspectors (0.213167ms)
+✔ Study Add Item rejects an item outside the selected Operation resolver result (1.7755ms)
+✔ SPECIMEN resolves through SubjectRef without becoming a renamed Wafer (0.090125ms)
+✔ Material package and applicability use the existing repository resolver (1.694416ms)
+✔ Material Study Setup and Run creation reuse shared full-snapshot materialization (1.49825ms)
+✔ structured formulation preserves raw ingredient identity and wt-percent composition (0.124792ms)
+✔ Material Engineering Grid preserves explicit VARIED intent for Specimens (1.373667ms)
+✔ manual execution is representable without MES or wafer identity evidence (0.065208ms)
+✔ Material measurements use Subject grain without Site and retain raw provenance (0.155042ms)
+✔ Material evaluation and Next Action reuse frozen lifecycle projections (0.124042ms)
+✔ Material reusable surfaces contain no scenario-name branches or semiconductor labels (1.783583ms)
+✔ Formulation keeps stable identity across immutable structured revisions (0.126417ms)
+✔ historical and future Runs pin exact independent Formulation revisions (0.067167ms)
+✔ RawMaterial Formulation Specimen and Measurement remain distinct contracts (0.079084ms)
+✔ legacy semiconductor planning normalizes once into the Subject contract (0.18125ms)
+✔ new reusable planning and measurement contracts contain no legacy wafer keys (0.57175ms)
+✔ Analysis v1 projects authoritative Measurement references without creating a value store (0.852208ms)
+✔ one Analysis projection supports Wafer and Specimen SubjectRef data (0.25175ms)
+✔ PHOTO CMP and Material use the same name-agnostic Analysis component (0.514542ms)
+✔ Analysis keeps missing distinct from zero and excluded observations traceable (0.34825ms)
+✔ representative Analysis rows retain exact existing summary provenance (0.104958ms)
+✔ Run-prefiltered and Study multi-Run Analysis contexts resolve correctly (0.896209ms)
+✔ Saved Analysis View stores source refs and configuration without copied values (2.393125ms)
+✔ Analysis v1 introduces no automatic scientific judgment or lifecycle mutation (0.438167ms)
+✔ E2E lifecycle deep links restore the requested Run stage (0.249417ms)
+✔ created next Run exposes a direct Plan continuation (1.301209ms)
+✔ E2E context links and Material workspace context remain explicit (0.336ms)
+✔ fresh Run starts with Plan and no downstream fixture records (1.207042ms)
+✔ Actual execution can be authored against a fresh Run (2.017875ms)
+✔ Actual authoring preserves the immutable Plan snapshot (1.69825ms)
+✔ Actual override remains execution evidence and never becomes VARIED intent (4.820792ms)
+✔ fresh Measurement creates MeasurementExecution Dataset and manual Value (1.445625ms)
+✔ Subject-level Material measurement requires no Site (1.75025ms)
+✔ Semiconductor manual measurement retains explicit Site and coordinates (1.430166ms)
+✔ newly authored Measurement is immediately consumable by Analysis (1.928917ms)
+✔ Engineer Judgment is manually authored against the exact summary (1.478292ms)
+✔ Decision and scientific NextAction can be authored manually (1.872167ms)
+✔ Next Run preview uses the authored source Run (1.857291ms)
+✔ created Next Run is an independent complete snapshot (1.743583ms)
+✔ Material fresh lifecycle completes through Next Run without Site or MES (2.0455ms)
+✔ Semiconductor fresh lifecycle completes through Next Run with manual acquisition (1.650208ms)
+✔ Run repository preserves committed authoring outside UI component state (1.444459ms)
+✔ repository boundary architecture guards feature UI from browser persistence (1.2785ms)
+✔ browser composition satisfies owner repository ports and shares one configuration source (0.077917ms)
+✔ application services run against alternate in-memory adapters (1.574458ms)
+✔ Measurement repository queries independently by Run Dataset Parameter Subject and Site (1.019083ms)
+✔ generic authoring boundary contains no DTS PHOTO CMP or Material branching (0.570416ms)
+✔ Saved Analysis repository persists exact refs and configuration without values (1.807083ms)
+✔ fresh authored Measurement Saved View reopens exact original Dataset refs (1.737792ms)
+✔ unavailable Saved View refs remain unresolved and never select replacements (1.72025ms)
+✔ Analysis URL carries lightweight navigation state and Saved View identity (0.42825ms)
+✔ user-visible Series terminology is normalized to Study while internal compatibility remains (1.08725ms)
+✔ Grid Plan edits preserve exact refs, independent FIXED intent and full source snapshot (3.698125ms)
+✔ Home calendar clips recorded intervals to UTC month without inventing duration (0.171167ms)
+✔ Home calendar empty authorized projection stays empty and labels recorded activity (21.0765ms)
+✔ Engineering Grid restores stored scope and manual focus without changing the route (0.355ms)
+✔ Engineering Grid branching participation rejects nonparticipant edits and preserves rejoin (3.614875ms)
+✔ Engineering Grid renders nonparticipation separately from an empty participating value (14.005417ms)
+✔ Final Plan presentation retains hierarchy and subject editors with a closed Inspector (10.309875ms)
+✔ Evaluation FINAL primary action cannot save a missing result (1.773958ms)
+✔ Actual FINAL retains operation hierarchy and keeps authoring and Inspector closed initially (20.639791ms)
+✔ Measurement FINAL retains evidence and exposes the record panel without writing at render (2.599625ms)
+✔ Analysis FINAL uses one distinct Table Line Bar Scatter selector and defaults to Table (3.322334ms)
+✔ Analysis FINAL chart retains observation values and separates parameter panels (1.513167ms)
+✔ All lifecycle Inspector close controls render an accessible action in both locales (0.407875ms)
+ℹ tests 139
+ℹ suites 0
+ℹ pass 139
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 597.589625
+✔ PostgreSQL slice hydrates exact configuration and creates read-back Run snapshots for Wafer and Specimen (12215.207833ms)
+✔ Create Run idempotency, safe allocation, optimistic conflict, and rollback are persisted (16984.399ms)
+✔ PostgreSQL Run survives adapter disposal and database reconnection (6001.369ms)
+✔ Phase 2.1 package lineage activation invariant A–D and PHOTO/CMP coexistence (5121.969917ms)
+✔ Production Run contract: concurrent allocation, historical pins, retry and mid-write rollback (3403.740875ms)
+✔ Execution: shared repository contracts, Plan immutability, persisted retries, stale conflict, atomic rollback (4047.951458ms)
+✔ Measurement: raw grain, provenance, SQL queries, Analysis, validity, idempotency, rollback and bounded volume (3404.2545ms)
+✔ Reasoning: Evaluation/Decision/NextAction exact sources, contracts, retries, concurrency and rollback (3759.761375ms)
+✔ Next Run: full snapshot, source independence, persisted retries, concurrency, rollback and navigation (4908.075417ms)
+✔ PostgreSQL Saved Analysis persists exact configuration, concurrency, retries, missing refs and atomic rollback (3794.191834ms)
+✔ Configuration + Study authoring: exact revisions, activation, persisted defaults, concurrency, rollback and historical Runs (3766.732792ms)
+✔ Plan authoring: mutable full snapshot, evidence lock, concurrency, retry, rollback and independent sources (6081.606959ms)
+✔ Freeze blockers: explicit new-package readiness, four persisted creation sources, full Wafer/Specimen lifecycle (7391.674875ms)
+✔ Authorization: trusted identity, SQL scope, command denial and frozen locks (3727.127959ms)
+✔ Scientific Authorization: persona writes, source intersection and trusted actors (4490.028917ms)
+✔ Configuration Authorization: scoped governance, direct API denial and historical pins (4911.061916ms)
+✔ Configuration permissions: scoped server projection disables authoring and safely renders empty discovery (58.653917ms)
+✔ Saved Analysis Authorization: ownership, sharing ceilings, all-source intersection and revocation (4910.617708ms)
+✔ Saved Analysis sharing UI uses server permissions and explains source intersection (3.272416ms)
+✔ Dashboard Authorization: scoped policy, search, aggregate leakage, calendar, organization and generic evidence (4096.610208ms)
+✔ Production Home uses scoped projections without fixture counts or names (16.054292ms)
+✔ Study creation: explicit scoped grants, exact references, atomic writes and authoritative read-back (2231.898875ms)
+✔ Study bootstrap: generic first Run and initial reasoning authorization/provenance (9501.394791ms)
+✔ Explicit scientific authorization: responsibility separation, revocation and transition inventory (2931.475167ms)
+✔ Material usage: authoritative assignments, exact refs, permission-scoped search/count/page and no writes (3271.975334ms)
+✔ Run criteria: immutable revisions, exact adoption, optional continuation, replay and explicit authority (2961.623625ms)
+✔ PostgreSQL Group vertical slice preserves explicit allocations, inheritance, warnings and Plan lock (2812.501708ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 127228.657292

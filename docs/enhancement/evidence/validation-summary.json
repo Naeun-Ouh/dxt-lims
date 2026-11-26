@@ -1,0 +1,18 @@
+{
+  "tests": 396,
+  "pass": 396,
+  "fail": 0,
+  "skipped": 0,
+  "codeHead": "2a878b71671035bf677c3e2a0811634822bd22ff",
+  "humanAcceptance": "NOT RUN",
+  "typescript": "PASS",
+  "changedFileLint": "PASS",
+  "productionBuild": "PASS",
+  "nativeFull": "PASS",
+  "sqlHashes": {
+    "019_operation_group_design.sql": "64afdf6a2907299da7ccd34092a7f3bef1f6c17406a7deffb3bbbd15006cd271",
+    "020_sample_revision_clone_origin.sql": "c528cd6e01d5bce29364d806685c88c3e5b12fb0577407f43bdd48cc98eb6d14",
+    "021_run_judgment_optional_basis.sql": "5e50a09bfff94342afd7ac52fc9d5a44073ad5337acc6759031ae18ac3b9a020",
+    "022_recipe_source_bindings.sql": "572a09de743d7bb94ee0f8344d0742ba168e31ef7d730f18aaf8ae76d733b1f0"
+  }
+}

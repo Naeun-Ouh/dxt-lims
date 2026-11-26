@@ -1,0 +1,363 @@
+{
+  "recordedAt": "2026-11-26T22:07:33.318Z",
+  "label": "AGENT TEST ONLY \u2014 not Human acceptance",
+  "databaseAccess": "BEGIN READ ONLY; SELECT only; ROLLBACK",
+  "environment": "tmp/enhancement-browser/agent-integration-SYTWTq",
+  "humanAcceptance": "NOT RUN",
+  "findings": {
+    "groupsPresent": true,
+    "groupZeroVaried": true,
+    "subjectFiveRetained": true,
+    "sp03Skip": true,
+    "criteriaFreeDecision": true,
+    "sourceStillR1": true,
+    "revision3ClonedFromR1": true,
+    "noFabricatedActual": true,
+    "sp02MovedToBaseWithOverrideRetained": true
+  },
+  "queries": [
+    {
+      "name": "exact_runs",
+      "rows": [
+        {
+          "study": "agent-integration-specimen",
+          "run": 3,
+          "run_id": "1a0b574a-86e5-4def-ae63-7fcfbd846e29",
+          "run_domain_id": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-3"
+        },
+        {
+          "study": "agent-integration-wafer",
+          "run": 3,
+          "run_id": "1f90e12c-4cee-4911-aef8-c5893f083ced",
+          "run_domain_id": "agent-source-browser-run-3"
+        }
+      ]
+    },
+    {
+      "name": "specimen_group_definitions",
+      "rows": [
+        {
+          "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+          "group_id": "9f82ff12-0bda-4b9e-b337-5090c9932b81",
+          "kind": "BASE",
+          "name": "Base",
+          "ordinal": 1
+        },
+        {
+          "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+          "group_id": "c98b08a7-1756-4265-897f-87f90eb5f188",
+          "kind": "SPLIT",
+          "name": "Split 1",
+          "ordinal": 2
+        }
+      ]
+    },
+    {
+      "name": "specimen_scoped_conditions",
+      "rows": [
+        {
+          "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+          "label": "Coating Thickness",
+          "value": "5",
+          "numeric_value": "5",
+          "role": "VARIED",
+          "group_id": null,
+          "subject": "AGENT-SP02"
+        },
+        {
+          "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+          "label": "Coating Thickness",
+          "value": "20",
+          "numeric_value": "20",
+          "role": "FIXED",
+          "group_id": null,
+          "subject": null
+        },
+        {
+          "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+          "label": "Coating Thickness",
+          "value": "0",
+          "numeric_value": "0",
+          "role": "VARIED",
+          "group_id": "c98b08a7-1756-4265-897f-87f90eb5f188",
+          "subject": null
+        }
+      ]
+    },
+    {
+      "name": "specimen_explicit_allocations",
+      "rows": [
+        {
+          "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-2",
+          "subject": "AGENT-SP01",
+          "plan_state": "COMMON",
+          "group_id": null
+        },
+        {
+          "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+          "subject": "AGENT-SP01",
+          "plan_state": "ASSIGNED",
+          "group_id": "9f82ff12-0bda-4b9e-b337-5090c9932b81"
+        },
+        {
+          "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+          "subject": "AGENT-SP02",
+          "plan_state": "ASSIGNED",
+          "group_id": "9f82ff12-0bda-4b9e-b337-5090c9932b81"
+        },
+        {
+          "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+          "subject": "AGENT-SP03",
+          "plan_state": "SKIP",
+          "group_id": null
+        }
+      ]
+    },
+    {
+      "name": "specimen_run_judgment",
+      "rows": [
+        {
+          "judgment_basis": "RUN_ONLY",
+          "context_id": null,
+          "payload": {
+            "decision": {
+              "id": "decision-1795730154720-cl0m0m",
+              "reason": "",
+              "conclusion": "AGENT TEST ONLY \u2014 criteria-free exploratory judgment",
+              "nextAction": null,
+              "recordedAt": "2026-11-26T21:55:54+09:00",
+              "recordedBy": "AGENT TEST ONLY agent-integration-writer",
+              "evaluations": [],
+              "experimentRunId": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-3",
+              "criterionAssessments": []
+            },
+            "targetScope": {
+              "subjectIds": [],
+              "operationIds": []
+            },
+            "siteScopeLabel": null,
+            "destinationRunId": null,
+            "decisionStatement": "AGENT TEST ONLY \u2014 criteria-free exploratory judgment",
+            "engineerEvaluationIds": [],
+            "targetAchievementReferences": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "wafer_exact_source",
+      "rows": [
+        {
+          "operation": "run-2c9cc346-5729-4825-8f80-0701b982b5a5-1-step-1",
+          "group_id": null,
+          "subject": null,
+          "package_version_id": "agent-integration-wafer-package",
+          "recipe_revision_id": "recipe-exp-r01-r1",
+          "parameter_revision_id": "condition-material-v1",
+          "selection_state": "SELECTED",
+          "sample_revision_id": "agent-source-browser-r1",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "sample_exact_revision_origin",
+      "rows": [
+        {
+          "id": "agent-source-browser-r1",
+          "revision_number": 1,
+          "copied_from_revision_id": null,
+          "change_reason": null
+        },
+        {
+          "id": "46c59164-14e0-4fcd-8bc6-e5d2841ad6b1",
+          "revision_number": 2,
+          "copied_from_revision_id": "agent-source-browser-r1",
+          "change_reason": null
+        },
+        {
+          "id": "6eb26c2f-d970-4dfe-8f6d-3fc3541c5d26",
+          "revision_number": 3,
+          "copied_from_revision_id": "agent-source-browser-r1",
+          "change_reason": null
+        }
+      ]
+    },
+    {
+      "name": "no_fabricated_actual",
+      "rows": [
+        {
+          "run_id": "1a0b574a-86e5-4def-ae63-7fcfbd846e29",
+          "actual_count": 0
+        },
+        {
+          "run_id": "1f90e12c-4cee-4911-aef8-c5893f083ced",
+          "actual_count": 0
+        }
+      ]
+    },
+    {
+      "name": "no_actual_for_specimen_skip",
+      "rows": [
+        {
+          "count": 0
+        }
+      ]
+    }
+  ],
+  "schemaHashes": {
+    "019_operation_group_design.sql": "64afdf6a2907299da7ccd34092a7f3bef1f6c17406a7deffb3bbbd15006cd271",
+    "020_sample_revision_clone_origin.sql": "c528cd6e01d5bce29364d806685c88c3e5b12fb0577407f43bdd48cc98eb6d14",
+    "021_run_judgment_optional_basis.sql": "5e50a09bfff94342afd7ac52fc9d5a44073ad5337acc6759031ae18ac3b9a020",
+    "022_recipe_source_bindings.sql": "572a09de743d7bb94ee0f8344d0742ba168e31ef7d730f18aaf8ae76d733b1f0"
+  },
+  "sourceSnapshot": {
+    "capturedAt": "2026-11-26T21:51:00.478163+00:00",
+    "sourceHead": "4cbaa1ecb7e2e123fafe3f0a69e3dc34b423965e",
+    "checkedAt": "2026-11-26T22:07:33.321Z",
+    "servers": [
+      {
+        "port": 51924,
+        "sourceCaptureHash": "21c6e9491c1f678801f9f555b012c1cb5bff885dd22f2aae0f8546819ae2ac1a",
+        "fileCount": 376,
+        "changedVsCurrentWorktree": [
+          {
+            "file": "src/application/plan-authoring.ts",
+            "captured": "e5dd2903a85077af703435f579a1da2d7fd8fd7d67b2b22d6594f96a864ac79a",
+            "current": "80af8b758f5289ccffda4ae6fe5372155c9a8a0a25a4fd15f5d15e17b9111716"
+          },
+          {
+            "file": "src/features/experiment-series/run-draft-subjects.tsx",
+            "captured": "bd02b2febae1a2080b160fe741b2c35a708c2551ebc046e6da9f640d86847239",
+            "current": "ed9fc0ffdb5768346d4211d872c1fc6524d72739316b51ace8c7007503ee02f9"
+          },
+          {
+            "file": "src/features/run-registration/actual-execution-grid.tsx",
+            "captured": "e26ae912f3bef16011a26d8a0eff31cb2b3e09b3f6984b81908659bef0cbfa75",
+            "current": "92b079e814a994db2a423e4eea56b408c6157b05f3caf03eb2873c6d4e68db8a"
+          },
+          {
+            "file": "src/features/run-registration/actual-execution-model.ts",
+            "captured": "9550e63eb5731cd09104d36c7b429ac219f6ca064201d5665f0127483544edef",
+            "current": "6f5ae611cbd27bcf64d55e6701ffa90fc10053b01f040c457f53ad056bd59468"
+          },
+          {
+            "file": "src/features/run-registration/engineering-grid-model.ts",
+            "captured": "eb85e427c63fd9cc31afe3f500cd4ba9b517ba919a5b84bbb5002438838ebf98",
+            "current": "d69209dd00944352eeb800fc2908044494dcda61b94fca825630dd867a4902d7"
+          },
+          {
+            "file": "src/features/run-registration/engineering-grid.tsx",
+            "captured": "51e1a446cf835f1e650775693be07b232a40ea3ada4cce7d72f86ef5d123d476",
+            "current": "be52fde65dd9ed97c21fb70bfabcfbbb9e43eba43d2645bdba9873a7ca521859"
+          },
+          {
+            "file": "src/features/run-registration/lifecycle-authoring.ts",
+            "captured": "881845bd82a37b53305e9042c231cb5011312bfa4c6ed419ff739dc89e61b995",
+            "current": "34b9ce6ea5354a3174ee45a38bdaab3e3f9641af3e25ebf45ec2ccc73d816825"
+          },
+          {
+            "file": "src/shared/i18n/allocation-messages.ts",
+            "captured": "e08d2da91adfee2c2805b1754729882a548cbc789892d268db3a26b261191bb1",
+            "current": "01343095871b3d2d4ebfe13967e012b9210f91760e6644179200ef5003585b58"
+          }
+        ]
+      },
+      {
+        "port": 51926,
+        "sourceCaptureHash": "21c6e9491c1f678801f9f555b012c1cb5bff885dd22f2aae0f8546819ae2ac1a",
+        "fileCount": 376,
+        "changedVsCurrentWorktree": [
+          {
+            "file": "src/application/plan-authoring.ts",
+            "captured": "e5dd2903a85077af703435f579a1da2d7fd8fd7d67b2b22d6594f96a864ac79a",
+            "current": "80af8b758f5289ccffda4ae6fe5372155c9a8a0a25a4fd15f5d15e17b9111716"
+          },
+          {
+            "file": "src/features/experiment-series/run-draft-subjects.tsx",
+            "captured": "bd02b2febae1a2080b160fe741b2c35a708c2551ebc046e6da9f640d86847239",
+            "current": "ed9fc0ffdb5768346d4211d872c1fc6524d72739316b51ace8c7007503ee02f9"
+          },
+          {
+            "file": "src/features/run-registration/actual-execution-grid.tsx",
+            "captured": "e26ae912f3bef16011a26d8a0eff31cb2b3e09b3f6984b81908659bef0cbfa75",
+            "current": "92b079e814a994db2a423e4eea56b408c6157b05f3caf03eb2873c6d4e68db8a"
+          },
+          {
+            "file": "src/features/run-registration/actual-execution-model.ts",
+            "captured": "9550e63eb5731cd09104d36c7b429ac219f6ca064201d5665f0127483544edef",
+            "current": "6f5ae611cbd27bcf64d55e6701ffa90fc10053b01f040c457f53ad056bd59468"
+          },
+          {
+            "file": "src/features/run-registration/engineering-grid-model.ts",
+            "captured": "eb85e427c63fd9cc31afe3f500cd4ba9b517ba919a5b84bbb5002438838ebf98",
+            "current": "d69209dd00944352eeb800fc2908044494dcda61b94fca825630dd867a4902d7"
+          },
+          {
+            "file": "src/features/run-registration/engineering-grid.tsx",
+            "captured": "51e1a446cf835f1e650775693be07b232a40ea3ada4cce7d72f86ef5d123d476",
+            "current": "be52fde65dd9ed97c21fb70bfabcfbbb9e43eba43d2645bdba9873a7ca521859"
+          },
+          {
+            "file": "src/features/run-registration/lifecycle-authoring.ts",
+            "captured": "881845bd82a37b53305e9042c231cb5011312bfa4c6ed419ff739dc89e61b995",
+            "current": "34b9ce6ea5354a3174ee45a38bdaab3e3f9641af3e25ebf45ec2ccc73d816825"
+          },
+          {
+            "file": "src/shared/i18n/allocation-messages.ts",
+            "captured": "e08d2da91adfee2c2805b1754729882a548cbc789892d268db3a26b261191bb1",
+            "current": "01343095871b3d2d4ebfe13967e012b9210f91760e6644179200ef5003585b58"
+          }
+        ]
+      },
+      {
+        "port": 51927,
+        "sourceCaptureHash": "21c6e9491c1f678801f9f555b012c1cb5bff885dd22f2aae0f8546819ae2ac1a",
+        "fileCount": 376,
+        "changedVsCurrentWorktree": [
+          {
+            "file": "src/application/plan-authoring.ts",
+            "captured": "e5dd2903a85077af703435f579a1da2d7fd8fd7d67b2b22d6594f96a864ac79a",
+            "current": "80af8b758f5289ccffda4ae6fe5372155c9a8a0a25a4fd15f5d15e17b9111716"
+          },
+          {
+            "file": "src/features/experiment-series/run-draft-subjects.tsx",
+            "captured": "bd02b2febae1a2080b160fe741b2c35a708c2551ebc046e6da9f640d86847239",
+            "current": "ed9fc0ffdb5768346d4211d872c1fc6524d72739316b51ace8c7007503ee02f9"
+          },
+          {
+            "file": "src/features/run-registration/actual-execution-grid.tsx",
+            "captured": "e26ae912f3bef16011a26d8a0eff31cb2b3e09b3f6984b81908659bef0cbfa75",
+            "current": "92b079e814a994db2a423e4eea56b408c6157b05f3caf03eb2873c6d4e68db8a"
+          },
+          {
+            "file": "src/features/run-registration/actual-execution-model.ts",
+            "captured": "9550e63eb5731cd09104d36c7b429ac219f6ca064201d5665f0127483544edef",
+            "current": "6f5ae611cbd27bcf64d55e6701ffa90fc10053b01f040c457f53ad056bd59468"
+          },
+          {
+            "file": "src/features/run-registration/engineering-grid-model.ts",
+            "captured": "eb85e427c63fd9cc31afe3f500cd4ba9b517ba919a5b84bbb5002438838ebf98",
+            "current": "d69209dd00944352eeb800fc2908044494dcda61b94fca825630dd867a4902d7"
+          },
+          {
+            "file": "src/features/run-registration/engineering-grid.tsx",
+            "captured": "51e1a446cf835f1e650775693be07b232a40ea3ada4cce7d72f86ef5d123d476",
+            "current": "be52fde65dd9ed97c21fb70bfabcfbbb9e43eba43d2645bdba9873a7ca521859"
+          },
+          {
+            "file": "src/features/run-registration/lifecycle-authoring.ts",
+            "captured": "881845bd82a37b53305e9042c231cb5011312bfa4c6ed419ff739dc89e61b995",
+            "current": "34b9ce6ea5354a3174ee45a38bdaab3e3f9641af3e25ebf45ec2ccc73d816825"
+          },
+          {
+            "file": "src/shared/i18n/allocation-messages.ts",
+            "captured": "e08d2da91adfee2c2805b1754729882a548cbc789892d268db3a26b261191bb1",
+            "current": "01343095871b3d2d4ebfe13967e012b9210f91760e6644179200ef5003585b58"
+          }
+        ]
+      }
+    ],
+    "note": "Comparison preserves original browser snapshot hashes; no app copy or source manifest was rewritten. Differences are listed explicitly and do not imply exact-final-head browser verification."
+  }
+}

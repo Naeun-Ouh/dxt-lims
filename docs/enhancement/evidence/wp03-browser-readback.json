@@ -1,0 +1,181 @@
+{
+  "label": "AGENT AUTOMATED CHECK — HUMAN ACCEPTANCE NOT RUN",
+  "sampleId": "6fdf07c9-dddb-4713-8bd2-6344cb0b4986",
+  "results": [
+    {
+      "port": 51053,
+      "revision": 1,
+      "status": 200,
+      "canRevise": true,
+      "values": [
+        0
+      ],
+      "cloneOrigin": null,
+      "history": [
+        {
+          "id": "a1557af8-8325-4b8f-89bc-89fcfb88adfc",
+          "revision": 3,
+          "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "copiedFromRevision": 1,
+          "changeReason": null
+        },
+        {
+          "id": "ca957021-bf92-4c04-a9d3-a530af4104c7",
+          "revision": 2,
+          "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "copiedFromRevision": 1,
+          "changeReason": "AGENT TEST ONLY R2 property change"
+        },
+        {
+          "id": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "revision": 1,
+          "copiedFromRevisionId": null,
+          "copiedFromRevision": null,
+          "changeReason": null
+        }
+      ]
+    },
+    {
+      "port": 51053,
+      "revision": 2,
+      "status": 200,
+      "canRevise": true,
+      "values": [
+        7
+      ],
+      "cloneOrigin": {
+        "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+        "copiedFromRevision": 1,
+        "changeReason": "AGENT TEST ONLY R2 property change"
+      },
+      "history": [
+        {
+          "id": "a1557af8-8325-4b8f-89bc-89fcfb88adfc",
+          "revision": 3,
+          "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "copiedFromRevision": 1,
+          "changeReason": null
+        },
+        {
+          "id": "ca957021-bf92-4c04-a9d3-a530af4104c7",
+          "revision": 2,
+          "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "copiedFromRevision": 1,
+          "changeReason": "AGENT TEST ONLY R2 property change"
+        },
+        {
+          "id": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "revision": 1,
+          "copiedFromRevisionId": null,
+          "copiedFromRevision": null,
+          "changeReason": null
+        }
+      ]
+    },
+    {
+      "port": 51053,
+      "revision": 3,
+      "status": 200,
+      "canRevise": true,
+      "values": [
+        0
+      ],
+      "cloneOrigin": {
+        "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+        "copiedFromRevision": 1,
+        "changeReason": null
+      },
+      "history": [
+        {
+          "id": "a1557af8-8325-4b8f-89bc-89fcfb88adfc",
+          "revision": 3,
+          "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "copiedFromRevision": 1,
+          "changeReason": null
+        },
+        {
+          "id": "ca957021-bf92-4c04-a9d3-a530af4104c7",
+          "revision": 2,
+          "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "copiedFromRevision": 1,
+          "changeReason": "AGENT TEST ONLY R2 property change"
+        },
+        {
+          "id": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "revision": 1,
+          "copiedFromRevisionId": null,
+          "copiedFromRevision": null,
+          "changeReason": null
+        }
+      ]
+    },
+    {
+      "port": 51056,
+      "revision": 3,
+      "status": 200,
+      "canRevise": false,
+      "values": [
+        0
+      ],
+      "cloneOrigin": {
+        "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+        "copiedFromRevision": 1,
+        "changeReason": null
+      },
+      "history": [
+        {
+          "id": "a1557af8-8325-4b8f-89bc-89fcfb88adfc",
+          "revision": 3,
+          "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "copiedFromRevision": 1,
+          "changeReason": null
+        },
+        {
+          "id": "ca957021-bf92-4c04-a9d3-a530af4104c7",
+          "revision": 2,
+          "copiedFromRevisionId": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "copiedFromRevision": 1,
+          "changeReason": "AGENT TEST ONLY R2 property change"
+        },
+        {
+          "id": "cd9a86e7-447a-4449-8a68-0f94d3f9ac57",
+          "revision": 1,
+          "copiedFromRevisionId": null,
+          "copiedFromRevision": null,
+          "changeReason": null
+        }
+      ]
+    },
+    {
+      "port": 51057,
+      "revision": 3,
+      "status": 404,
+      "code": "NOT_FOUND"
+    }
+  ],
+  "copiedSourceHashes": {
+    "src/application/sample-lifecycle.ts": "c2311726b9d86ce97d70fff740d66b56dcbdede7b0bbfeda5329245a7603b826",
+    "src/application/sample-revision-clone.ts": "17d52bdba975797d840c8d681ba726ba90ad3a1bc19bdc6a9624de5d6b234fe7",
+    "src/features/samples/revision-form.tsx": "8eb5f81d2256939b27902aeb99d6aafc503f80c034e8dcfdae5acedcfc7d2acc",
+    "src/features/samples/production-samples.tsx": "1b2f752fa32e6b49e5ee594decfd44ad3380bbc391627488fc7d3c1bab214378",
+    "src/infrastructure/postgres/sample-lifecycle.ts": "a5fe366518abbee5dcfe2eb9e9b32d386aa2a79df71e2cf01221e519b903c497",
+    "src/infrastructure/postgres/migrations/020_sample_revision_clone_origin.sql": "c528cd6e01d5bce29364d806685c88c3e5b12fb0577407f43bdd48cc98eb6d14",
+    "src/shared/i18n/sample-revision-messages.ts": "5f30ccc79c6eebd01c1e9be1cff1d6b8d64bd2692cbf299c688a3a6d5e3168ff"
+  },
+  "sourceCaptureHash": "374de8f8d1ec43a31a91f7f58a63d302ceba64b7c68d989420f46a03a649492c",
+  "timestamp": "2026-11-26T21:15:09.586Z",
+  "deniedBrowserFollowup": {
+    "date": "2026-11-27",
+    "observer": "parent agent / root CUA",
+    "browserId": "1",
+    "tabId": "6",
+    "route": "http://127.0.0.1:51057/samples/6fdf07c9-dddb-4713-8bd2-6344cb0b4986/revisions/3",
+    "result": "PASS",
+    "method": "accessibility-tree observation",
+    "visibleText": "샘플이 없거나 조회 권한이 없습니다.",
+    "retryVisible": true,
+    "sampleRevisionContentOrFormExposed": false,
+    "screenshot": null,
+    "humanAcceptance": "NOT RUN"
+  }
+}

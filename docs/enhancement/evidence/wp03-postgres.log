@@ -1,0 +1,25 @@
+▶ Sample runtime: isolated PostgreSQL, HTTP, exact Run links and explicit authority
+  ✔ HTTP register persists immutable aggregate, zero value, idempotency and exact readback (35.842916ms)
+  ✔ invalid graph, duplicate identity, typed value and unresolved reference persist nothing (5.548708ms)
+  ✔ viewer/admin/cross-org cannot register or revise; exact grant required; spoof headers ignored (6.631375ms)
+  ✔ authorized Plan selection and delete/reinsert writer preserve exact Revision and history (91.117875ms)
+  ✔ Plan reference replacement clears stale registered revision instead of remapping it (125.670375ms)
+  ✔ append Revision preserves old snapshot and stale expected-latest conflicts (15.804ms)
+  ✔ actual Run copy through Preview/Create pins selected r1 after newer r2 exists (108.829917ms)
+  ✔ clear/remove/re-add stable key never resurrects prior selection; history truth is explicit (166.715625ms)
+  ✔ revoked READ hides selected revision, denies resave/copy; explicit clear is allowed (206.42475ms)
+  ✔ execution evidence freezes selected revision and rejects Plan mutation atomically (84.441167ms)
+  ✔ Run Sample read locks grant policy before snapshot; concurrent revoke waits and next command redacts (114.034ms)
+  ✔ trusted backend role template serves HTTP without Sample table ownership (25.132208ms)
+  ✔ client role cannot bypass trusted server using direct DML/function/GUC actor spoof (11.007041ms)
+  ✔ WP03: R1 → R2 and selected old R1 → R3 retain exact origin, optional reason and old Run usage (65.10375ms)
+✔ Sample runtime: isolated PostgreSQL, HTTP, exact Run links and explicit authority (2615.025ms)
+ℹ 18.7 (Postgres.app)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2833.892458
