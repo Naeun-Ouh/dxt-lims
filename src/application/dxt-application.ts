@@ -208,19 +208,22 @@ export class DxtApplication {
       await this.repositories.run.saveSnapshot(snapshot, command(`initialize-run-${snapshot.id}`),
       );
     const empty = createEmptyLifecycleState(savedSnapshot ?? snapshot, profile);
+    const exactContext=await this.repositories.evaluation.getContext?.(snapshot.id);
+    const active=exactContext?.interpretation?.contextId;
     return {
       ...empty,
       actualEvidence: execution.records,
       executionVersion: execution.version,
       measurementResults: measurement.record,
       measurementVersion: measurement.version,
-      engineerEvaluations: engineerEvaluations.record,
+      engineerEvaluations: exactContext?.interpretation!==undefined ? engineerEvaluations.record.filter(e=>engineerEvaluations.provenance?.some(p=>p.recordId===e.id&&p.contextId===active)) : engineerEvaluations.record,
+      evaluationProvenance: engineerEvaluations.provenance,
+      decisionProvenance: decision.provenance,
       evaluationVersion: engineerEvaluations.version,
       decisionVersion: decision.version,
-      decisionContext: decision.record?.context ?? null,
-      nextRunPreview: decision.record?.nextRunPreview ?? null,
-      ...(await this.repositories.evaluation.getContext?.(snapshot.id).then((context) =>({targetBindings:[...context.targetBindings],measurementCatalog:context.catalog,
-        }))),
+      decisionContext: exactContext?.interpretation!==undefined && !decision.provenance?.some(p=>p.recordId===decision.record?.context?.decision.id&&p.contextId===active) ? null : decision.record?.context ?? null,
+      nextRunPreview: exactContext?.interpretation!==undefined && !decision.provenance?.some(p=>p.recordId===decision.record?.context?.decision.id&&p.contextId===active) ? null : decision.record?.nextRunPreview ?? null,
+      ...(exactContext ? {targetBindings:[...exactContext.targetBindings],measurementCatalog:exactContext.catalog,interpretation:exactContext.interpretation,actor:exactContext.actor}:{}),
     } satisfies AuthoredLifecycleState;
   }
 
