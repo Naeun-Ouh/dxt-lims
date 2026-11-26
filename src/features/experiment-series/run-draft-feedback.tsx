@@ -55,6 +55,7 @@ export function locateDraftFeedback(
           (item) => item.applicabilityId === def.applicabilityId,
         );
         for (const item of items) {
+          if (item.subjectId !== null && !item.value.trim()) continue;
           let reason = '';
           if (!item.value.trim())
             reason = 'Enter a value or remove an optional assignment.';
@@ -78,7 +79,7 @@ export function locateDraftFeedback(
           for (const subject of op.subjectIds) {
             if (
               !items.some(
-                (item) => item.subjectId === null || item.subjectId === subject,
+                (item) => !!item.value.trim() && (item.subjectId === null || item.subjectId === subject),
               )
             )
               add(

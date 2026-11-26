@@ -1,3 +1,4 @@
+import { conditionPrecedenceContract } from './postgres-condition-precedence-contract';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
@@ -231,4 +232,5 @@ export async function runDraftContract(
     0,
     'Blank does not copy prior Run or Study Subjects',
   );
+  await conditionPrecedenceContract(db, owner, study.slug, blank);
 }

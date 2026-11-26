@@ -193,12 +193,23 @@ export function projectOperationExecution(
           : (record?.observedValues.find(
               (value) => value.definitionId === definition.id,
             )?.value ?? null);
-      const role = model.snapshot.assignments.find(
-        (assignment) =>
-          assignment.processStepId === operation.id &&
-          !assignment.subjectId &&
-          assignment.label === definition.label,
-      )?.intentRole;
+      const role =
+        model.snapshot.conditionResolution === 'SUBJECT_FIRST_V1'
+          ? Object.values(
+              effectiveAssignments(model.snapshot, subject.id),
+            ).find(
+              (assignment) =>
+                assignment.processStepId === operation.id &&
+                assignment.kind === definition.assignmentKind &&
+                (assignment.referenceId === definition.assignmentReferenceId ||
+                  assignment.label === definition.label),
+            )?.intentRole
+          : model.snapshot.assignments.find(
+              (assignment) =>
+                assignment.processStepId === operation.id &&
+                !assignment.subjectId &&
+                assignment.label === definition.label,
+            )?.intentRole;
       return {
         key: definition.id,
         label: definition.label,

@@ -101,6 +101,11 @@ export function bootstrapActionError(
   if (e?.code === 'CONFLICT')
     return 'The Study has changed. Keep your entered values and review the latest saved state before retrying.';
   const known: Record<string, string> = {
+    'Condition name must match its exact definition.': 'A condition name does not match the selected reference information. Reload the draft and check the Operation conditions.',
+    'Conditions with the same name cannot be resolved unambiguously.': 'More than one condition has the same name in this Operation. Ask the configuration administrator to resolve the ambiguity.',
+    'Copy this Run through Run Draft and review changed condition values before creating.': 'Copy this Run through Run Draft and review changed condition values before creating.',
+    'Plan condition resolution must remain unchanged.': 'Keep the existing Plan interpretation. To use the new condition priority, copy this Run and review the changes.',
+
     'This source contains unscoped conditions. Choose another source.':
       'This source contains unscoped conditions. Choose another source.',
     'Check Operation participation.': 'Check Operation participation.',

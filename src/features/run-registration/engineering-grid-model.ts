@@ -1,5 +1,9 @@
 import type { SubjectRef } from '@/src/domain/experiment/subject';
-import type { PlanningIntent, SetupAssignment } from './planning-model';
+import {
+  effectiveAssignments,
+  type PlanningIntent,
+  type SetupAssignment,
+} from './planning-model';
 import type { ApplicableVariableDefinition } from './applicability';
 import { measurementInlineSummary, subjectValues } from './inline-model';
 import { resolvedVariableDefinitions } from './variable-model';
@@ -17,6 +21,7 @@ export type EngineeringGridRow = {
   assignment?: SetupAssignment;
   role?: PlanningIntent;
   values?: Record<string, string>;
+  subjectRoles?: Record<string, PlanningIntent>;
   summary?: string;
 };
 
@@ -114,26 +119,53 @@ export function projectEngineeringGridRows(
     const variables = resolvedVariableDefinitions(
       model,
       operation.sourceOperationId,
-    ).filter(definition => !model.explicitAssignments || model.snapshot.assignments.some(a =>
-      a.processStepId === operation.sourceOperationId && a.kind === definition.assignmentKind && a.referenceId === definition.assignmentReferenceId
-    )).map((definition) => {
-      const assignment = assignmentFor(model, operation, definition);
-      const values =
-        operation.id === operation.sourceOperationId
-          ? subjectValues(model, assignment)
-          : Object.fromEntries(
-              model.subjects.map((subject) => [subject.id, assignment.value]),
-            );
-      return {
-        id: `${operation.id}:${definition.applicabilityId}`,
-        kind: 'VARIABLE' as const,
-        operation,
-        definition,
-        assignment,
-        role: assignment.intentRole,
-        values,
-      };
-    });
+    )
+      .filter(
+        (definition) =>
+          !model.explicitAssignments ||
+          model.snapshot.assignments.some(
+            (a) =>
+              a.processStepId === operation.sourceOperationId &&
+              a.kind === definition.assignmentKind &&
+              a.referenceId === definition.assignmentReferenceId,
+          ),
+      )
+      .map((definition) => {
+        const assignment = assignmentFor(model, operation, definition);
+        const values =
+          operation.id === operation.sourceOperationId
+            ? subjectValues(model, assignment)
+            : Object.fromEntries(
+                model.subjects.map((subject) => [subject.id, assignment.value]),
+              );
+        return {
+          id: `${operation.id}:${definition.applicabilityId}`,
+          kind: 'VARIABLE' as const,
+          operation,
+          definition,
+          assignment,
+          role: assignment.intentRole,
+          values,
+          ...(model.snapshot.conditionResolution === 'SUBJECT_FIRST_V1'
+            ? {
+                subjectRoles: Object.fromEntries(
+                  model.subjects
+                    .filter((subject) =>
+                      model.snapshot.subjectOperationIds[subject.id]?.includes(
+                        operation.sourceOperationId,
+                      ),
+                    )
+                    .map((subject) => [
+                      subject.id,
+                      effectiveAssignments(model.snapshot, subject.id)[
+                        `${operation.sourceOperationId}:${assignment.kind}:${assignment.label}`
+                      ]?.intentRole ?? assignment.intentRole,
+                    ]),
+                ),
+              }
+            : {}),
+        };
+      });
     return [parent, ...variables];
   });
 }

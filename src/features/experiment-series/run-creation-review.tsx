@@ -1,5 +1,7 @@
 'use client';
 import type { AuthoritativeRunPreview } from '@/src/application/run-creation';
+import { ConditionCopyNotice } from './condition-copy-notice';
+import { effectiveAssignments } from '@/src/features/run-registration/planning-model';
 import { useLocale } from '@/src/shared/i18n/locale';
 
 export function RunCreationReview({
@@ -17,6 +19,7 @@ export function RunCreationReview({
 }) {
   const { t } = useLocale();
   const { snapshot } = preview;
+  const effective = new Map(snapshot.subjects.map(subject => [subject.id, effectiveAssignments(snapshot, subject.id)]));
   return (
     <section className="draft-preview" aria-label={t('Confirm Run creation')}>
       <h2 className="draft-review-heading" tabIndex={-1}>
@@ -29,6 +32,7 @@ export function RunCreationReview({
             : 'Nothing has been saved yet. Review this plan. Only Final Create saves the Run.',
         )}
       </p>
+      <ConditionCopyNotice preview={preview} />
       <h3>
         {t('Subjects')} · {snapshot.subjects.length}
       </h3>
@@ -77,22 +81,14 @@ export function RunCreationReview({
                       .join(', ') || '—'}
                   </td>
                   <td>
-                    {snapshot.assignments
-                      .filter((a) => a.processStepId === step.id)
-                      .map((a) => (
-                        <div key={a.id}>
-                          {a.label}: {a.value} ·{' '}
-                          {a.subjectId
-                            ? `${t('Subject-specific condition value')} · ${a.subjectId}`
-                            : t('Condition value')}{' '}
-                          ·{' '}
-                          {t(
-                            a.intentRole === 'VARIED'
-                              ? 'Intentionally Varied'
-                              : 'Fixed',
-                          )}
-                        </div>
-                      ))}
+                    {snapshot.subjects.map(subject => <div key={subject.id}>
+                      <strong>{subject.displayLabel}: </strong>
+                      {!applies(subject.id) ? t('Operation does not apply') :
+                        [...new Set(snapshot.assignments.filter(a => a.processStepId === step.id).map(a => `${a.kind}:${a.label}`))].map(key => {
+                          const value = effective.get(subject.id)?.[`${step.id}:${key}`];
+                          return <div key={key}>{key.slice(key.indexOf(':') + 1)}: {value?.value || t('Missing')} · {value ? t(value.intentRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed') : '—'}</div>;
+                        })}
+                    </div>)}
                   </td>
                   <td>
                     {snapshot.measurements
