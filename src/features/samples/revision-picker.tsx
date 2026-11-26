@@ -1,4 +1,5 @@
 'use client';
+import { SampleSelectionDetail } from './selection-detail';
 import { useEffect, useState } from 'react';
 import type { SampleRevisionChoice } from '@/src/application/sample-lifecycle';
 import { sampleRequest } from '@/src/infrastructure/http/sample-client';
@@ -42,7 +43,7 @@ export function SampleRevisionPicker({
   return (
     <div>
       <small>{t('selectRevision')}</small>
-      <p>{denied ? t('denied') : (value ?? t('unlinked'))}</p>
+      <SampleSelectionDetail revisionId={value} denied={denied} />
       <button
         type="button"
         className="entry-button"
@@ -60,8 +61,11 @@ export function SampleRevisionPicker({
         </button>
       )}
       {open && (
-        <section
-          role="dialog"
+        <dialog
+          ref={(node) => {
+            if (node && !node.open) node.showModal();
+          }}
+          onCancel={() => setOpen(false)}
           aria-modal="true"
           aria-label={t('lookup')}
           className="sample-section"
@@ -120,7 +124,7 @@ export function SampleRevisionPicker({
             </tbody>
           </table>
           {!rows.length && !error && <p>{t('empty')}</p>}
-        </section>
+        </dialog>
       )}
     </div>
   );

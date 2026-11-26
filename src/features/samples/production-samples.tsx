@@ -32,17 +32,19 @@ export default function ProductionSamples({
     [version, setVersion] = useState(0),
     [form, setForm] = useState(false),
     [saved, setSaved] = useState(false);
-  const [result, setResult] = useState<{
+  const key = JSON.stringify([id, revision, search, offset, version]);
+  const [loaded, setResult] = useState<{
+      key: string;
       rows: SampleSummary[];
       total: number;
       detail?: SampleDetail;
       orgs: { id: string }[];
     } | null>(null),
-    [error, setError] = useState<string | null>(null);
+    [failure, setError] = useState<{ key: string; code: string } | null>(null);
+  const result = loaded?.key === key ? loaded : null;
+  const error = failure?.key === key ? failure.code : null;
   useEffect(() => {
     let active = true;
-    setResult(null);
-    setError(null);
     void Promise.all([
       sampleRequest<{ id: string }[]>({ operation: 'options' }),
       id
@@ -58,18 +60,21 @@ export default function ProductionSamples({
         if (active)
           setResult(
             'sample' in data
-              ? { rows: [], total: 0, detail: data, orgs }
-              : { ...data, orgs },
+              ? { key, rows: [], total: 0, detail: data, orgs }
+              : { key, ...data, orgs },
           );
       })
       .catch((e) => {
         if (active)
-          setError(e instanceof SampleRequestError ? e.code : 'PERSISTENCE');
+          setError({
+            key,
+            code: e instanceof SampleRequestError ? e.code : 'PERSISTENCE',
+          });
       });
     return () => {
       active = false;
     };
-  }, [id, revision, search, offset, version]);
+  }, [id, revision, search, offset, version, key]);
   const detail = result?.detail;
   return (
     <Workspace
@@ -100,7 +105,7 @@ export default function ProductionSamples({
           )}
         </div>
         <p>{t('planOnly')}</p>
-        {saved && <p role="status">{t('saved')}</p>}
+        {saved && <output>{t('saved')}</output>}
         {error && (
           <p role="alert">
             {t(
@@ -221,7 +226,7 @@ export default function ProductionSamples({
                       <td>{n.label}</td>
                       <td>{t(n.nodeType)}</td>
                       <td>
-                        <details>
+                        <details aria-label={t('reference')}>
                           <summary>{global('Details')}</summary>
                           <code>{n.referenceId}</code>
                         </details>

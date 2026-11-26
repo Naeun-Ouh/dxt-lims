@@ -34,9 +34,7 @@ export async function sampleOperation(
   const input = sampleCommandSchema.parse(raw);
   return database.transaction(async (sql) => {
     await sql.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-    await sql.query(
-      'LOCK TABLE auth_principal,auth_org_unit,auth_membership,dxt_sample.access_grant,study_access,study_access_grant,study_module_access IN SHARE MODE',
-    );
+    await sql.query('SELECT dxt_sample.lock_policy()');
     await resolvePrincipal(sql, pid);
     return dispatchSample(sql, pid, input);
   });

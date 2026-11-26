@@ -28,7 +28,11 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
   // Creation inserts access rows: serialize before taking the repeatable-read snapshot,
   // avoiding a SHARE-to-ROW-EXCLUSIVE lock-upgrade deadlock between creators.
   const policyLock = raw.operation === 'study.create' ? 'SHARE ROW EXCLUSIVE' : 'SHARE';
-  await sql.query(`LOCK TABLE auth_principal,auth_org_unit,auth_membership,study_access,study_module_access,study_access_grant,configuration_access_scope,configuration_access_grant,study_creation_grant,dxt_sample.access_grant IN ${policyLock} MODE`);
+  await sql.query(`LOCK TABLE auth_principal,auth_org_unit,auth_membership,study_access,study_module_access,study_access_grant,configuration_access_scope,configuration_access_grant,study_creation_grant IN ${policyLock} MODE`);
+  // Sample grant revocation must serialize before the repeatable-read snapshot.
+  // Reasoning-only and Study commands remain independent of the Sample schema.
+  if(['run.create','run.preview','run.create.preview','run.plan.save','run.get','run.planning','run.list','run.created','run.next'].includes(String(raw.operation)))
+    await sql.query('SELECT dxt_sample.lock_policy()');
   const principal=await resolvePrincipal(sql,principalId), policy=new PostgresAuthorization(sql);
   const input=structuredClone(raw), op=text(input.operation);
   if(op.startsWith('analysis.'))return savedAnalysisOperation(sql,principal,input);
