@@ -22,7 +22,7 @@ Run copies preserve an explicitly selected revision, even after a newer Sample r
 
 ## UI
 
-One KO/EN implementation supports catalog search, exact detail, immutable history, registration, revision creation, composition/property authoring, and permission-aware disabled actions. Errors preserve form state and use actionable localized copy. Local datetime input is held as a local string and converted once on submit. Run Draft uses an exact revision picker, and Plan Inspector provides the selected revision detail link. Modal selection uses native dialog focus behavior.
+One KO/EN implementation supports catalog search, exact detail, immutable history, registration, revision creation, composition/property authoring, and permission-aware disabled actions. Errors preserve form state and use actionable localized copy. Local datetime input is held as a local string and converted once on submit. Run Draft uses an exact revision picker. Existing unlocked Plan material rows and existing Subject overrides expose compact revision lookup/clear controls; changes remain local until Save Plan. Plan Inspector provides the selected revision detail link. Modal selection uses native dialog focus behavior.
 
 ## Validation
 
@@ -34,4 +34,4 @@ DXT_POSTGRES_BIN=/Volumes/Postgres-2.9.7-18/Postgres.app/Contents/Versions/18/bi
 
 Native PostgreSQL 18.7, new temporary cluster only: **14/14 tests PASS** (13 cases plus suite). The suite executes actual Sample HTTP handlers and the existing authorized Run Preview/Create/Save/readback boundary. It covers full aggregate rollback, permissions, zero, immutable revisions, exact Run copy, clear/remove/re-add, reference replacement, denied copy rollback, execution lock, concurrent grant revocation, and restricted service/client roles. No existing environment URL is accepted by the runner.
 
-UI/API esbuild bundles pass. TypeScript has no new application errors; the isolated worktree lacks pre-existing `.openai/hosting.json` used by vite.config, and parent integration owns full build/TypeScript/regression validation. Changed Sample files pass lint. Browser/Human acceptance is recorded separately by the parent; automated tests are not Human acceptance.
+UI/API esbuild bundles pass. Focused TypeScript passes for all tracked application/tests plus new Sample files (excluding vite.config whose pre-existing `.openai/hosting.json` is not present in the isolated worktree); parent integration owns full build/TypeScript/regression validation. Changed Sample files pass lint. Browser/Human acceptance is recorded separately by the parent; automated tests are not Human acceptance.

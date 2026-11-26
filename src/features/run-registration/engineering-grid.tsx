@@ -1,4 +1,5 @@
 'use client';
+import {SampleRevisionPicker} from '@/src/features/samples/revision-picker';
 import {SampleSelectionDetail} from '@/src/features/samples/selection-detail';
 import { legacyConditionAmbiguities } from '@/src/application/condition-resolution';
 import { runAnalysisHref } from './run-analysis-link';
@@ -279,6 +280,7 @@ export default function EngineeringGrid({
   const activeSubjectId = selected?.subjectId ?? initialSubjectId;
   const [anchor, setAnchor] = useState<Cell | null>(null);
   const [dirty, setDirty] = useState<Record<string, string>>({});
+  const [sampleSelections,setSampleSelections]=useState<Record<string,string|null>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [roles, setRoles] = useState<Record<string, 'FIXED' | 'VARIED'>>({});
   const [inspected, setInspected] = useState<EngineeringGridRow | null>(null);
@@ -331,6 +333,7 @@ export default function EngineeringGrid({
         roles,
       ),
     };
+    record.snapshot={...record.snapshot,assignments:record.snapshot.assignments.map(a=>a.kind==='MATERIAL'&&Object.hasOwn(sampleSelections,a.id)?{...a,sampleRevisionId:sampleSelections[a.id],sampleAccessDenied:false}:a)};
     const digest = await crypto.subtle.digest(
       'SHA-256',
       new TextEncoder().encode(JSON.stringify(record)),
@@ -346,6 +349,7 @@ export default function EngineeringGrid({
       if (!stored) throw new Error('Plan read-back unavailable.');
       setPersistedPlan(stored);
       setDirty({});
+      setSampleSelections({});
       setRoles({});
       setParticipationDraft(null);
       setPlanMessage('Plan saved.');
@@ -1107,6 +1111,7 @@ export default function EngineeringGrid({
                           Object.keys(errors).length > 0 ||
                           (!Object.keys(dirty).length &&
                             !Object.keys(roles).length &&
+                            !Object.keys(sampleSelections).length &&
                             !participationDraft)
                         }
                         onClick={() => {
@@ -1346,6 +1351,8 @@ export default function EngineeringGrid({
                                   row.operation.sourceOperationId,
                                 )
                               }
+                              sampleSelections={sampleSelections}
+                              onSample={production&&!planReadOnly?(id,value)=>setSampleSelections(s=>({...s,[id]:value})):undefined}
                               readOnly={planReadOnly}
                               onRole={(role) =>
                                 !planReadOnly &&
@@ -1418,6 +1425,8 @@ export default function EngineeringGrid({
 }
 
 function GridRow(props: {
+  sampleSelections:Record<string,string|null>;
+  onSample?:(assignmentId:string,value:string|null)=>void;
   onParticipation: () => void;
   readOnly?: boolean;
   row: EngineeringGridRow;
@@ -1583,6 +1592,7 @@ function GridRow(props: {
           {row.definition?.label}
           <span className="grid-compact-unit"> {row.definition?.unit}</span>
         </span>
+        {props.onSample&&row.assignment?.kind==='MATERIAL'&&model.snapshot.assignments.some(a=>a.id===row.assignment!.id)&&<SampleRevisionPicker compact value={Object.hasOwn(props.sampleSelections,row.assignment.id)?props.sampleSelections[row.assignment.id]:row.assignment.sampleRevisionId} denied={!Object.hasOwn(props.sampleSelections,row.assignment.id)&&row.assignment.sampleAccessDenied} onChange={value=>props.onSample?.(row.assignment!.id,value)}/>}
       </td>
       <td aria-label={t('Inherited equipment')}>—</td>
       <td>
@@ -1748,6 +1758,7 @@ function GridRow(props: {
                 }
               />
             )}
+            {props.onSample&&row.assignment?.kind==='MATERIAL'&&model.snapshot.assignments.filter(a=>a.kind==='MATERIAL'&&a.processStepId===row.operation.sourceOperationId&&a.subjectId===subject.id&&a.label===row.assignment?.label).map(a=><SampleRevisionPicker key={a.id} compact value={Object.hasOwn(props.sampleSelections,a.id)?props.sampleSelections[a.id]:a.sampleRevisionId} denied={!Object.hasOwn(props.sampleSelections,a.id)&&a.sampleAccessDenied} onChange={value=>props.onSample?.(a.id,value)}/>)}
           </td>
         );
       })}

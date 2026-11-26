@@ -9,7 +9,9 @@ export function SampleRevisionPicker({
   value,
   denied,
   onChange,
+  compact = false,
 }: {
+  compact?: boolean;
   value?: string | null;
   denied?: boolean;
   onChange: (id: string | null) => void;
@@ -42,16 +44,26 @@ export function SampleRevisionPicker({
   }, [open, search]);
   return (
     <div>
-      <small>{t('selectRevision')}</small>
-      <SampleSelectionDetail revisionId={value} denied={denied} />
+      {!compact && (
+        <>
+          <small>{t('selectRevision')}</small>
+          <SampleSelectionDetail revisionId={value} denied={denied} />
+        </>
+      )}
       <button
         type="button"
         className="entry-button"
+        title={t('selectRevision')}
+        style={
+          compact
+            ? { minHeight: 24, height: 24, padding: '2px 5px', fontSize: 11 }
+            : undefined
+        }
         onClick={() => setOpen(true)}
       >
-        {t('lookup')}
+        {t(compact ? 'revision' : 'lookup')}
       </button>
-      {(value || denied) && (
+      {!compact && (value || denied) && (
         <button
           type="button"
           className="entry-button"
@@ -80,6 +92,18 @@ export function SampleRevisionPicker({
           }}
         >
           <h2>{t('lookup')}</h2>
+          <SampleSelectionDetail revisionId={value} denied={denied} />
+          {(value || denied) && (
+            <button
+              type="button"
+              onClick={() => {
+                onChange(null);
+                setOpen(false);
+              }}
+            >
+              {t('clear')}
+            </button>
+          )}
           <label>
             {t('search')}
             <input
