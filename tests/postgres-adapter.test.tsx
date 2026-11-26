@@ -1,3 +1,4 @@
+import {operationGroupContract} from './postgres-operation-group-contract';
 import {completeLegacyFixtureMeasurementPlans} from './complete-legacy-fixture-measurement-plans';
 import {runCriteriaContract} from './postgres-run-criteria-contract';
 import {seedScientificTestPrincipal} from './postgres-reasoning-fixtures';
@@ -79,6 +80,11 @@ async function withDatabase() {
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/016_shared_scientific_authority.sql'), 'utf8'));
     await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/017_run_reasoning_provenance.sql'), 'utf8'));
     await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/018_sample_lifecycle.sql'), 'utf8'));
+    await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/019_operation_group_design.sql'), 'utf8'));
+    await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/020_sample_revision_clone_origin.sql'), 'utf8'));
+    await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/021_run_judgment_optional_basis.sql'), 'utf8'));
+    await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/022_recipe_source_bindings.sql'), 'utf8'));
+
   await seedProductionSlice(database, configurationRepository);
   await seedScientificTestPrincipal(database);
   await provisionMeasurementReferences(database, definitions);
@@ -334,3 +340,7 @@ void test('Explicit scientific authorization: responsibility separation, revocat
 void test("Material usage: authoritative assignments, exact refs, permission-scoped search/count/page and no writes",async()=>{const s=await withDatabase();try{await materialUsageContract(s.database,await productionMeasurementContract(s.database));}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
 
 void test('Run criteria: immutable revisions, exact adoption, optional continuation, replay and explicit authority',async()=>{const s=await withDatabase();try{await runCriteriaContract(s.database);}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
+
+void test('PostgreSQL Group vertical slice preserves explicit allocations, inheritance, warnings and Plan lock',async()=>{
+ const state=await withDatabase();try{await operationGroupContract(state.database);}finally{await state.database.close();await rm(state.directory,{recursive:true,force:true});}
+});

@@ -1,3 +1,5 @@
+import {recipeSourceBindingSchema} from './recipe-source';
+import { operationDesignSchema, applyOperationDesign, validateOperationDesign } from '@/src/features/run-registration/operation-design';
 import { z } from 'zod';
 import { measurementPointSchema } from '@/src/domain/reference';
 import type { ReferenceCatalog } from '@/src/domain/reference';
@@ -11,12 +13,16 @@ const id = z.string().trim().min(1).max(200);
 /** Transient authoring input, not a persistent domain entity. No scientific criteria accepted. */
 export const runDraftSchema = z
   .object({
+    planningContract: z.literal('GROUPS_V2').optional(),
+    recipeSourceBindings: z.array(recipeSourceBindingSchema).max(10000).optional(),
     subjects: z.array(z.object({ id, displayLabel: id }).strict()).max(500),
     operations: z
       .array(
         z
           .object({
             optionId: id,
+            instanceId: id.optional(),
+            design: operationDesignSchema.optional(),
             subjectIds: z.array(id).max(500),
             point: measurementPointSchema.nullable(),
             parameterIds: z.array(id).max(500),
@@ -25,6 +31,7 @@ export const runDraftSchema = z
                 z
                   .object({
                     applicabilityId: id,
+                    groupId: id.nullable().optional(),
                     value: z.string().max(4000),
                     intentRole: z.enum(['FIXED', 'VARIED']),
                     subjectId: id.nullable(),
@@ -37,7 +44,7 @@ export const runDraftSchema = z
           })
           .strict(),
       )
-      .max(200),
+      .max(5000),
   })
   .strict();
 export type RunDraft = z.infer<typeof runDraftSchema>;
@@ -58,11 +65,13 @@ export function materializeRunDraft(
   if (subjects.size !== draft.subjects.length)
     fail('Duplicate Subject identity.');
   const kind = subjectKind;
-  const snapshot: RunPlanningSnapshot = {
+  let snapshot: RunPlanningSnapshot = {
     ...structuredClone(base),
     subjects: draft.subjects.map((s) => ({ ...s, type: kind })),
     candidateSubjects: undefined,
     steps: [],
+    ...(draft.planningContract==='GROUPS_V2'?{conditionResolution:'GROUPS_V2' as const,operationDesign:{}}:{}),
+    recipeSourceBindings: draft.recipeSourceBindings ?? [],
     assignments: [],
     measurements: [],
     subjectOperationIds: Object.fromEntries(
@@ -79,7 +88,7 @@ export function materializeRunDraft(
     )
       fail('Check Operation participation.');
     const op = option.operation,
-      stepId = `${base.id}-step-${index + 1}`;
+      stepId = selected.instanceId ?? `${base.id}-step-${index + 1}`;
     snapshot.steps.push({
       id: stepId,
       label: op.label,
@@ -90,18 +99,22 @@ export function materializeRunDraft(
     });
     for (const s of selected.subjectIds)
       snapshot.subjectOperationIds[s].push(stepId);
+    if (selected.design) {
+      if(draft.planningContract!=='GROUPS_V2') fail('Group design requires its versioned contract.');
+      snapshot=applyOperationDesign(snapshot,stepId,selected.design);
+    }
     const itemKeys = new Set<string>();
     for (const item of selected.items) {
-      const key = JSON.stringify([item.applicabilityId, item.subjectId]);
+      const key = JSON.stringify([item.applicabilityId, item.subjectId, item.groupId??null]);
       if (itemKeys.has(key)) fail('Duplicate assignment.');
       itemKeys.add(key);
-      if (item.subjectId && !selected.subjectIds.includes(item.subjectId))
+      if (item.subjectId && !subjects.has(item.subjectId))
         fail('Conditions must belong to participating Subjects.');
       const def = op.items.find(
         (d) => d.applicabilityId === item.applicabilityId,
       );
       if (!def) return fail('Assignment is not applicable.');
-      if (item.subjectId !== null && !item.value.trim()) continue;
+      if ((item.subjectId !== null || draft.planningContract==='GROUPS_V2') && !item.value.trim()) continue;
       // Empty/invalid values remain visible in Preview readiness; Create rejects them.
       let referenceId = def.referenceId;
       if (def.editor === 'REFERENCE')
@@ -112,6 +125,7 @@ export function materializeRunDraft(
         id: `${stepId}-assignment-${snapshot.assignments.length + 1}`,
         processStepId: stepId,
         subjectId: item.subjectId,
+        ...(draft.planningContract==='GROUPS_V2'?{groupId:item.groupId??null,applicabilityId:item.applicabilityId}:{}),
         positionId: null,
         label: def.label,
         kind: def.kind,
@@ -146,7 +160,10 @@ export function materializeRunDraft(
         });
     }
   });
-  return prospectiveConditions(snapshot);
+  const result=prospectiveConditions(snapshot);
+  const errors=validateOperationDesign(result);
+  if(errors.length)fail(errors.join('; '));
+  return result;
 }
 export function draftValueProblems(
   draft: RunDraft,
@@ -155,7 +172,7 @@ export function draftValueProblems(
   const missing: string[] = [];
   draft.operations.forEach((op, index) => {
     for (const item of op.items) {
-      if (item.subjectId !== null && !item.value.trim()) continue;
+      if ((item.subjectId !== null || draft.planningContract==='GROUPS_V2') && !item.value.trim()) continue;
       const def = options
         .find((o) => o.id === op.optionId)
         ?.operation.items.find(
@@ -182,6 +199,8 @@ export function draftFromSnapshot(
   if (snapshot.assignments.some((a) => !a.processStepId))
     fail('This source contains unscoped conditions. Choose another source.');
   return {
+    ...(snapshot.conditionResolution==='GROUPS_V2'?{planningContract:'GROUPS_V2' as const}:{}),
+    ...(snapshot.recipeSourceBindings?{recipeSourceBindings:structuredClone(snapshot.recipeSourceBindings)}:{}),
     subjects: snapshot.subjects.map(({ id, displayLabel }) => ({
       id,
       displayLabel,
@@ -200,6 +219,8 @@ export function draftFromSnapshot(
         return fail('Operation is not eligible for this exact configuration.');
       return {
         optionId: option.id,
+        instanceId: step.id,
+        ...(snapshot.operationDesign?.[step.id]?{design:structuredClone(snapshot.operationDesign[step.id])}:{}),
         subjectIds: snapshot.subjects
           .filter((s) => snapshot.subjectOperationIds[s.id]?.includes(step.id))
           .map((s) => s.id),
@@ -224,6 +245,7 @@ export function draftFromSnapshot(
               value: a.value,
               intentRole: a.intentRole,
               subjectId: a.subjectId,
+              ...(a.groupId?{groupId:a.groupId}:{}),
               ...(a.kind==='MATERIAL'?{sampleRevisionId:a.sampleRevisionId??null,sampleAccessDenied:a.sampleAccessDenied}:{}),
             };
           }),

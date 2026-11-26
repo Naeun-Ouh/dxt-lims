@@ -72,22 +72,14 @@ export async function saveConclusionRecord(
   return saved;
 }
 
-// UI prerequisites only. Repository commands remain the authority for writes.
+// Run judgment is independent of per-result Evaluation. Keep this pure helper
+// for callers that formerly used an Evaluation prerequisite; permissions remain
+// authoritative at the command boundary.
 export function conclusionPrerequisite(
-  selected: EvaluationProjection | null,
-  comment: string,
-  disposition: EngineerEvaluationRecord['disposition'],
+  _selected: EvaluationProjection | null,
+  _comment: string,
+  _disposition: EngineerEvaluationRecord['disposition'],
 ): string | null {
-  if (!selected?.achievement.measurementSummaryId)
-    return 'Result Missing. Record a measured result before saving Evaluation or Run Conclusion.';
-  const saved = selected.engineerEvaluation;
-  if (
-    !saved ||
-    saved.measurementSummaryId !== selected.achievement.measurementSummaryId
-  )
-    return 'Save Evaluation for this result before recording Run Conclusion.';
-  if (saved.comment !== comment.trim() || saved.disposition !== disposition)
-    return 'Save your Evaluation changes before recording Run Conclusion.';
   return null;
 }
 

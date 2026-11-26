@@ -1,4 +1,5 @@
 'use client';
+import { RunDraftWarnings } from './run-draft-warnings';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -250,6 +251,7 @@ function RunDraftPage({
                 <RunDraftEditor
                   key={`${source}-${generation}`}
                   draft={draft}
+                  baseSnapshot={context.snapshot}
                   options={context.options ?? []}
                   catalog={context.catalog}
                   onChange={(value) => {
@@ -264,6 +266,7 @@ function RunDraftPage({
               </DraftFeedbackContext.Provider>
             </fieldset>
           )}
+          <RunDraftWarnings warnings={preview?.readiness.warnings} />
           <RunDraftActions
             busy={busy}
             available={Boolean(draft && context?.catalog)}

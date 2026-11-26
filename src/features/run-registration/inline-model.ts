@@ -33,7 +33,7 @@ export function subjectValues(
       w.id,
       effectiveAssignments(model.snapshot, w.id)[
         `${item.processStepId}:${item.kind}:${item.label}`
-      ]?.value ?? item.value,
+      ]?.value ?? (model.snapshot.conditionResolution==='GROUPS_V2'?'':item.value),
     ]),
   );
 }

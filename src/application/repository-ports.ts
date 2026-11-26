@@ -103,10 +103,10 @@ export type MeasurementQuery = {
 export type ReasoningState<T> = { version: number; record: T;
   provenance?: {
     recordId: string;
-    contextId: string;
-    revision: number;
+    contextId: string | null;
+    revision: number | null;
     record: unknown;
-    context: import('./study-readiness').StudyReasoningContext;
+    context: import('./study-readiness').StudyReasoningContext | null;
   }[];
 };
 export interface EvaluationRepository {

@@ -1,4 +1,5 @@
 /* oxlint-disable next/no-img-element -- Use the Figma search asset at intrinsic size. */
+import {RecipeSourceAssociationEditor} from './recipe-source-association-editor';
 import { useLocale } from '@/src/shared/i18n/locale';
 import { canGovern, governedScopes } from './permissions';
 import { configurationScopeKey } from '@/src/application/configuration-permissions';
@@ -95,6 +96,7 @@ export function DefinitionsView({
   };
   return (
     <>
+      <RecipeSourceAssociationEditor/>
       <div className="rs-toolbar">
         <div>
           <span className="rs-kicker">{t('DEFINITIONS')}</span>

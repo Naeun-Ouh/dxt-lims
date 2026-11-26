@@ -1,4 +1,5 @@
 'use client';
+import { judgmentText } from './judgment-messages';
 /* oxlint-disable next/no-img-element -- Exact Figma status indicators. */
 import { LifecycleInspectorClose } from '@/src/shared/ui/lifecycle-inspector-close';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -118,13 +119,11 @@ export function EvaluationExecutionGrid({
     ? projectDecisionContinuation(decisionContext, catalog, nextRunPreview)
     : null;
 
-  const selectedContinuation =
-    selected?.engineerEvaluation &&
-    decisionContext?.engineerEvaluationIds.includes(
-      selected.engineerEvaluation.id,
-    )
-      ? continuation
-      : null;
+  // A Run judgment is visible independently of the currently selected result.
+  const selectedContinuation = continuation;
+  const selectedDecisionEvidence = selected?.engineerEvaluation &&
+    decisionContext?.engineerEvaluationIds.includes(selected.engineerEvaluation.id)
+      ? selected : null;
   return (
     <>
       <section className="engineering-grid-toolbar evaluation-grid-toolbar">
@@ -310,7 +309,7 @@ export function EvaluationExecutionGrid({
             <DecisionContinuationPanel
               key={selectedContinuation.context.decision.id}
               continuation={selectedContinuation}
-              selected={selected}
+              selected={selectedDecisionEvidence}
               nextRunHref={nextRunHref}
               onCreateNextRun={onCreateNextRun}
             />
@@ -367,11 +366,11 @@ function DecisionContinuationPanel({
       ]
         .filter(Boolean)
         .join(' · ')
-    : 'No selected evaluation context';
+    : t('Run Conclusion');
   return (
     <section className="decision-continuation-panel">
       <header className="reasoning-flow-head">
-        <span>{t('SELECTED REASONING CONTEXT')}</span>
+        <span>{t('Saved Run Conclusion')}</span>
         <strong>{actionTarget}</strong>
       </header>
       <div className="evaluation-recorded-summary">
@@ -470,7 +469,7 @@ function EvaluationAuthoringPanel({
   saving: boolean;
   setSaving: (saving: boolean) => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   // A comment is informative unless the engineer explicitly classifies it.
   // Never derive an ACCEPT disposition from automatic Target Status.
   const [disposition, setDisposition] = useState<
@@ -500,7 +499,6 @@ function EvaluationAuthoringPanel({
     !saving &&
     !conclusionBlocked &&
     !!conclusion.trim() &&
-    !!reason.trim() &&
     (!isNextRun || !!nextAction.trim()) &&
     (!isNextRun || !changeId || !!changeValue.trim());
 
@@ -541,8 +539,7 @@ function EvaluationAuthoringPanel({
   const saveConclusion = async () => {
     if (
       !canSaveConclusion ||
-      !onRecordDecision ||
-      !selected?.engineerEvaluation
+      !onRecordDecision
     )
       return;
     setSaving(true);
@@ -550,7 +547,7 @@ function EvaluationAuthoringPanel({
     setError('');
     try {
       await saveConclusionRecord(
-        selected.runId,
+        model.snapshot.id,
         {
           decisionStatement: conclusion.trim(),
           conclusion: conclusion.trim(),
@@ -560,16 +557,16 @@ function EvaluationAuthoringPanel({
           nextActionNote: actionType
             ? isNextRun ? nextAction.trim() : 'Complete Run'
             : '',
-          evaluationIds: [selected.engineerEvaluation.id],
-          targetReferences: [
+          evaluationIds: selected?.engineerEvaluation ? [selected.engineerEvaluation.id] : [],
+          targetReferences: selected?.achievement.measurementSummaryId ? [
             {
               seriesTargetId: selected.binding.target.id,
               measurementSummaryId: selected.achievement.measurementSummaryId!,
               status: selected.achievement.status,
             },
-          ],
-          targetSubjectIds: [selected.subject.id],
-          targetOperationIds: selected.measurement
+          ] : [],
+          targetSubjectIds: selected ? [selected.subject.id] : [],
+          targetOperationIds: selected?.measurement
             ? [selected.measurement.operation.id]
             : [],
           recordedBy: actor,
@@ -658,7 +655,7 @@ function EvaluationAuthoringPanel({
       <header>
         <b>{t('Run Conclusion')}</b>
         <small>
-          {t('Conclusion is recorded separately after saving Evaluation.')}
+          {judgmentText(locale, 'independent')}
         </small>
       </header>
       {conclusionBlocked && (
@@ -733,9 +730,8 @@ function EvaluationAuthoringPanel({
               />
             </label>
             <label className="authoring-grow">
-              {t('Reason')}
+              {judgmentText(locale, 'optionalReason')}
               <textarea
-                required
                 rows={2}
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}

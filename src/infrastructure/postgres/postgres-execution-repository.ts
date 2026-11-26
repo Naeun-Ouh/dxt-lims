@@ -79,7 +79,7 @@ export class PostgresExecutionRepository implements ExecutionRepository {
             throw new ApplicationError('VALIDATION', 'Execution does not reference the exact planned item.');
           const members = await session.query<{ run_subject_id: string; run_operation_id: string }>(`SELECT rs.run_subject_id,o.run_operation_id
             FROM run_subject rs JOIN subject s USING(subject_id)
-            JOIN run_subject_operation link ON link.run_subject_id=rs.run_subject_id
+            JOIN run_subject_operation link ON link.run_subject_id=rs.run_subject_id AND link.plan_state IN ('COMMON','ASSIGNED')
             JOIN run_operation o ON o.run_operation_id=link.run_operation_id
             WHERE rs.run_id=$1 AND s.subject_domain_id=$2 AND o.operation_domain_id=$3`, [id, evidence.resolvedSubjectId, event.processStepId]);
           const member = members.rows[0];

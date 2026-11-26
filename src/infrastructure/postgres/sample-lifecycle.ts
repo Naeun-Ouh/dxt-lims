@@ -1,3 +1,4 @@
+import {readRecipeSourceUsage} from './postgres-recipe-sources';
 import {
   sampleCommandSchema,
   type SampleAggregate,
@@ -125,7 +126,17 @@ export async function dispatchSample(
         pid,
         input.commandId,
         input.expectedLatest,
-        d,
+        {
+          ...d,
+          ...(input.copiedFromRevisionId
+            ? {
+                cloneOrigin: {
+                  copiedFromRevisionId: input.copiedFromRevisionId,
+                  changeReason: input.changeReason || null,
+                },
+              }
+            : {}),
+        },
       ]);
     } catch (e) {
       const code = typeof e === 'object' && e && 'code' in e ? e.code : '';
@@ -172,8 +183,8 @@ async function sampleDetail(
   ).rows[0];
   if (!s) throw unavailable();
   const history = (
-    await sql.query<{ id: string; revision: number }>(
-      'SELECT id,revision_number revision FROM dxt_sample.revision WHERE sample_id=$1 ORDER BY revision_number DESC',
+    await sql.query<SampleDetail['history'][number]>(
+      `SELECT r.id,r.revision_number revision,o.copied_from_revision_id "copiedFromRevisionId",source.revision_number "copiedFromRevision",o.change_reason "changeReason" FROM dxt_sample.revision r LEFT JOIN dxt_sample.revision_clone_origin o ON o.revision_id=r.id LEFT JOIN dxt_sample.revision source ON source.id=o.copied_from_revision_id WHERE r.sample_id=$1 ORDER BY r.revision_number DESC`,
       [id],
     )
   ).rows;
@@ -223,7 +234,18 @@ async function sampleDetail(
       s.id,
       'REVISE_SAMPLE',
     ),
+    cloneOrigin: (() => {
+      const selected = history.find((h) => h.id === row.metadata.id);
+      return selected?.copiedFromRevisionId &&
+        selected.copiedFromRevision != null
+        ? {
+            copiedFromRevisionId: selected.copiedFromRevisionId,
+            copiedFromRevision: selected.copiedFromRevision,
+            changeReason: selected.changeReason,
+          }
+        : null;
+    })(),
     history,
-    usage,
+    usage: [...usage, ...await readRecipeSourceUsage(sql,pid,id)],
   };
 }

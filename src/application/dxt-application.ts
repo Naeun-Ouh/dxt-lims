@@ -157,7 +157,7 @@ export class DxtApplication {
       decision.provenance?.some(
         (p) =>
           p.recordId === decision.record?.context?.decision.id &&
-          p.contextId === active,
+          (p.contextId === null || p.contextId === active),
       )
         ? decision.record
         : null;
@@ -165,7 +165,7 @@ export class DxtApplication {
       ...measured,
       measurementCatalog: criteria.targetBindings.length
         ? criteria.catalog
-        : measurementCatalog,
+        : { ...(measurementCatalog ?? criteria.catalog), nextActionTypes: criteria.catalog.nextActionTypes },
       targetBindings: criteria.targetBindings,
       interpretation: criteria.interpretation,
       actor: criteria.actor,

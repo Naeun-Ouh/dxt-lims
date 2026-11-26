@@ -3,6 +3,11 @@ import {SampleRevisionPicker} from '@/src/features/samples/revision-picker';
 import {SampleSelectionDetail} from '@/src/features/samples/selection-detail';
 import { legacyConditionAmbiguities } from '@/src/application/condition-resolution';
 import { runAnalysisHref } from './run-analysis-link';
+import { allocationLabel, allocationDescription, allocationUi } from '@/src/shared/i18n/allocation-messages';
+import { allocationFor } from './operation-design';
+import { groupText } from './group-messages';
+import { PlanOperationDesignEditor } from './plan-operation-design-editor';
+import type { RunPlanningSnapshot } from './planning-model';
 import { ParticipationEditor } from './participation-editor';
 import { editOperationParticipation } from './participation';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -89,10 +94,11 @@ export default function EngineeringGrid({
   nextRunPreview?: NextRunPreview | null;
   authoringProfile?: LifecycleAuthoringProfile;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { application } = useDxtApplication();
   const [persistedPlan, setPersistedPlan] =
     useState<PlanningWorkspaceRecord | null>(null);
+  const [groupDraft, setGroupDraft] = useState<RunPlanningSnapshot | null>(null);
   const [planMessage, setPlanMessage] = useState('');
   const [planSaving, setPlanSaving] = useState(false);
   const production = !!application.configurationAuthoringBoundary;
@@ -145,16 +151,16 @@ export default function EngineeringGrid({
   // Unsaved Plan membership must never reinterpret recorded downstream evidence.
   const model = useMemo(
     () =>
-      workspaceMode === 'PLAN' && participationDraft
+      workspaceMode === 'PLAN' && (participationDraft || groupDraft)
         ? {
             ...baseModel,
             snapshot: {
-              ...baseModel.snapshot,
-              subjectOperationIds: participationDraft,
+              ...(groupDraft ?? baseModel.snapshot),
+              subjectOperationIds: participationDraft ?? groupDraft?.subjectOperationIds ?? baseModel.snapshot.subjectOperationIds,
             },
           }
         : baseModel,
-    [baseModel, participationDraft, workspaceMode],
+    [baseModel, participationDraft, groupDraft, workspaceMode],
   );
   const legacyConditionWarning = useMemo(
     () => legacyConditionAmbiguities(model.snapshot),
@@ -181,6 +187,7 @@ export default function EngineeringGrid({
           setPersistedPlan(record);
           if (record.lockReason || record.canEditPlan === false) {
             setParticipationDraft(null);
+            setGroupDraft(null);
             setParticipationOperation(null);
           }
         }
@@ -255,6 +262,8 @@ export default function EngineeringGrid({
       .map((operation) => ({ ...operation, sourceOperationId: operation.id }));
   }, [model, projection, viewFocus]);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  const initializedCollapse = useRef<string | null>(null);
+  useEffect(()=>{if(model.snapshot.conditionResolution==='GROUPS_V2'&&initializedCollapse.current!==model.snapshot.id){initializedCollapse.current=model.snapshot.id;setCollapsed(new Set(model.operations.map(o=>o.id)));}},[model.snapshot.id,model.snapshot.conditionResolution,model.operations]);
   const expanded = useMemo(
     () =>
       new Set(
@@ -323,9 +332,9 @@ export default function EngineeringGrid({
       ...patch,
       snapshot: applyGridPlanEdits(
         {
-          ...persistedPlan.snapshot,
+          ...(groupDraft ?? persistedPlan.snapshot),
           subjectOperationIds:
-            participationDraft ?? persistedPlan.snapshot.subjectOperationIds,
+            participationDraft ?? groupDraft?.subjectOperationIds ?? persistedPlan.snapshot.subjectOperationIds,
         },
         projectEngineeringGridRows(
           model,
@@ -355,6 +364,7 @@ export default function EngineeringGrid({
       setSampleSelections({});
       setRoles({});
       setParticipationDraft(null);
+      setGroupDraft(null);
       setPlanMessage('Plan saved.');
       return true;
     } catch (error: unknown) {
@@ -367,6 +377,7 @@ export default function EngineeringGrid({
       if (stored?.lockReason) {
         setPersistedPlan(stored);
         setParticipationDraft(null);
+      setGroupDraft(null);
         setParticipationOperation(null);
         setDirty({});
         setRoles({});
@@ -808,9 +819,7 @@ export default function EngineeringGrid({
                 ]}
               />
             )}
-            {resolvedMeasurements &&
-          resolvedCatalog &&
-          resolvedBindings.length ? (
+            {resolvedMeasurements && resolvedCatalog ? (
           <EvaluationExecutionGrid
             key={`evaluation-${model.snapshot.id}-${authoring?.state.interpretation?.contextId ?? criteriaRefresh}`}
             model={model}
@@ -1137,7 +1146,7 @@ export default function EngineeringGrid({
                           (!Object.keys(dirty).length &&
                             !Object.keys(roles).length &&
                             !Object.keys(sampleSelections).length &&
-                            !participationDraft)
+                            !participationDraft && !groupDraft)
                         }
                         onClick={() => {
                           void savePlan();
@@ -1148,7 +1157,8 @@ export default function EngineeringGrid({
                     )}
                   </div>
                 </section>
-                {participationOperation && !scopeMode && (
+                {participationOperation && !scopeMode && model.snapshot.conditionResolution === 'GROUPS_V2' && <PlanOperationDesignEditor key={participationOperation} snapshot={model.snapshot} operationId={participationOperation} rows={projectEngineeringGridRows(model,model.operations.filter(o=>o.id===participationOperation).map(o=>({...o,sourceOperationId:o.id})),new Set([participationOperation]))} readOnly={planReadOnly} onClose={()=>setParticipationOperation(null)} onChange={next=>{if(!planReadOnly)setGroupDraft(next);}} />}
+                {participationOperation && !scopeMode && model.snapshot.conditionResolution !== 'GROUPS_V2' && (
                   <ParticipationEditor
                     key={participationOperation}
                     snapshot={model.snapshot}
@@ -1204,9 +1214,9 @@ export default function EngineeringGrid({
                     }}
                   />
                 )}
-                {participationDraft && (
+                {(participationDraft || groupDraft) && (
                   <output className="participation-unsaved">
-                    {t('Participation changes are not saved yet.')}
+                    {model.snapshot.conditionResolution==='GROUPS_V2'?groupText(locale,'unsaved'):t('Participation changes are not saved yet.')}
                   </output>
                 )}
                 <div
@@ -1226,9 +1236,7 @@ export default function EngineeringGrid({
                     {planReadOnly ? t('Plan is read-only') : t('Plan editing')}{' '}
                     ·{' '}
                     {persistedPlan?.lockReason
-                      ? t(
-                          'Execution evidence recorded. Original Plan protected.',
-                        )
+                      ? groupText(locale, 'evidenceLocked')
                       : t(planMessage) ||
                         (production
                           ? t('Save Plan to keep changes')
@@ -1422,7 +1430,7 @@ export default function EngineeringGrid({
                       </table>
                     </div>
                     <footer>
-                      {t(
+                      {model.snapshot.conditionResolution==='GROUPS_V2'?allocationUi(locale,'legend'):t(
                         '● Planned participant · N/A Not participating · — Value not entered. Arrow keys / Enter / Tab move cells · Shift-click extends selection · ⌘C and tab/newline paste supported',
                       )}
                     </footer>
@@ -1478,8 +1486,10 @@ function GridRow(props: {
     subjectIndex: number,
   ) => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { row, model } = props;
+  const v2=model.snapshot.conditionResolution==='GROUPS_V2';
+  const allocationText=(subjectId:string)=>{if(!v2)return 'N/A';const a=allocationFor(model.snapshot,row.operation.sourceOperationId,subjectId);const groupId='groupId' in a?a.groupId:null;const name=groupId?model.snapshot.operationDesign?.[row.operation.sourceOperationId]?.groups.find(g=>g.id===groupId)?.name:null;return name??allocationLabel(locale,model.snapshot,row.operation.sourceOperationId,subjectId);};
   if (row.kind === 'OPERATION')
     return (
       <tr
@@ -1511,7 +1521,7 @@ function GridRow(props: {
           <button
             className="participation-count"
             disabled={props.readOnly}
-            aria-label={t('Edit participation for {0}', [row.operation.name])}
+            aria-label={v2?`${allocationUi(locale,'edit')} · ${row.operation.name}`:t('Edit participation for {0}', [row.operation.name])}
             onClick={(event) => {
               event.stopPropagation();
               props.onParticipation();
@@ -1526,7 +1536,7 @@ function GridRow(props: {
                 ),
               ).length
             }
-            /{model.subjects.length} {t('participants')}
+            /{model.subjects.length} {v2?allocationUi(locale,'applied'):t('participants')}
           </button>
         </td>
         <td aria-label={t('No operation unit value')}>—</td>
@@ -1537,7 +1547,7 @@ function GridRow(props: {
             className={
               props.activeSubjectId === subject.id ? 'active-subject' : ''
             }
-            aria-label={t('{0}: {1} in {2}', [
+            aria-label={v2?`${subject.displayLabel} · ${allocationText(subject.id)} · ${row.operation.name}`:t('{0}: {1} in {2}', [
               subject.displayLabel,
               participatesInOperation(
                 model.snapshot,
@@ -1548,7 +1558,7 @@ function GridRow(props: {
                 : t('Not participating'),
               row.operation.name,
             ])}
-            title={
+            title={v2?allocationDescription(locale,model.snapshot,row.operation.sourceOperationId,subject.id):
               participatesInOperation(
                 model.snapshot,
                 subject.id,
@@ -1563,9 +1573,9 @@ function GridRow(props: {
               subject.id,
               row.operation.sourceOperationId,
             ) ? (
-              <img src="/figma/run-plan/participant.svg" alt="" />
+              model.snapshot.conditionResolution==='GROUPS_V2'?allocationText(subject.id):<img src="/figma/run-plan/participant.svg" alt="" />
             ) : (
-              'N/A'
+              allocationText(subject.id)
             )}
           </td>
         ))}
@@ -1597,7 +1607,7 @@ function GridRow(props: {
               row.operation.sourceOperationId,
             )
               ? '—'
-              : 'N/A'}
+              : allocationText(subject.id)}
           </td>
         ))}
       </tr>
@@ -1633,15 +1643,15 @@ function GridRow(props: {
       <td>
         <button
           className={`grid-role ${props.role?.toLowerCase()}`}
-          aria-label={t('Toggle {0} role, currently {1}', [
+          aria-label={model.snapshot.conditionResolution==='GROUPS_V2'?groupText(locale,'conditions'):t('Toggle {0} role, currently {1}', [
             row.definition?.label,
             t(props.role),
           ])}
           disabled={props.readOnly}
-          title={t('{0} · Toggle scientific intent', [t(props.role)])}
+          title={model.snapshot.conditionResolution==='GROUPS_V2'?groupText(locale,'conditions'):t('{0} · Toggle scientific intent', [t(props.role)])}
           onClick={(event) => {
             event.stopPropagation();
-            props.onRole(props.role === 'VARIED' ? 'FIXED' : 'VARIED');
+            if(model.snapshot.conditionResolution==='GROUPS_V2')props.onParticipation();else props.onRole(props.role === 'VARIED' ? 'FIXED' : 'VARIED');
           }}
         >
           {props.role === 'VARIED' ? '◆' : '◇'}
@@ -1659,15 +1669,15 @@ function GridRow(props: {
             <td
               key={subject.id}
               className="grid-not-participating"
-              aria-label={t('{0} {1}: Not participating', [
+              aria-label={v2?`${row.definition?.label} · ${subject.displayLabel} · ${allocationText(subject.id)}`:t('{0} {1}: Not participating', [
                 row.definition?.label,
                 subject.displayLabel,
               ])}
-              title={t(
+              title={v2?allocationDescription(locale,model.snapshot,row.operation.sourceOperationId,subject.id):t(
                 'This Subject does not participate in this operation. This is not a missing value.',
               )}
             >
-              N/A
+              {allocationText(subject.id)}
             </td>
           );
         const key = gridCellKey(row.id, subject);

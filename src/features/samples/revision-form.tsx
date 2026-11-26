@@ -13,6 +13,11 @@ import {
   sampleValidationLabel,
   type SampleMessage,
 } from '@/src/shared/i18n/sample-messages';
+import { cloneSampleRevision } from '@/src/application/sample-revision-clone';
+import {
+  sampleRevisionText,
+  type SampleRevisionMessage,
+} from '@/src/shared/i18n/sample-revision-messages';
 import { useLocale } from '@/src/shared/i18n/locale';
 export function SampleRevisionForm({
   orgs,
@@ -27,34 +32,16 @@ export function SampleRevisionForm({
 }) {
   const { locale } = useLocale(),
     t = (k: SampleMessage) => sampleText(locale, k);
+  const rt = (key: SampleRevisionMessage) => sampleRevisionText(locale, key);
+  const [sourceDetail, setSourceDetail] = useState(detail);
+  const [changeReason, setChangeReason] = useState('');
+  const [edited, setEdited] = useState(false);
   const [commandId] = useState(() => crypto.randomUUID());
   const [draft, setDraft] = useState<SampleAggregate>(() => {
     const id = detail?.sample.id ?? crypto.randomUUID(),
       rid = crypto.randomUUID(),
       createdAt = new Date().toISOString();
-    if (detail) {
-      const nodes = detail.composition.nodes.map((n) =>
-        n.nodeType === 'SAMPLE_REVISION' && n.referenceId === detail.revision.id
-          ? { ...n, referenceId: rid }
-          : n,
-      );
-      return {
-        owningOrgId: detail.owningOrgId,
-        sample: detail.sample,
-        revision: {
-          ...detail.revision,
-          id: rid,
-          revision: detail.latestRevision + 1,
-          effectiveAt: '',
-          createdAt,
-        },
-        composition: {
-          nodes,
-          edges: structuredClone(detail.composition.edges),
-        },
-        properties: structuredClone(detail.properties),
-      };
-    }
+    if (detail) return cloneSampleRevision(detail, rid, createdAt);
     return {
       owningOrgId: orgs[0]?.id ?? '',
       sample: {
@@ -98,7 +85,41 @@ export function SampleRevisionForm({
   const change = <K extends keyof SampleAggregate>(
     key: K,
     value: SampleAggregate[K],
-  ) => setDraft((d) => ({ ...d, [key]: value }));
+  ) => {
+    setEdited(true);
+    setDraft((d) => ({ ...d, [key]: value }));
+  };
+  const selectSource = async (revision: number) => {
+    if (!detail || (edited && !window.confirm(rt('changeSource')))) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const selected = await sampleRequest<SampleDetail>({
+        operation: 'detail',
+        id: detail.sample.id,
+        revision,
+      });
+      setSourceDetail(selected);
+      setDraft(
+        cloneSampleRevision(
+          selected,
+          draft.revision.id,
+          draft.revision.createdAt,
+        ),
+      );
+      setEffectiveLocal('');
+      setChangeReason('');
+      setEdited(false);
+    } catch (e) {
+      setError(
+        e instanceof SampleRequestError
+          ? e
+          : new SampleRequestError('PERSISTENCE'),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
   const save = async () => {
     setBusy(true);
     setError(null);
@@ -107,7 +128,10 @@ export function SampleRevisionForm({
         await sampleRequest<SampleDetail>({
           operation: 'write',
           commandId,
-          expectedLatest: detail?.latestRevision ?? 0,
+          expectedLatest: sourceDetail?.latestRevision ?? 0,
+          ...(sourceDetail
+            ? { copiedFromRevisionId: sourceDetail.revision.id, changeReason }
+            : {}),
           aggregate: {
             ...draft,
             revision: {
@@ -145,7 +169,117 @@ export function SampleRevisionForm({
         void save();
       }}
     >
-      <h2>{t(detail ? 'revise' : 'create')}</h2>
+      <h2>{detail ? rt('raiseRevision') : t('create')}</h2>
+      {sourceDetail && (
+        <fieldset disabled={busy}>
+          <legend>{rt('copiedFrom')}</legend>
+          <div className="bootstrap-controls">
+            <label>
+              {rt('sampleId')}
+              <output>{sourceDetail.sample.id}</output>
+            </label>
+            <label>
+              {rt('copiedFrom')}
+              <select
+                value={sourceDetail.revision.revision}
+                onChange={(e) => void selectSource(Number(e.target.value))}
+              >
+                {sourceDetail.history.map((r) => (
+                  <option key={r.id} value={r.revision}>
+                    R{r.revision}
+                    {r.revision === sourceDetail.latestRevision
+                      ? ` · ${t('latest')}`
+                      : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {rt('newRevision')}
+              <output>R{draft.revision.revision}</output>
+            </label>
+          </div>
+          <p>{rt('numbering')}</p>
+          <details>
+            <summary>{rt('original')}</summary>
+            <div className="dxt-grid-scroll">
+              <table className="dxt-grid">
+                <thead>
+                  <tr>
+                    <th>{t('node')}</th>
+                    <th>{t('type')}</th>
+                    <th>{t('reference')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sourceDetail.composition.nodes.map((n) => (
+                    <tr key={n.id}>
+                      <td>{n.label}</td>
+                      <td>{t(n.nodeType)}</td>
+                      <td>{n.referenceId}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="dxt-grid-scroll">
+              <table className="dxt-grid">
+                <thead>
+                  <tr>
+                    <th>{t('parent')}</th>
+                    <th>{t('child')}</th>
+                    <th>{t('ratio')}</th>
+                    <th>{t('unit')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sourceDetail.composition.edges.map((e) => (
+                    <tr key={e.id}>
+                      <td>
+                        {
+                          sourceDetail.composition.nodes.find(
+                            (n) => n.id === e.parentNodeId,
+                          )?.label
+                        }
+                      </td>
+                      <td>
+                        {
+                          sourceDetail.composition.nodes.find(
+                            (n) => n.id === e.childNodeId,
+                          )?.label
+                        }
+                      </td>
+                      <td>{e.ratioValue ?? '—'}</td>
+                      <td>{e.ratioUnit ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="dxt-grid-scroll">
+              <table className="dxt-grid">
+                <thead>
+                  <tr>
+                    <th>{t('definition')}</th>
+                    <th>{t('value')}</th>
+                    <th>{t('unit')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sourceDetail.properties.map((p) => (
+                    <tr key={p.id}>
+                      <td>{p.propertyDefinitionId}</td>
+                      <td>{String(p.value)}</td>
+                      <td>{p.unit ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </fieldset>
+      )}
+
       <fieldset disabled={busy}>
         <legend>{t('identity')}</legend>
         <div className="bootstrap-controls">
@@ -192,7 +326,7 @@ export function SampleRevisionForm({
       </fieldset>
       <fieldset disabled={busy}>
         <legend>
-          {t('snapshot')} · {draft.revision.revision}
+          {detail ? rt('edited') : t('snapshot')} · R{draft.revision.revision}
         </legend>
         <div className="bootstrap-controls">
           <label>
@@ -200,9 +334,16 @@ export function SampleRevisionForm({
             <input
               type="datetime-local"
               required
-              aria-invalid={error?.fields.some(f => f.path === 'aggregate.revision.effectiveAt') || undefined}
+              aria-invalid={
+                error?.fields.some(
+                  (f) => f.path === 'aggregate.revision.effectiveAt',
+                ) || undefined
+              }
               value={effectiveLocal}
-              onChange={(e) => setEffectiveLocal(e.target.value)}
+              onChange={(e) => {
+                setEdited(true);
+                setEffectiveLocal(e.target.value);
+              }}
             />
           </label>
           <label>
@@ -638,12 +779,27 @@ export function SampleRevisionForm({
           {t('add')} · {t('properties')}
         </button>
       </fieldset>
+      {detail && (
+        <label>
+          {rt('optionalReason')}
+          <textarea
+            maxLength={2000}
+            disabled={busy}
+            value={changeReason}
+            onChange={(e) => {
+              setEdited(true);
+              setChangeReason(e.target.value);
+            }}
+          />
+        </label>
+      )}
       {error && (
         <div role="alert">
           <p>{t(errorKey)}</p>
           {error.fields.map((f) => (
             <p key={f.path}>
-              <strong>{sampleValidationLabel(locale, f.path)}</strong> · {t('invalid')}
+              <strong>{sampleValidationLabel(locale, f.path)}</strong> ·{' '}
+              {t('invalid')}
             </p>
           ))}
         </div>
@@ -660,7 +816,11 @@ export function SampleRevisionForm({
         <button
           type="submit"
           className="entry-button primary"
-          disabled={busy || !draft.owningOrgId}
+          disabled={
+            busy ||
+            !draft.owningOrgId ||
+            (sourceDetail != null && !sourceDetail.canRevise)
+          }
         >
           {busy ? t('loading') : t(detail ? 'saveRevision' : 'save')}
         </button>

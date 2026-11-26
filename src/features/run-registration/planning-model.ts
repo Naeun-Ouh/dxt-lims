@@ -1,3 +1,5 @@
+import type { RecipeSourceBinding } from '@/src/application/recipe-source';
+import { resolveSubjectAssignments, validateOperationDesign, type OperationDesign } from './operation-design';
 import type { SubjectRef } from '@/src/domain/experiment/subject';
 
 export type PlanningIntent = 'FIXED' | 'VARIED';
@@ -9,6 +11,8 @@ export type PlanningProvenance =
 export type SetupKind = 'RECIPE' | 'CONDITION' | 'MATERIAL' | 'RESOURCE';
 
 export type SetupAssignment = {
+  groupId?: string | null;
+  applicabilityId?: string;
   /** Exact registered Sample Revision selection; null means explicitly unlinked. */
   sampleRevisionId?: string | null;
   sampleAccessDenied?: boolean;
@@ -48,8 +52,10 @@ export type MeasurementPlanItem = {
   point: 'PRE' | 'INTERMEDIATE' | 'POST' | 'FINAL' | 'CUSTOM';
 };
 export type PlanDelta = {
+  beforeRole?:PlanningIntent|null;
+  afterRole?:PlanningIntent|null;
   id: string;
-  kind: SetupKind | 'MEASUREMENT_PLAN';
+  kind: SetupKind | 'MEASUREMENT_PLAN' | 'OPERATION_GROUP' | 'ALLOCATION';
   label: string;
   change: 'CHANGED' | 'ADDED' | 'REMOVED';
   before: string | null;
@@ -57,7 +63,9 @@ export type PlanDelta = {
 };
 export type RunPlanningSnapshot = {
   /** Absent means frozen legacy array-order interpretation. Set only at new Run creation. */
-  conditionResolution?: 'SUBJECT_FIRST_V1';
+  conditionResolution?: 'SUBJECT_FIRST_V1' | 'GROUPS_V2';
+  operationDesign?: Record<string, OperationDesign>;
+  recipeSourceBindings?: RecipeSourceBinding[];
   id: string;
   configurationPackageVersionId: string;
   experimentTypeProfileVersionId: string;
@@ -441,6 +449,7 @@ export function effectiveAssignments(
   snapshot: RunPlanningSnapshot,
   subjectId: string,
 ) {
+  if (snapshot.conditionResolution === 'GROUPS_V2') return resolveSubjectAssignments(snapshot,subjectId);
   if (snapshot.conditionResolution === 'SUBJECT_FIRST_V1') {
     const result: Record<string, SetupAssignment> = {};
     // Two explicit passes: scope, never input order or value truthiness, selects the winner.
@@ -495,11 +504,12 @@ export function assignmentSummary(
   return { value, detail: `${assignments.length} ${subjectNoun} assignments` };
 }
 export function validatePlanningSnapshot(snapshot: RunPlanningSnapshot) {
-  const errors: string[] = [];
-  if (snapshot.conditionResolution !== undefined && snapshot.conditionResolution !== 'SUBJECT_FIRST_V1')
+  const errors: string[] = validateOperationDesign(snapshot);
+  if (snapshot.conditionResolution !== undefined && snapshot.conditionResolution !== 'SUBJECT_FIRST_V1' && snapshot.conditionResolution !== 'GROUPS_V2')
     errors.push('Unsupported condition resolution');
   const subjectIds = new Set(snapshot.subjects.map((subject) => subject.id));
   const stepIds = new Set(snapshot.steps.map((s) => s.id));
+  if (stepIds.size !== snapshot.steps.length) errors.push('Duplicate Operation instance identity');
   if (subjectIds.size !== snapshot.subjects.length)
     errors.push('Duplicate subject reference');
   for (const [subjectId, ids] of Object.entries(snapshot.subjectOperationIds)) {

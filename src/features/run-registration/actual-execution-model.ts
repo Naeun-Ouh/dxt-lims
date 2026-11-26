@@ -128,7 +128,7 @@ function plannedDefinitionValue(
       candidate.processStepId === operationId &&
       (candidate.referenceId === definitionId || candidate.label === label),
   );
-  return assignment?.value ?? defaultValue ?? null;
+  return assignment?.value ?? (model.snapshot.conditionResolution==='GROUPS_V2'?null:defaultValue) ?? null;
 }
 
 function findEvidence(
@@ -194,7 +194,7 @@ export function projectOperationExecution(
               (value) => value.definitionId === definition.id,
             )?.value ?? null);
       const role =
-        model.snapshot.conditionResolution === 'SUBJECT_FIRST_V1'
+        model.snapshot.conditionResolution
           ? Object.values(
               effectiveAssignments(model.snapshot, subject.id),
             ).find(

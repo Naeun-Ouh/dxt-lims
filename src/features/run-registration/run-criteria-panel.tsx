@@ -401,10 +401,10 @@ export function RunCriteriaPanel({
           {history.map((h) => (
             <article key={h.recordId}>
               <strong>
-                {t('Revision')} {h.revision}
+                {h.revision === null ? t('Run Conclusion') : `${t('Revision')} ${h.revision}`}
               </strong>
               <p>
-                {h.context.targetBindings
+                {h.context?.targetBindings
                   .map(
                     (b) =>
                       `${b.target.operator} ${b.target.threshold ?? `${b.target.lowerBound}–${b.target.upperBound}`}`,
@@ -428,5 +428,5 @@ export function RunCriteriaPanel({
 
 function HistoricalRecord({record,context}:{record:unknown;context:NonNullable<ReasoningState<unknown>['provenance']>[number]['context']}){
  const {t}=useLocale();const r=record as {comment?:string;disposition?:string;evaluator?:string;evaluatedAt?:string;decisionStatement?:string;decision?:{conclusion:string;reason:string;recordedBy:string;recordedAt:string;nextAction:{nextActionTypeDefinitionId:string;note:string}|null}};
- return r.decision?<><p>{r.decisionStatement??r.decision.conclusion}</p><p>{r.decision.reason}</p><p>{r.decision.recordedBy} · {r.decision.recordedAt}</p><p>{r.decision.nextAction?`${context.catalog.nextActionTypes.find(a=>a.id===r.decision!.nextAction!.nextActionTypeDefinitionId)?.name??t('Next Action')}: ${r.decision.nextAction.note}`:t('No Next Action (optional)')}</p></>:<><p>{r.comment}</p><p>{r.disposition&&t(r.disposition)} · {r.evaluator} · {r.evaluatedAt}</p></>;
+ return r.decision?<><p>{r.decisionStatement??r.decision.conclusion}</p><p>{r.decision.reason}</p><p>{r.decision.recordedBy} · {r.decision.recordedAt}</p><p>{r.decision.nextAction?`${context?.catalog.nextActionTypes.find(a=>a.id===r.decision!.nextAction!.nextActionTypeDefinitionId)?.name??t('Next Action')}: ${r.decision.nextAction.note}`:t('No Next Action (optional)')}</p></>:<><p>{r.comment}</p><p>{r.disposition&&t(r.disposition)} · {r.evaluator} · {r.evaluatedAt}</p></>;
 }

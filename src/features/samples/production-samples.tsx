@@ -16,6 +16,10 @@ import {
   type SampleMessage,
 } from '@/src/shared/i18n/sample-messages';
 import { Workspace } from '@/src/shared/ui/workspace';
+import {
+  sampleRevisionText,
+  type SampleRevisionMessage,
+} from '@/src/shared/i18n/sample-revision-messages';
 import { SampleRevisionForm } from './revision-form';
 export default function ProductionSamples({
   id,
@@ -27,6 +31,9 @@ export default function ProductionSamples({
   const router = useRouter();
   const { locale, t: global } = useLocale(),
     t = (k: SampleMessage) => sampleText(locale, k);
+  const rt = (key: SampleRevisionMessage) => sampleRevisionText(locale, key);
+  const [formDetail, setFormDetail] = useState<SampleDetail>();
+  const [opening, setOpening] = useState(false);
   const [search, setSearch] = useState(''),
     [offset, setOffset] = useState(0),
     [version, setVersion] = useState(0),
@@ -97,10 +104,37 @@ export default function ProductionSamples({
               type="button"
               className="entry-button primary"
               style={{ marginLeft: 'auto' }}
-              disabled={detail ? !detail.canRevise : !result.orgs.length}
-              onClick={() => setForm(true)}
+              disabled={
+                opening || (detail ? !detail.canRevise : !result.orgs.length)
+              }
+              onClick={async () => {
+                setOpening(true);
+                try {
+                  setFormDetail(
+                    detail
+                      ? await sampleRequest<SampleDetail>({
+                          operation: 'detail',
+                          id: detail.sample.id,
+                        })
+                      : undefined,
+                  );
+                  setForm(true);
+                } catch (e) {
+                  setError({
+                    key,
+                    code:
+                      e instanceof SampleRequestError ? e.code : 'PERSISTENCE',
+                  });
+                } finally {
+                  setOpening(false);
+                }
+              }}
             >
-              {t(detail ? 'revise' : 'create')}
+              {opening
+                ? t('loading')
+                : detail
+                  ? rt('raiseRevision')
+                  : t('create')}
             </button>
           )}
         </div>
@@ -124,7 +158,7 @@ export default function ProductionSamples({
         {form && result && (
           <SampleRevisionForm
             orgs={result.orgs}
-            detail={detail}
+            detail={formDetail}
             onCancel={() => setForm(false)}
             onSaved={(d) => {
               setForm(false);
@@ -293,6 +327,11 @@ export default function ProductionSamples({
                   >
                     {t('revision')} {r.revision}
                   </Link>
+                  {' · '}
+                  {r.copiedFromRevision != null
+                    ? `${rt('copied')} R${r.copiedFromRevision}`
+                    : rt(r.revision === 1 ? 'registered' : 'unknownOrigin')}
+                  {r.changeReason && <span> · {r.changeReason}</span>}
                 </p>
               ))}
             </section>

@@ -117,34 +117,55 @@ export const sampleAggregateSchema = z
     });
   });
 export type SampleAggregate = z.infer<typeof sampleAggregateSchema>;
-export const sampleCommandSchema = z.discriminatedUnion('operation', [
-  z.object({ operation: z.literal('options') }),
-  z.object({
-    operation: z.literal('list'),
-    search: z.string().max(200).default(''),
-    offset: z.number().int().min(0).default(0),
-    limit: z.number().int().min(1).max(100).default(25),
-  }),
-  z.object({
-    operation: z.literal('detail'),
-    id: z.string().min(1),
-    revision: z.number().int().positive().optional(),
-  }),
-  z.object({
-    operation: z.literal('write'),
-    commandId: z.string().min(1).max(200),
-    expectedLatest: z.number().int().min(0),
-    aggregate: sampleAggregateSchema,
-  }),
-  z.object({
-    operation: z.literal('selection'),
-    revisionId: z.string().min(1),
-  }),
-  z.object({
-    operation: z.literal('revisions'),
-    search: z.string().max(200).default(''),
-  }),
-]);
+export const sampleCommandSchema = z
+  .discriminatedUnion('operation', [
+    z.object({ operation: z.literal('options') }),
+    z.object({
+      operation: z.literal('list'),
+      search: z.string().max(200).default(''),
+      offset: z.number().int().min(0).default(0),
+      limit: z.number().int().min(1).max(100).default(25),
+    }),
+    z.object({
+      operation: z.literal('detail'),
+      id: z.string().min(1),
+      revision: z.number().int().positive().optional(),
+    }),
+    z.object({
+      operation: z.literal('write'),
+      commandId: z.string().min(1).max(200),
+      expectedLatest: z.number().int().min(0),
+      copiedFromRevisionId: z.string().min(1).max(200).optional(),
+      changeReason: z.string().trim().max(2000).optional(),
+      aggregate: sampleAggregateSchema,
+    }),
+    z.object({
+      operation: z.literal('selection'),
+      revisionId: z.string().min(1),
+    }),
+    z.object({
+      operation: z.literal('revisions'),
+      search: z.string().max(200).default(''),
+    }),
+  ])
+  .superRefine((command, context) => {
+    if (
+      command.operation === 'write' &&
+      command.changeReason &&
+      !command.copiedFromRevisionId
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['copiedFromRevisionId'],
+        message: 'Choose the clone source before recording a change reason.',
+      });
+    }
+  });
+export type SampleCloneOrigin = {
+  copiedFromRevisionId: string;
+  copiedFromRevision: number;
+  changeReason: string | null;
+};
 export type SampleCommand = z.infer<typeof sampleCommandSchema>;
 export type SampleSummary = {
   id: string;
@@ -162,7 +183,14 @@ export type SampleDetail = {
   properties: SampleAggregate['properties'];
   latestRevision: number;
   canRevise: boolean;
-  history: { id: string; revision: number }[];
+  cloneOrigin: SampleCloneOrigin | null;
+  history: {
+    id: string;
+    revision: number;
+    copiedFromRevisionId: string | null;
+    copiedFromRevision: number | null;
+    changeReason: string | null;
+  }[];
   usage: {
     study: string;
     slug: string;

@@ -1,6 +1,9 @@
 'use client';
+import type { RunPlanningSnapshot } from '@/src/features/run-registration/planning-model';
 import { RunDraftFeedback } from './run-draft-feedback';
-import { useState, Fragment } from 'react';
+import { useState, useEffect, Fragment } from 'react';
+import { RunDraftGroupGrid } from './run-draft-group-grid';
+import { prepareGroupDraft } from './run-draft-group-edit';
 import { DxtGridFrame, DxtStatus, DxtCellText } from '@/src/shared/ui/dxt-grid';
 import { RunDraftMeasurementGrid } from './run-draft-measurement-grid';
 import { RunDraftSubjects } from './run-draft-subjects';
@@ -15,11 +18,13 @@ export function RunDraftEditor({
   draft,
   options,
   catalog,
+  baseSnapshot,
   onChange,
 }: {
   draft: RunDraft;
   options: BootstrapOperationOption[];
   catalog: ReferenceCatalog;
+  baseSnapshot?: RunPlanningSnapshot;
   onChange: (draft: RunDraft) => void;
 }) {
   const { t } = useLocale();
@@ -35,6 +40,8 @@ export function RunDraftEditor({
         i === index ? { ...op, ...patch } : op,
       ),
     });
+  useEffect(() => { if (draft.planningContract !== 'GROUPS_V2') onChange(prepareGroupDraft(draft)); }, [draft, onChange]);
+  if (draft.planningContract === 'GROUPS_V2') return <RunDraftGroupGrid baseSnapshot={baseSnapshot} draft={draft} options={options} catalog={catalog} onChange={onChange} />;
   const leftColumns = attributes ? 7 : 3;
   const leftWidth = attributes ? 644 : 304;
   const displayName = (id?: string | null, label?: string) =>

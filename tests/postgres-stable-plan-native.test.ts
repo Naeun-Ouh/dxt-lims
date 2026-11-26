@@ -1,3 +1,4 @@
+import {operationGroupContract} from './postgres-operation-group-contract';
 import assert from 'node:assert/strict';
 import {mkdtemp,readFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -65,6 +66,11 @@ void test('native PostgreSQL 18 preserves Operation instance identity across Pla
     await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/016_shared_scientific_authority.sql'), 'utf8'));
     await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/017_run_reasoning_provenance.sql'), 'utf8'));
     await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/018_sample_lifecycle.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/019_operation_group_design.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/020_sample_revision_clone_origin.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/021_run_judgment_optional_basis.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/022_recipe_source_bindings.sql'), 'utf8'));
+
     await seedProductionSlice(database, configurationRepository);
   await seedScientificTestPrincipal(database);
     await provisionMeasurementReferences(database, definitions);
@@ -72,6 +78,7 @@ void test('native PostgreSQL 18 preserves Operation instance identity across Pla
   await completeLegacyFixtureMeasurementPlans(database);
     const proof=await stableOperationIdentityContract(database);
     await nativePlanEvidenceRace(database);
+    await operationGroupContract(database);
     assert.match((await database.query<{server_version:string}>('SHOW server_version')).rows[0].server_version,/^18\./);
     await database.close();
     await stop();running=false;

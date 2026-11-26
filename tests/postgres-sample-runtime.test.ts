@@ -1,3 +1,4 @@
+import { cloneSampleRevision } from '@/src/application/sample-revision-clone';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, readdir, rm, mkdir } from 'node:fs/promises';
@@ -806,6 +807,171 @@ void test('Sample runtime: isolated PostgreSQL, HTTP, exact Run links and explic
         } finally {
           await c.close();
         }
+      },
+    );
+    await t.test(
+      'WP03: R1 → R2 and selected old R1 → R3 retain exact origin, optional reason and old Run usage',
+      async () => {
+        const beforeUsage = (
+          await ok({ operation: 'detail', id: 'contract-sample', revision: 1 })
+        ).usage;
+        const firstDocument = document();
+        firstDocument.sample.id = 'clone-sample';
+        firstDocument.sample.sampleCode = 'CLONE AGENT TEST ONLY';
+        firstDocument.revision.sampleId = 'clone-sample';
+        firstDocument.revision.id = 'clone-r1';
+        firstDocument.composition.nodes[0].referenceId = 'clone-r1';
+        const r1 = await ok({
+          operation: 'write',
+          aggregate: firstDocument,
+          expectedLatest: 0,
+          commandId: randomUUID(),
+        });
+        assert.equal(r1.cloneOrigin, null);
+        const revisionDocument = (source: SampleDetail, id: string) => {
+          const d = cloneSampleRevision(source, id, '2026-01-02T00:00:00.000Z');
+          d.revision.effectiveAt = '2026-01-02T00:00:00.000Z';
+          return d;
+        };
+        const secondDocument = revisionDocument(r1, 'clone-r2');
+        secondDocument.properties[0].value = 7;
+        const r2 = await ok({
+          operation: 'write',
+          aggregate: secondDocument,
+          expectedLatest: 1,
+          copiedFromRevisionId: 'clone-r1',
+          commandId: randomUUID(),
+          changeReason: 'First controlled change',
+        });
+        assert.equal(r2.cloneOrigin?.copiedFromRevisionId, 'clone-r1');
+        const oldSource = await ok({
+          operation: 'detail',
+          id: 'clone-sample',
+          revision: 1,
+        });
+        const thirdDocument = revisionDocument(oldSource, 'clone-r3');
+        assert.equal(thirdDocument.revision.revision, 3);
+        assert.equal(thirdDocument.properties[0].value, 0);
+        const command = {
+          operation: 'write',
+          aggregate: thirdDocument,
+          expectedLatest: 2,
+          copiedFromRevisionId: 'clone-r1',
+          commandId: randomUUID(),
+          changeReason: '',
+        };
+        const r3 = await ok(command);
+        assert.deepEqual(r3.cloneOrigin, {
+          copiedFromRevisionId: 'clone-r1',
+          copiedFromRevision: 1,
+          changeReason: null,
+        });
+        assert.deepEqual(
+          (await ok(command)).cloneOrigin,
+          r3.cloneOrigin,
+          'same command retries exactly',
+        );
+        assert.equal(
+          (await api({ ...command, copiedFromRevisionId: 'clone-r2' })).status,
+          409,
+          'receipt includes exact origin',
+        );
+        assert.equal(
+          (await ok({ operation: 'detail', id: 'clone-sample', revision: 2 }))
+            .properties[0].value,
+          7,
+        );
+        assert.equal(
+          (await ok({ operation: 'detail', id: 'clone-sample', revision: 1 }))
+            .properties[0].value,
+          0,
+        );
+        assert.deepEqual(
+          (
+            await ok({
+              operation: 'detail',
+              id: 'contract-sample',
+              revision: 1,
+            })
+          ).usage,
+          beforeUsage,
+          'old Run links do not change',
+        );
+        assert.equal(
+          r3.history.find((h) => h.revision === 3)?.copiedFromRevision,
+          1,
+        );
+        const r4 = revisionDocument(r3, 'clone-r4');
+        for (const source of ['missing-revision', 'contract-r1']) {
+          const bad = await api({
+            operation: 'write',
+            aggregate: r4,
+            expectedLatest: 3,
+            copiedFromRevisionId: source,
+            commandId: randomUUID(),
+          });
+          assert.equal(bad.status, 409, 'foreign/nonexistent origin rejected');
+        }
+        const races = await Promise.all(
+          ['a', 'b'].map((suffix) =>
+            api({
+              operation: 'write',
+              aggregate: revisionDocument(r3, `clone-r4-${suffix}`),
+              expectedLatest: 3,
+              copiedFromRevisionId: 'clone-r1',
+              commandId: randomUUID(),
+            }),
+          ),
+        );
+        assert.deepEqual(races.map((r) => r.status).sort((a, b) => a - b), [200, 409]);
+        const current = await ok({ operation: 'detail', id: 'clone-sample' });
+        assert.equal(current.latestRevision, 4);
+        assert.equal(current.history.length, 4);
+        for (const pid of [
+          'sample-viewer',
+          'sample-admin',
+          'sample-outsider',
+        ]) {
+          assert.equal(
+            (
+              await api(
+                {
+                  operation: 'write',
+                  aggregate: revisionDocument(current, `denied-${pid}`),
+                  expectedLatest: 4,
+                  copiedFromRevisionId: 'clone-r1',
+                  commandId: randomUUID(),
+                },
+                pid,
+              )
+            ).status,
+            403,
+          );
+        }
+        await sql.query(
+          "UPDATE dxt_sample.access_grant SET active=false WHERE id='sample-writer-REVISE_SAMPLE'",
+        );
+        assert.equal(
+          (await api(command)).status,
+          403,
+          'retry checks revoked capability',
+        );
+        await sql.query(
+          "UPDATE dxt_sample.access_grant SET active=true WHERE id='sample-writer-REVISE_SAMPLE'",
+        );
+        for (const query of [
+          "UPDATE dxt_sample.revision_clone_origin SET change_reason='changed'",
+          'DELETE FROM dxt_sample.revision_clone_origin',
+          'TRUNCATE dxt_sample.revision_clone_origin',
+        ]) {
+          await assert.rejects(sql.query(query), /append-only/i);
+        }
+        const legacy = await ok({
+          operation: 'detail',
+          id: 'contract-sample',
+          revision: 2,
+        });
+        assert.equal(legacy.cloneOrigin, null, 'legacy source not inferred');
       },
     );
   } finally {
