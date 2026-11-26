@@ -20,6 +20,10 @@ try {
       if (applied.rows[0].checksum !== checksum) throw new Error('Applied migration checksum differs; a corrective migration is required.');
       process.stdout.write('Migration already applied; checksum verified.\n');
     } else {
+      // These migrations are approved for isolated development only until rollout review.
+      if (Number(name.slice(0, 3)) >= 16 && process.env.DXT_SCHEMA_STAGE !== 'disposable-development') {
+        throw new Error('New lifecycle migrations require the separately prepared disposable development environment.');
+      }
       await client.query(sql.replace(/^BEGIN;\s*/, '').replace(/COMMIT;\s*$/, ''));
       await client.query('INSERT INTO dxt_schema_migration (name, checksum) VALUES ($1,$2)', [name, checksum]);
       process.stdout.write(`${name} migration applied.\n`);
