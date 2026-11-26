@@ -40,6 +40,7 @@ export function validatePlanEdit(current:RunPlanningSnapshot,next:RunPlanningSna
     validateVariableValue(definition,a.value);
     if(definition.editor==='REFERENCE'&&!definition.options.some(o=>o.value===a.value&&o.referenceId===a.referenceId))throw new ApplicationError('VALIDATION','Reference value must match its exact revision.');
   }
+  next={...next,assignments:next.assignments.map(a=>{const old=current.assignments.find(x=>x.id===a.id);return a.kind==='MATERIAL'&&old&&old.referenceId!==a.referenceId?{...a,sampleRevisionId:null,sampleAccessDenied:false}:a;})};
   return withPlanDelta(current,next);
 }
 export function withPlanDelta(current:RunPlanningSnapshot,next:RunPlanningSnapshot):RunPlanningSnapshot {

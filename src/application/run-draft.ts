@@ -28,6 +28,8 @@ export const runDraftSchema = z
                     value: z.string().max(4000),
                     intentRole: z.enum(['FIXED', 'VARIED']),
                     subjectId: id.nullable(),
+                    sampleRevisionId:id.nullable().optional(),
+                    sampleAccessDenied:z.boolean().optional(),
                   })
                   .strict(),
               )
@@ -117,6 +119,7 @@ export function materializeRunDraft(
         value: item.value,
         intentRole: item.intentRole,
         provenance: 'AD_HOC',
+        ...(def.kind==='MATERIAL'?{sampleRevisionId:item.sampleRevisionId??null,sampleAccessDenied:item.sampleAccessDenied}:{}),
       });
     }
     if (op.role === 'PROCESS') {
@@ -221,6 +224,7 @@ export function draftFromSnapshot(
               value: a.value,
               intentRole: a.intentRole,
               subjectId: a.subjectId,
+              ...(a.kind==='MATERIAL'?{sampleRevisionId:a.sampleRevisionId??null,sampleAccessDenied:a.sampleAccessDenied}:{}),
             };
           }),
       };

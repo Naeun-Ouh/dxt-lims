@@ -1,3 +1,4 @@
+import {readSampleSelections,syncSampleSelections} from './sample-run-links';
 import { prospectiveConditions, conditionInterpretationChanges, legacyConditionAmbiguities } from '@/src/application/condition-resolution';
 import { executionOptions } from './study-bootstrap';
 import { materializeRunDraft, draftValueProblems } from '@/src/application/run-draft';
@@ -244,6 +245,7 @@ async function readRun(session: SqlSession, where: string, parameters: unknown[]
       intentRole: item.intent_role, provenance: item.provenance })),
     measurements: plans, delta: row.delta,
   };
+  await readSampleSelections(session,row.run_id,snapshot.assignments);
   const errors = validatePlanningSnapshot(snapshot);
   if (errors.length) throw new ApplicationError('PERSISTENCE', `Persisted Run snapshot is invalid: ${errors.join('; ')}`);
   return snapshot;
@@ -264,10 +266,10 @@ async function insertSnapshot(session: SqlSession, study: StudyRow, snapshot: Ru
       snapshot.experimentType, snapshot.area, snapshot.workspaceContextLabel ?? null, snapshot.createdAt.length === 10 ? `${snapshot.createdAt}T00:00:00.000Z` : snapshot.createdAt,
       snapshot.intent, snapshot.provenance.kind, snapshot.provenance.label, snapshot.provenance.sourceId,
       JSON.stringify(snapshot.candidateSubjects ?? null), JSON.stringify(snapshot.manufacturingContext ?? null), JSON.stringify(snapshot.delta), snapshot.series.name, JSON.stringify({ranges:[],manualFocus:[],conditionResolution:snapshot.conditionResolution})]);
-  await insertPlanChildren(session,runId,snapshot,registry);
+  await insertPlanChildren(session,runId,snapshot,registry,'CREATE_RUN');
   return runId;
 }
-async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPlanningSnapshot,registry:ReturnType<import('@/src/application/hydrated-configuration').HydratedConfiguration['getConfigurationRegistry']>){
+async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPlanningSnapshot,registry:ReturnType<import('@/src/application/hydrated-configuration').HydratedConfiguration['getConfigurationRegistry']>,sampleAction:'CREATE_RUN'|'EDIT_RUN_PLAN'='EDIT_RUN_PLAN'){
   const rules=registry.applicabilityRuleSets.flatMap(set=>set.rules);
   const subjectIds = new Map<string, string>();
   for (const [index, subject] of snapshot.subjects.entries()) {
@@ -353,6 +355,7 @@ async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPl
         (measurement_plan_id, ordinal, parameter_definition_id, parameter_label) VALUES ($1,$2,$3,$4)`,
         [measurementId, index + 1, measurement.parameterDefinitionIds[index], measurement.parameters[index]]);
   }
+  await syncSampleSelections(session,runId,snapshot,sampleAction);
   return runId;
 }
 

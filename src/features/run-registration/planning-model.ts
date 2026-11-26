@@ -9,6 +9,9 @@ export type PlanningProvenance =
 export type SetupKind = 'RECIPE' | 'CONDITION' | 'MATERIAL' | 'RESOURCE';
 
 export type SetupAssignment = {
+  /** Exact registered Sample Revision selection; null means explicitly unlinked. */
+  sampleRevisionId?: string | null;
+  sampleAccessDenied?: boolean;
   id: string;
   kind: SetupKind;
   label: string;
