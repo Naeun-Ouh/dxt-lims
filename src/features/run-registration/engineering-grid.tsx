@@ -1,4 +1,8 @@
 'use client';
+import {SampleRevisionPicker} from '@/src/features/samples/revision-picker';
+import {SampleSelectionDetail} from '@/src/features/samples/selection-detail';
+import { legacyConditionAmbiguities } from '@/src/application/condition-resolution';
+import { runAnalysisHref } from './run-analysis-link';
 import { ParticipationEditor } from './participation-editor';
 import { editOperationParticipation } from './participation';
 import { useLocale } from '@/src/shared/i18n/locale';
@@ -31,6 +35,7 @@ import { validateVariableValue } from './applicability';
 import { ActualExecutionGrid } from './actual-execution-grid';
 import type { ActualExecutionEvidence } from './actual-execution-model';
 import { MeasurementExecutionGrid } from './measurement-execution-grid';
+import { RunCriteriaPanel } from './run-criteria-panel';
 import { EvaluationExecutionGrid } from './evaluation-execution-grid';
 import type {
   EngineerEvaluationRecord,
@@ -101,10 +106,13 @@ export default function EngineeringGrid({
   const baseModel = useMemo(
     () =>
       persistedPlan
-        ? gridPlanningContext(
-            persistedPlan,
-            application.repositories.configuration,
-          )
+        ? {
+            ...gridPlanningContext(
+              persistedPlan,
+              application.repositories.configuration,
+            ),
+            explicitAssignments: inputModel.explicitAssignments,
+          }
         : {
             ...inputModel,
             configurationRepository: application.repositories.configuration,
@@ -147,6 +155,10 @@ export default function EngineeringGrid({
           }
         : baseModel,
     [baseModel, participationDraft, workspaceMode],
+  );
+  const legacyConditionWarning = useMemo(
+    () => legacyConditionAmbiguities(model.snapshot),
+    [model.snapshot],
   );
   const changeMode = (
     mode: 'PLAN' | 'ACTUAL' | 'MEASUREMENT' | 'EVALUATION',
@@ -269,6 +281,7 @@ export default function EngineeringGrid({
   const activeSubjectId = selected?.subjectId ?? initialSubjectId;
   const [anchor, setAnchor] = useState<Cell | null>(null);
   const [dirty, setDirty] = useState<Record<string, string>>({});
+  const [sampleSelections,setSampleSelections]=useState<Record<string,string|null>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [roles, setRoles] = useState<Record<string, 'FIXED' | 'VARIED'>>({});
   const [inspected, setInspected] = useState<EngineeringGridRow | null>(null);
@@ -285,6 +298,7 @@ export default function EngineeringGrid({
   const keyWidth = compactContext ? 340 : 540;
   const subjectWidth = 80;
 
+  const [criteriaRefresh, setCriteriaRefresh] = useState(0);
   const authoring = useLifecycleAuthoring(
     model,
     authoringProfile,
@@ -294,6 +308,7 @@ export default function EngineeringGrid({
       : workspaceMode === 'MEASUREMENT'
         ? 'MEASUREMENT'
         : 'ALL',
+    criteriaRefresh,
   );
   const savePlan = async (
     patch: Partial<
@@ -321,6 +336,7 @@ export default function EngineeringGrid({
         roles,
       ),
     };
+    record.snapshot={...record.snapshot,assignments:record.snapshot.assignments.map(a=>a.kind==='MATERIAL'&&Object.hasOwn(sampleSelections,a.id)?{...a,sampleRevisionId:sampleSelections[a.id],sampleAccessDenied:false}:a)};
     const digest = await crypto.subtle.digest(
       'SHA-256',
       new TextEncoder().encode(JSON.stringify(record)),
@@ -336,6 +352,7 @@ export default function EngineeringGrid({
       if (!stored) throw new Error('Plan read-back unavailable.');
       setPersistedPlan(stored);
       setDirty({});
+      setSampleSelections({});
       setRoles({});
       setParticipationDraft(null);
       setPlanMessage('Plan saved.');
@@ -365,11 +382,11 @@ export default function EngineeringGrid({
     authoring?.state.measurementResults ?? measurementResults;
   const resolvedCatalog =
     authoring?.state.measurementCatalog ??
-    authoring?.profile.catalog ??
+    authoring?.profile?.catalog ??
     referenceCatalog;
   const resolvedBindings =
     authoring?.state.targetBindings ??
-    authoring?.profile.targetBindings ??
+    authoring?.profile?.targetBindings ??
     evaluationTargetBindings;
   const resolvedEvaluations =
     authoring?.state.engineerEvaluations ?? engineerEvaluations;
@@ -378,9 +395,8 @@ export default function EngineeringGrid({
   const analysisParameterId = resolvedMeasurements?.values.find(
     (value) => value.parameterDefinitionId,
   )?.parameterDefinitionId;
-  const analysisHref = `/analysis?study=${seriesSlug}&runs=${model.snapshot.runNumber}${
-    analysisParameterId ? `&parameters=${analysisParameterId}` : ''
-  }`;
+  const analysisHref = runAnalysisHref(model.snapshot, analysisParameterId ?? undefined,
+  );
   const nextRunHref = resolvedNextRun
     ? `/series/${seriesSlug}/runs/${resolvedNextRun.snapshot.runNumber}/engineering-grid?view=plan`
     : undefined;
@@ -416,7 +432,9 @@ export default function EngineeringGrid({
     const matchesFilter = (row: EngineeringGridRow) => {
       const role = roles[row.id] ?? row.role;
       return filter === 'VARIED'
-        ? role === 'VARIED'
+        ? row.subjectRoles && roles[row.id] === undefined
+          ? Object.values(row.subjectRoles).includes('VARIED')
+          : role === 'VARIED'
         : filter === 'CHANGED'
           ? Object.keys(dirty).some((key) => key.startsWith(`${row.id}:`)) ||
             model.snapshot.delta.items.some(
@@ -670,6 +688,12 @@ export default function EngineeringGrid({
         className={`engineering-grid-page plan-final-page lifecycle-final-page mode-${workspaceMode.toLowerCase()}`}
       >
         <h1 className="plan-screen-title">{t('Engineering Grid')}</h1>
+        {legacyConditionWarning && (
+          <p role="note">
+            {t('This existing Plan contains overlapping condition scopes. Its saved interpretation is preserved; copying it requires reviewing effective values.',
+            )}
+          </p>
+        )}
         <nav
           className="engineering-grid-modes"
           aria-label={t('Experiment lifecycle')}
@@ -688,7 +712,9 @@ export default function EngineeringGrid({
           </button>
           <button
             className={workspaceMode === 'MEASUREMENT' ? 'active' : ''}
-            disabled={!resolvedMeasurements || !resolvedCatalog}
+            disabled={
+              !production && (!resolvedMeasurements || !resolvedCatalog)
+            }
             onClick={() => changeMode('MEASUREMENT')}
           >
             {t('Measurement')}
@@ -696,9 +722,11 @@ export default function EngineeringGrid({
           <button
             className={workspaceMode === 'EVALUATION' ? 'active' : ''}
             disabled={
-              !resolvedMeasurements ||
-              !resolvedCatalog ||
-              resolvedBindings.length === 0
+              !production && (
+                !resolvedMeasurements ||
+                !resolvedCatalog ||
+                resolvedBindings.length === 0
+              )
             }
             onClick={() => changeMode('EVALUATION')}
           >
@@ -711,40 +739,80 @@ export default function EngineeringGrid({
         ) : workspaceMode !== 'PLAN' && authoring?.loading ? (
           <output>{t('Loading lifecycle evidence…')}</output>
         ) : workspaceMode === 'ACTUAL' ? (
-          <ActualExecutionGrid
-            model={model}
-            evidence={resolvedActualEvidence}
-            onComparePlan={() => changeMode('PLAN')}
-            onRecord={
-              authoring && (!production || scientific?.canRecordActual)
-                ? (command) => authoring.recordActual(command)
-                : undefined
-            }
-            onContinue={authoring ? () => changeMode('MEASUREMENT') : undefined}
-            now={authoring?.now}
-          />
+          <>
+            {production && !scientific?.canRecordActual && (
+              <output>
+                {t(
+                  'Actual is read-only. Ask the Study manager for permission to record execution.',
+                )}
+              </output>
+            )}
+            <ActualExecutionGrid
+              model={model}
+              evidence={resolvedActualEvidence}
+              onComparePlan={() => changeMode('PLAN')}
+              onRecord={
+                authoring && (!production || scientific?.canRecordActual)
+                  ? (command) => authoring.recordActual(command)
+                  : undefined
+              }
+              onContinue={
+                authoring ? () => changeMode('MEASUREMENT') : undefined
+              }
+              now={authoring?.now}
+            />
+          </>
+        ) : workspaceMode === 'MEASUREMENT' &&
+          production &&
+          !model.snapshot.measurements.length &&
+          !resolvedMeasurements?.datasets.length ? (
+          <output>
+            {t(
+              'No Measurement plan exists for this Run. Record Actual for this process-only Run, or configure Measurement when creating a subsequent Run.',
+            )}
+          </output>
         ) : workspaceMode === 'MEASUREMENT' &&
           resolvedMeasurements &&
           resolvedCatalog ? (
-          <MeasurementExecutionGrid
-            model={model}
-            results={resolvedMeasurements}
-            catalog={resolvedCatalog}
-            executionEvidence={resolvedActualEvidence}
-            onRecord={
-              authoring && (!production || scientific?.canRecordMeasurement)
-                ? (command) => authoring.recordMeasurement(command)
-                : undefined
-            }
-            analysisHref={authoring ? analysisHref : undefined}
-            now={authoring?.now}
-          />
-        ) : workspaceMode === 'EVALUATION' &&
-          resolvedMeasurements &&
+          <>
+            {production && !scientific?.canRecordMeasurement && (
+              <output>
+                {t(
+                  'Measurement is read-only. Ask the Study manager for permission to record results.',
+                )}
+              </output>
+            )}
+            <MeasurementExecutionGrid
+              model={model}
+              results={resolvedMeasurements}
+              catalog={resolvedCatalog}
+              executionEvidence={resolvedActualEvidence}
+              onRecord={
+                authoring && (!production || scientific?.canRecordMeasurement)
+                  ? (command) => authoring.recordMeasurement(command)
+                  : undefined
+              }
+              analysisHref={authoring ? analysisHref : undefined}
+              now={authoring?.now}
+            />
+          </>
+        ) : workspaceMode === 'EVALUATION' ? (
+          <>
+            {production && (
+              <RunCriteriaPanel
+                runId={model.snapshot.id}
+                onChanged={() => setCriteriaRefresh((v) => v + 1)}
+                history={[
+                  ...(authoring?.state.evaluationProvenance ?? []),
+                  ...(authoring?.state.decisionProvenance ?? []),
+                ]}
+              />
+            )}
+            {resolvedMeasurements &&
           resolvedCatalog &&
           resolvedBindings.length ? (
           <EvaluationExecutionGrid
-            key={`evaluation-${model.snapshot.id}`}
+            key={`evaluation-${model.snapshot.id}-${authoring?.state.interpretation?.contextId ?? criteriaRefresh}`}
             model={model}
             results={resolvedMeasurements}
             catalog={resolvedCatalog}
@@ -761,8 +829,7 @@ export default function EngineeringGrid({
             }
             onRecordDecision={
               authoring &&
-              (!production ||
-                (scientific?.canDecide && scientific?.canAuthorNextAction))
+              (!production || scientific?.canDecide)
                 ? (command) => authoring.recordDecision(command)
                 : undefined
             }
@@ -771,9 +838,17 @@ export default function EngineeringGrid({
                 ? () => authoring.createNextRun()
                 : undefined
             }
-            actor={authoring?.profile.actor}
+            actor={authoring?.state.actor ?? authoring?.profile?.actor}
             now={authoring?.now}
-          />
+              />
+            ) : (
+              <p>
+                {t(
+                  'No Evaluation Criteria selected. This Run remains available for execution and Measurement.',
+                )}
+              </p>
+            )}
+          </>
         ) : (
           <>
             {scopeMode ? (
@@ -1061,6 +1136,7 @@ export default function EngineeringGrid({
                           Object.keys(errors).length > 0 ||
                           (!Object.keys(dirty).length &&
                             !Object.keys(roles).length &&
+                            !Object.keys(sampleSelections).length &&
                             !participationDraft)
                         }
                         onClick={() => {
@@ -1300,6 +1376,8 @@ export default function EngineeringGrid({
                                   row.operation.sourceOperationId,
                                 )
                               }
+                              sampleSelections={sampleSelections}
+                              onSample={production&&!planReadOnly?(id,value)=>setSampleSelections(s=>({...s,[id]:value})):undefined}
                               readOnly={planReadOnly}
                               onRole={(role) =>
                                 !planReadOnly &&
@@ -1372,6 +1450,8 @@ export default function EngineeringGrid({
 }
 
 function GridRow(props: {
+  sampleSelections:Record<string,string|null>;
+  onSample?:(assignmentId:string,value:string|null)=>void;
   onParticipation: () => void;
   readOnly?: boolean;
   row: EngineeringGridRow;
@@ -1537,6 +1617,7 @@ function GridRow(props: {
           {row.definition?.label}
           <span className="grid-compact-unit"> {row.definition?.unit}</span>
         </span>
+        {props.onSample&&row.assignment?.kind==='MATERIAL'&&model.snapshot.assignments.some(a=>a.id===row.assignment!.id)&&<SampleRevisionPicker compact value={Object.hasOwn(props.sampleSelections,row.assignment.id)?props.sampleSelections[row.assignment.id]:row.assignment.sampleRevisionId} denied={!Object.hasOwn(props.sampleSelections,row.assignment.id)&&row.assignment.sampleAccessDenied} onChange={value=>props.onSample?.(row.assignment!.id,value)}/>}
       </td>
       <td aria-label={t('Inherited equipment')}>—</td>
       <td>
@@ -1608,8 +1689,24 @@ function GridRow(props: {
           props.activeSubjectId === subject.id ? 'active-subject' : '',
         ].join(' ');
         const label = `${row.definition?.label} ${subject.displayLabel}`;
+        const clearedOverride = row.subjectRoles &&
+          props.dirty[key] !== undefined && !props.dirty[key].trim();
+        const cellRole = props.role !== row.role || clearedOverride
+          ? props.role
+          : row.subjectRoles?.[subject.id];
         return (
           <td key={subject.id} className={className}>
+            {row.subjectRoles && (
+              <span
+                className={`plan-intent-label ${cellRole === 'VARIED' ? 'varied' : ''}`}
+                aria-label={t(cellRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed',
+                )}
+                title={t(cellRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed',
+                )}
+              >
+                {cellRole === 'VARIED' ? 'V' : 'F'}
+              </span>
+            )}
             <span className="grid-cell-state" aria-hidden="true">
               {props.errors[key]
                 ? '!'
@@ -1688,6 +1785,7 @@ function GridRow(props: {
                 }
               />
             )}
+            {props.onSample&&row.assignment?.kind==='MATERIAL'&&model.snapshot.assignments.filter(a=>a.kind==='MATERIAL'&&a.processStepId===row.operation.sourceOperationId&&a.subjectId===subject.id&&a.label===row.assignment?.label).map(a=><SampleRevisionPicker key={a.id} compact value={Object.hasOwn(props.sampleSelections,a.id)?props.sampleSelections[a.id]:a.sampleRevisionId} denied={!Object.hasOwn(props.sampleSelections,a.id)&&a.sampleAccessDenied} onChange={value=>props.onSample?.(a.id,value)}/>)}
           </td>
         );
       })}
@@ -1748,6 +1846,7 @@ function GridInspector({
             <dd>{row.definition.unit || t('None')}</dd>
             <dt>{t('Source')}</dt>
             <dd>{t(row.assignment?.provenance)}</dd>
+            {row.assignment?.kind==='MATERIAL'&&<><dt>{t('Sample')}</dt><dd><SampleSelectionDetail revisionId={row.assignment.sampleRevisionId} denied={row.assignment.sampleAccessDenied}/></dd></>}
             <dt>{t('Variation')}</dt>
             <dd>{role ? t(role) : '—'}</dd>
           </dl>

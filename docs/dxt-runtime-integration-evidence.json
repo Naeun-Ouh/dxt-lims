@@ -1,0 +1,482 @@
+{
+  "status": "AUTOMATED RUNTIME PASS; BOUNDED AGENT BROWSER PASS; HUMAN ACCEPTANCE NOT RUN",
+  "date": "2026-11-26",
+  "runtimeSourceCommit": "ec0ba85ce2c9076dff936c885195868e0e437483",
+  "branches": {
+    "codex/shared-scientific-authority": "9b570f228aad1cd1a0ec4c96f9b03ebfba829ce7",
+    "codex/sample-runtime": "0ac41121876584f09a880422afad7f27da2e9202",
+    "codex/reasoning-runtime": "0d3bfe3db7e7c18654913ef58a199b3aaa928edd"
+  },
+  "validation": {
+    "repositoryTests": {
+      "passed": 365,
+      "failed": 0
+    },
+    "nativePostgresIntegration": "PASS — PostgreSQL 18.7",
+    "sampleNativeContracts": {
+      "passed": 14,
+      "failed": 0
+    },
+    "allTrackedTypeScript": "PASS",
+    "changedFileLint": "PASS",
+    "productionBuild": "PASS",
+    "browserKOEN": "BLOCKED — Mac locked; automatic unlock failed",
+    "humanAcceptance": "NOT RUN"
+  },
+  "sqlLedger": [
+    {
+      "name": "016_shared_scientific_authority",
+      "checksum": "76e93d9ca79116275c01dc1332aa2230473098e5afe6dbadd77e45256646398e"
+    },
+    {
+      "name": "017_run_reasoning_provenance",
+      "checksum": "a90513c006937884bb8b7b7727cedfd1f2f620ad9974de8ecfbc1e8a31e9eae7"
+    },
+    {
+      "name": "018_sample_lifecycle",
+      "checksum": "2b173988476e802ebb0f204e48c49c748712530eef5a80b5116ea74240253326"
+    }
+  ],
+  "runtimeSourceAttestation": {
+    "sourceCommit": "ec0ba85ce2c9076dff936c885195868e0e437483",
+    "runtimeFilesCompared": 292,
+    "mismatches": [],
+    "note": "Fresh localhost server app/src byte comparison against final runtime source; later changes restricted to tests/scripts/docs."
+  },
+  "httpSampleAndAuthorization": {
+    "label": "AGENT HTTP CHECKS — HUMAN ACCEPTANCE NOT RUN",
+    "sampleId": "2dc69ade-64c3-4618-a993-f86aee1bef4f",
+    "revisionIds": [
+      "9aae8786-f865-469a-9849-dc2c1c49745b",
+      "26185c89-9e99-49c5-ac5d-85515533f823"
+    ],
+    "evidence": [
+      {
+        "operation": "options",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "write",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "write",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "write",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "detail",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "detail",
+        "principal": "viewer",
+        "status": 200
+      },
+      {
+        "operation": "options",
+        "principal": "viewer",
+        "status": 200
+      },
+      {
+        "operation": "write",
+        "principal": "viewer",
+        "status": 403
+      },
+      {
+        "operation": "list",
+        "principal": "denied",
+        "status": 200
+      },
+      {
+        "operation": "detail",
+        "principal": "denied",
+        "status": 404
+      },
+      {
+        "operation": "run.created",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "run.criteria.load",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "run.planning",
+        "principal": "viewer",
+        "status": 200
+      },
+      {
+        "operation": "run.get",
+        "principal": "denied",
+        "status": 404
+      },
+      {
+        "operation": "run.created",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "run.criteria.load",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "run.planning",
+        "principal": "viewer",
+        "status": 200
+      },
+      {
+        "operation": "run.get",
+        "principal": "denied",
+        "status": 404
+      },
+      {
+        "operation": "run.created",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "run.criteria.load",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "run.planning",
+        "principal": "viewer",
+        "status": 200
+      },
+      {
+        "operation": "run.get",
+        "principal": "denied",
+        "status": 404
+      },
+      {
+        "operation": "run.created",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "run.criteria.load",
+        "principal": "writer",
+        "status": 200
+      },
+      {
+        "operation": "run.planning",
+        "principal": "viewer",
+        "status": 200
+      },
+      {
+        "operation": "run.get",
+        "principal": "denied",
+        "status": 404
+      }
+    ]
+  },
+  "httpReasoning": {
+    "label": "AGENT HTTP CHECKS — HUMAN ACCEPTANCE NOT RUN",
+    "results": [
+      {
+        "domain": "specimen",
+        "runId": "run-b655c815-665d-4bd0-8f02-5f2f1fa472c3-2",
+        "status": "PASS (completed synthetic scenario readback)"
+      },
+      {
+        "domain": "wafer",
+        "runId": "run-d3028bd4-2b0a-4b60-8c3a-1f6ff0a5f023-2",
+        "oldCriteria": "fa5d5306-4756-4e47-a936-65ac0b0233ef",
+        "newCriteria": "c73092ff-767b-445d-9304-4361d5c625af",
+        "evaluationId": "http-evaluation-dc356b2d-cc9a-4878-b813-5d0590c17576",
+        "decisionId": "http-decision-dc356b2d-cc9a-4878-b813-5d0590c17576",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      {
+        "operation": "configuration.load",
+        "status": 200
+      },
+      {
+        "operation": "run.created",
+        "status": 200
+      },
+      {
+        "operation": "run.criteria.load",
+        "status": 200
+      },
+      {
+        "operation": "evaluation.load",
+        "status": 200
+      },
+      {
+        "operation": "decision.load",
+        "status": 200
+      },
+      {
+        "operation": "run.created",
+        "status": 200
+      },
+      {
+        "operation": "run.criteria.load",
+        "status": 200
+      },
+      {
+        "operation": "run.criteria.save",
+        "status": 200
+      },
+      {
+        "operation": "run.criteria.save",
+        "status": 200
+      },
+      {
+        "operation": "run.get",
+        "status": 200
+      },
+      {
+        "operation": "execution.load",
+        "status": 200
+      },
+      {
+        "operation": "measurement.load",
+        "status": 200
+      },
+      {
+        "operation": "measurement.catalog",
+        "status": 200
+      },
+      {
+        "operation": "evaluation.context",
+        "status": 200
+      },
+      {
+        "operation": "evaluation.load",
+        "status": 200
+      },
+      {
+        "operation": "decision.load",
+        "status": 200
+      },
+      {
+        "operation": "run.get",
+        "status": 200
+      },
+      {
+        "operation": "execution.save",
+        "status": 200
+      },
+      {
+        "operation": "execution.load",
+        "status": 200
+      },
+      {
+        "operation": "measurement.catalog",
+        "status": 200
+      },
+      {
+        "operation": "measurement.save",
+        "status": 200
+      },
+      {
+        "operation": "measurement.load",
+        "status": 200
+      },
+      {
+        "operation": "run.get",
+        "status": 200
+      },
+      {
+        "operation": "execution.load",
+        "status": 200
+      },
+      {
+        "operation": "measurement.load",
+        "status": 200
+      },
+      {
+        "operation": "measurement.catalog",
+        "status": 200
+      },
+      {
+        "operation": "decision.load",
+        "status": 200
+      },
+      {
+        "operation": "evaluation.context",
+        "status": 200
+      },
+      {
+        "operation": "evaluation.load",
+        "status": 200
+      },
+      {
+        "operation": "evaluation.save",
+        "status": 200
+      },
+      {
+        "operation": "evaluation.load",
+        "status": 200
+      },
+      {
+        "operation": "decision.save",
+        "status": 200
+      },
+      {
+        "operation": "decision.load",
+        "status": 200
+      },
+      {
+        "operation": "run.criteria.save",
+        "status": 200
+      },
+      {
+        "operation": "run.get",
+        "status": 200
+      },
+      {
+        "operation": "execution.load",
+        "status": 200
+      },
+      {
+        "operation": "measurement.load",
+        "status": 200
+      },
+      {
+        "operation": "measurement.catalog",
+        "status": 200
+      },
+      {
+        "operation": "evaluation.context",
+        "status": 200
+      },
+      {
+        "operation": "evaluation.load",
+        "status": 200
+      },
+      {
+        "operation": "decision.load",
+        "status": 200
+      },
+      {
+        "operation": "evaluation.load",
+        "status": 200
+      },
+      {
+        "operation": "decision.load",
+        "status": 200
+      },
+      {
+        "operation": "run.get",
+        "status": 200
+      }
+    ]
+  },
+  "routeAvailability": {
+    "label": "HTTP route availability only — not browser or Human acceptance",
+    "out": [
+      {
+        "path": "/samples",
+        "status": 200,
+        "bytes": 25097
+      },
+      {
+        "path": "/samples/2dc69ade-64c3-4618-a993-f86aee1bef4f",
+        "status": 200,
+        "bytes": 25714
+      },
+      {
+        "path": "/series/agent-integration-specimen/runs/1/engineering-grid?view=plan",
+        "status": 200,
+        "bytes": 28933
+      },
+      {
+        "path": "/series/agent-integration-specimen/runs/2/engineering-grid?view=actual",
+        "status": 200,
+        "bytes": 28918
+      },
+      {
+        "path": "/series/agent-integration-specimen/runs/2/engineering-grid?view=measurement",
+        "status": 200,
+        "bytes": 28926
+      },
+      {
+        "path": "/series/agent-integration-specimen/runs/2/engineering-grid?view=evaluation",
+        "status": 200,
+        "bytes": 28927
+      },
+      {
+        "path": "/series/agent-integration-wafer/runs/2/engineering-grid?view=evaluation",
+        "status": 200,
+        "bytes": 28866
+      },
+      {
+        "path": "/analysis",
+        "status": 200,
+        "bytes": 25345
+      },
+      {
+        "path": "/samples/2dc69ade-64c3-4618-a993-f86aee1bef4f/revisions/1",
+        "status": 200,
+        "bytes": 26016
+      }
+    ]
+  },
+  "localUrls": {
+    "writer": "http://127.0.0.1:59769",
+    "viewer": "http://127.0.0.1:59772",
+    "denied": "http://127.0.0.1:59773"
+  },
+  "scope": "Only fresh AGENT TEST ONLY environment. No existing UAT data, live permissions, production migrations or GitHub merges.",
+  "approvedPolicyFollowup": {
+    "date": "2026-11-26",
+    "baseCommit": "50f3af1d2f0258a0b5ccaacc1606455db882e186",
+    "authority": "User approval; Issue1 frontend minimum policy7181556471",
+    "retainedConditionPolicyCommit": "2e1a1b2fa28255fb02b92509aef8c9582fe4d6cc",
+    "repositoryTests": {
+      "passed": 367,
+      "failed": 0
+    },
+    "nativePostgresIntegration": "PASS — PostgreSQL18.7 isolated cluster; no backend changes after validation",
+    "trackedTypeScript": "PASS",
+    "changedFileLint": "PASS",
+    "productionBuild": "PASS",
+    "diffCheck": "PASS",
+    "browser": "BOUNDED PASS — Sample register/revise/history; Specimen historical criteria; Wafer Actual/Measurement/Evaluation navigation; no-criteria Run; read-only and denied; Analysis Table/N-A/Inspector; KO/EN",
+    "browserSampleId": "f63fe9e9-3ae6-418d-88dd-f26a256acd7e",
+    "browserViewport": "1440x900; restored afterward",
+    "humanAcceptance": "NOT RUN",
+    "remainingBrowserCoverage": [
+      "Exact Sample Revision picker/clear",
+      "Full Human UAT acceptance matrix"
+    ],
+    "regressionObservation": "One intermediate PGlite configuration_activation interval-constraint failure; isolated rerun and final full suite PASS. Root cause unconfirmed; original failure preserved, no constraint weakened.",
+    "sqlHashesUnchanged": true,
+    "existingUatModified": false,
+    "livePermissionsModified": false,
+    "productionMigrationsApplied": false,
+    "prsMerged": false,
+    "runtimeSourceAttestation": {
+      "59769": {
+        "compared": 292,
+        "mismatches": []
+      },
+      "59772": {
+        "compared": 292,
+        "mismatches": []
+      },
+      "59773": {
+        "compared": 292,
+        "mismatches": []
+      }
+    }
+  }
+}

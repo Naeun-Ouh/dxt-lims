@@ -1,3 +1,5 @@
+import {adoptTestCriteria} from './postgres-reasoning-fixtures';
+import { scientificStudyActions } from '@/src/application/authorization';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { authorizedOperation } from '@/src/infrastructure/postgres/authorized-application';
@@ -8,7 +10,7 @@ import {
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
 import { DxtApplication } from '@/src/application/dxt-application';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { createExperimentWorkspace } from '@/src/features/run-registration/workspace-model';
 import {
   createEmptyLifecycleState,
@@ -92,6 +94,7 @@ export async function scientificAuthorizationContract(db: SqlDatabase) {
       'INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT $1||study_id,study_id,$2,$3,$4 FROM study WHERE ($5::text IS NULL OR series_slug=$5)',
       [randomUUID(), `science-${p}`, action, 'science-owner', slug ?? null],
     );
+  for (const action of scientificStudyActions) await grant('owner', action);
   for (const [p, a] of [
     ['operator', 'RECORD_ACTUAL'],
     ['measurer', 'RECORD_MEASUREMENT'],
@@ -139,6 +142,10 @@ export async function scientificAuthorizationContract(db: SqlDatabase) {
         403,
         `${p} ${String(input.operation)}`,
       );
+    // A responsible user loses scientific writes immediately when explicit grants are revoked.
+    await db.query("UPDATE study_access_grant SET active=false WHERE principal_id='science-owner'");
+    assert.equal((await api('owner', input)).status, 403, `responsibility cannot bypass revocation: ${String(input.operation)}`);
+    await db.query("UPDATE study_access_grant SET active=true WHERE principal_id='science-owner'");
     assert.deepEqual(await counts(), before);
   };
   for (const [slug, parameterId, grain, value] of [
@@ -157,6 +164,7 @@ export async function scientificAuthorizationContract(db: SqlDatabase) {
     })) as RunPlanningSnapshot;
     const model = createExperimentWorkspace(snapshot, config),
       profile = lifecycleAuthoringProfiles[slug];
+    await adoptTestCriteria(db,snapshot.id);
     const context = await trusted.reasoning.context(snapshot.id);
     let state = {
       ...createEmptyLifecycleState(snapshot, profile),
@@ -312,7 +320,7 @@ export async function scientificAuthorizationContract(db: SqlDatabase) {
       operation: 'evaluation.save',
       runId: snapshot.id,
       records: evaluated.engineerEvaluations,
-      command: { commandId: randomUUID(), expectedVersion: 0 },
+      command: { commandId: randomUUID(), expectedVersion: 0, expectedInterpretation: context.interpretation },
     };
     await denied(evaluationRequest);
     await denied(evaluationRequest, ['measurer', 'decider']);
@@ -329,7 +337,7 @@ export async function scientificAuthorizationContract(db: SqlDatabase) {
           measurementSummaryId: 'missing-summary',
         },
       ],
-      command: { commandId: randomUUID(), expectedVersion: 1 },
+      command: { commandId: randomUUID(), expectedVersion: 1, expectedInterpretation: context.interpretation },
     };
     assert.equal((await api('collaborator', invalidEval)).status, 409);
     state = {
@@ -362,7 +370,7 @@ export async function scientificAuthorizationContract(db: SqlDatabase) {
         context: decided.decisionContext,
         nextRunPreview: decided.nextRunPreview,
       },
-      command: { commandId: randomUUID(), expectedVersion: 0 },
+      command: { commandId: randomUUID(), expectedVersion: 0, expectedInterpretation: context.interpretation },
     };
     await denied(decisionRequest);
     await denied(decisionRequest, ['evaluator', 'collaborator', 'decider']);

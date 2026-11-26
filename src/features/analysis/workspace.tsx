@@ -327,7 +327,8 @@ function AnalysisWorkspaceContent({
   ];
   const [scopeOpen, setScopeOpen] = useState(true);
   const contextLabel = sources[0]?.workspaceContextLabel ?? 'R&D';
-  const studyHref = `/series/${selection.studyId}`;
+  const studySlug = sources[0]?.studySlug ?? selection.studyId;
+  const studyHref = `/series/${studySlug}`;
   const singleRun = selectedSources.length === 1 ? selectedSources[0] : null;
 
   const openSavedView = useCallback(
@@ -602,7 +603,7 @@ function AnalysisWorkspaceContent({
       page="Analysis"
       planShell
       lifecyclePhase="Analysis"
-      seriesSlug={selection.studyId}
+      seriesSlug={studySlug}
       seriesTitle={sources[0]?.studyLabel}
       run={singleRun?.runNumber}
       returnHref={studyHref}
@@ -620,7 +621,7 @@ function AnalysisWorkspaceContent({
             singleRun ? (
               <a
                 key={phase}
-                href={`/series/${selection.studyId}/runs/${singleRun.runNumber}/engineering-grid?view=${phase.toLowerCase()}`}
+                href={`/series/${studySlug}/runs/${singleRun.runNumber}/engineering-grid?view=${phase.toLowerCase()}`}
               >
                 {t(phase)}
               </a>
@@ -1063,7 +1064,7 @@ function Check({
     </label>
   );
 }
-function AnalysisResultTable({
+export function AnalysisResultTable({
   rows,
   selectedId,
   onSelect,
@@ -1101,7 +1102,7 @@ function AnalysisResultTable({
                 className={
                   selectedId === row.id
                     ? 'selected'
-                    : row.validity.toLowerCase()
+                    : row.validity?.toLowerCase() ?? 'not-participating'
                 }
               >
                 <td>{row.studyLabel}</td>
@@ -1111,7 +1112,7 @@ function AnalysisResultTable({
                 <td>
                   <b>{row.subject.displayLabel}</b>
                 </td>
-                <td>{row.parameterLabel}</td>
+                <td>{row.parameterLabel}{row.expectation && <small>{row.expectation.operationLabel} · {t(row.expectation.point)}</small>}</td>
                 <td className="mono">{row.value ?? '—'}</td>
                 <td>{row.unit || '—'}</td>
                 <td title={row.datasetId ?? undefined}>
@@ -1122,10 +1123,11 @@ function AnalysisResultTable({
                 <td>{t(row.representativeType)}</td>
                 <td>
                   <span
-                    className={`analysis-validity ${row.validity.toLowerCase()}`}
+                    className={`analysis-validity ${row.validity?.toLowerCase() ?? 'not-participating'}`}
                   >
-                    {t(row.validity)}
+                    {row.validity === null ? `N/A · ${t('Operation does not apply')}` : t(row.validity)}
                   </span>
+                  {row.datasetId && row.expectation?.applies === false && <small>{t('Out-of-plan evidence')}</small>}
                   {row.exclusionReason && (
                     <small>{t(row.exclusionReason)}</small>
                   )}
@@ -1201,10 +1203,10 @@ function AnalysisInspector({
           <small>{row.datasetOrigin ? t(row.datasetOrigin) : ''}</small>
         </dd>
         <dt>{t('MeasurementValue')}</dt>
-        <dd>{row.measurementValueId ?? t('Representative projection')}</dd>
+        <dd>{row.measurementValueId ?? (row.validity === null ? '—' : t('Representative projection'))}</dd>
         <dt>{t('Representative Result')}</dt>
         <dd>
-          {row.representativeResultId ?? t('Calculated in this view')}
+          {row.representativeResultId ?? (row.validity === null ? '—' : t('Calculated in this view'))}
           <small>
             {t(row.representativeType)} · {row.sourceMeasurementIds.length}{' '}
             {t('source value(s)')}
@@ -1212,9 +1214,11 @@ function AnalysisInspector({
         </dd>
         <dt>{t('Parameter Definition')}</dt>
         <dd>{row.parameterId}</dd>
+        {row.expectation && <><dt>{t('Operation')}</dt><dd>{row.expectation.operationLabel} · {t(row.expectation.point)}</dd></>}
         <dt>{t('Validity')}</dt>
         <dd>
-          {t(row.validity)}
+          {row.validity === null ? `N/A · ${t('Operation does not apply')}` : t(row.validity)}
+          {row.datasetId && row.expectation?.applies === false && <small>{t('Out-of-plan evidence')}</small>}
           <small>
             {row.exclusionReason
               ? t(row.exclusionReason)

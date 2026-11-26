@@ -1,3 +1,4 @@
+import {scientificTestPrincipal} from './postgres-reasoning-fixtures';
 import assert from 'node:assert/strict';
 import { DxtApplication } from '@/src/application/dxt-application';
 import {
@@ -7,7 +8,7 @@ import {
 import { createExperimentWorkspace } from '@/src/features/run-registration/workspace-model';
 import { lifecycleAuthoringProfiles } from '@/src/mock/lifecycle-authoring';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { createInMemoryRepositories } from '@/src/infrastructure/memory/in-memory-repositories';
 import { createBrowserRepositories } from '@/src/infrastructure/browser/browser-repositories';
 import { PostgresMeasurementRepository } from '@/src/infrastructure/postgres/postgres-measurement-repository';
@@ -429,7 +430,7 @@ export async function productionMeasurementContract(database: SqlDatabase) {
     transaction: (work) => database.transaction((s) => work(wrap(s))),
     close: async () => {},
   };
-  const bounded = new PostgresMeasurementRepository(counted);
+  const bounded = new PostgresMeasurementRepository(counted,scientificTestPrincipal);
   await bounded.saveByRun(proof.snapshot.id, bulkRecord, {
     commandId: 'bulk-measurement',
     expectedVersion: proof.state.version,

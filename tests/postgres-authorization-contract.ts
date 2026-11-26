@@ -9,7 +9,7 @@ import type {AuthoritativeRunPreview} from '@/src/application/run-creation';
 import type {RunPlanningSnapshot} from '@/src/features/run-registration/planning-model';
 import type {StudySetupSnapshot} from '@/src/features/experiment-series/study-setup-model';
 import {DxtApplication} from '@/src/application/dxt-application';
-import {createProductionSliceRepositories} from '@/src/infrastructure/postgres/postgres-repositories';
+import {createProductionSliceRepositories} from './explicit-scientific-repositories';
 import {hydrateConfigurationPackages} from '@/src/infrastructure/postgres/configuration-hydrator';
 import {createExperimentWorkspace} from '@/src/features/run-registration/workspace-model';
 import {lifecycleAuthoringProfiles} from '@/src/mock/lifecycle-authoring';
@@ -20,8 +20,10 @@ export async function authorizationContract(db:SqlDatabase){
  await db.query("INSERT INTO auth_org_unit VALUES ('part','PART',NULL),('dept','DEPARTMENT','part'),('other-dept','DEPARTMENT',NULL),('area','AREA',NULL),('module','MODULE',NULL)");
  for(const id of ['owner','viewer','outsider','leader','module-leader','area-user','collaborator','admin'])await db.query('INSERT INTO auth_principal VALUES ($1,$1,true,$2)',[id,id==='admin'?'ADMIN':'GENERAL_USER']);
  await db.query("INSERT INTO auth_membership VALUES ('viewer','dept',false),('leader','part',true),('module-leader','module',true),('area-user','area',false),('outsider','other-dept',false)");
- await db.query("INSERT INTO study_access(study_id,responsible_user_id,responsible_department_id) SELECT study_id,'owner','dept' FROM study");
+ await db.query("INSERT INTO study_access(study_id,responsible_user_id,responsible_department_id) SELECT study_id,'owner','dept' FROM study ON CONFLICT(study_id) DO UPDATE SET responsible_user_id=EXCLUDED.responsible_user_id,responsible_department_id=EXCLUDED.responsible_department_id");
  await db.query("INSERT INTO study_module_access SELECT study_id,'module' FROM study_access");
+ // These actors exercise authorized lifecycle behavior; responsibility alone is insufficient.
+ await db.query("INSERT INTO study_access_grant(id,study_id,principal_id,action,granted_by) SELECT study_id::text||action,study_id,'owner',action,'admin' FROM study CROSS JOIN unnest(ARRAY['CREATE_RUN','EDIT_RUN_PLAN']) action");
  const slugs=['dts-improvement','adhesion-material-optimization'] as const;
  const ids=(await db.query<{study_id:string;series_slug:string}>('SELECT study_id,series_slug FROM study')).rows;
  const photoId=ids.find(s=>s.series_slug===slugs[0])!.study_id;
@@ -51,6 +53,7 @@ export async function authorizationContract(db:SqlDatabase){
   for(const source of ['STUDY_DEFAULT','PREVIOUS_RUN','EXISTING_RUN','BLANK'] as const){
    const input={seriesSlug:slug,source,...(source==='EXISTING_RUN'?{sourceRunId:first!.id}:{})};
    const preview=await call('owner',{operation:'run.preview',input}) as AuthoritativeRunPreview;
+   if(source==='BLANK'){assert.equal(preview.readiness.status,'NOT_READY');assert.equal((await api('owner',{operation:'run.create.preview',input,fingerprint:preview.fingerprint,command:{commandId:randomUUID()}})).status,409);continue;}
    const command={commandId:randomUUID()};
    const created=await call('owner',{operation:'run.create.preview',input,fingerprint:preview.fingerprint,command}) as RunPlanningSnapshot;
    assert.equal(created.subjectTypeRevisionId,setup.subjectTypeRevisionId);

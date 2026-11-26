@@ -1,4 +1,4 @@
-import {authorizationPolicyVersion} from '@/src/application/authorization';
+import {authorizationPolicyVersion, scientificStudyActions} from '@/src/application/authorization';
 import type { AuthorizationService,AuthorizationDecision,Principal,StudyAction,StudyPermissions } from '@/src/application/authorization';
 import { ApplicationError } from '@/src/application/repository-ports';
 import type { SqlSession } from './sql-database';
@@ -6,7 +6,13 @@ export const allowReasons=['RESPONSIBLE_USER','RESPONSIBLE_DEPARTMENT','AREA_SCO
 export class PostgresAuthorization implements AuthorizationService {
  constructor(private readonly sql:SqlSession){}
  async authorize(principal:Principal,action:StudyAction,studyId:string):Promise<AuthorizationDecision>{
-  const r=(await this.sql.query<{reason:string;version:string|null}>(`SELECT dxt_study_access_reason($1,$2,$3) reason,(SELECT version FROM study_access WHERE study_id=$2) version`,[principal.principalId,studyId,action])).rows[0];
+  // One SQL authority is shared by runtime commands and protected scientific SQL.
+  // Discovery/administration retain their separate existing policy.
+  const scientific = scientificStudyActions.some(candidate => candidate === action);
+  const query = scientific
+   ? `SELECT dxt_explicit_scientific_access_reason($1,$2,$3) reason,(SELECT version FROM study_access WHERE study_id=$2) version`
+   : `SELECT dxt_study_access_reason($1,$2,$3) reason,(SELECT version FROM study_access WHERE study_id=$2) version`;
+  const r=(await this.sql.query<{reason:string;version:string|null}>(query,[principal.principalId,studyId,action])).rows[0];
   return {effect:allowReasons.includes(r.reason)?'ALLOW':'DENY',reason:r.reason,principalId:principal.principalId,action,studyId,policyVersion:authorizationPolicyVersion,contextVersion:r.version===null?null:Number(r.version)};
  }
  async require(principal:Principal,action:StudyAction,studyId:string){

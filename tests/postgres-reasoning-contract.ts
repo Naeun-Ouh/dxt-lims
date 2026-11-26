@@ -1,3 +1,4 @@
+import {adoptTestCriteria} from './postgres-reasoning-fixtures';
 import assert from 'node:assert/strict';
 import { DxtApplication } from '@/src/application/dxt-application';
 import {
@@ -5,7 +6,7 @@ import {
   type ApplicationRepositories,
   type DecisionRecord,
 } from '@/src/application/repository-ports';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
 import { lifecycleAuthoringProfiles } from '@/src/mock/lifecycle-authoring';
@@ -26,7 +27,8 @@ export async function reasoningContract(
   prefix: string,
 ) {
   const ev = await repos.evaluation.getStateByRun(runId);
-  const cmd = { commandId: prefix + '-eval', expectedVersion: ev.version };
+  const expectedInterpretation = (await repos.evaluation.getContext?.(runId))?.interpretation ?? undefined;
+  const cmd = { commandId: prefix + '-eval', expectedVersion: ev.version, expectedInterpretation };
   await repos.evaluation.saveByRun(runId, evals, cmd);
   await repos.evaluation.saveByRun(runId, evals, cmd);
   assert.equal(
@@ -41,7 +43,7 @@ export async function reasoningContract(
     conflict,
   );
   const d = await repos.decision.getStateByRun(runId);
-  const dc = { commandId: prefix + '-decision', expectedVersion: d.version };
+  const dc = { commandId: prefix + '-decision', expectedVersion: d.version, expectedInterpretation };
   await repos.decision.saveByRun(runId, decision, dc);
   await repos.decision.saveByRun(runId, decision, dc);
   assert.deepEqual(await repos.decision.getByRun(runId), decision);
@@ -66,6 +68,7 @@ export async function productionReasoningContract(
   const proofs = [];
   for (const proof of measurements) {
     const snapshot = proof.snapshot;
+    await adoptTestCriteria(db,snapshot.id);
     const slug = snapshot.series.id.replace(
       /^series-/,
       '',
@@ -160,7 +163,7 @@ export async function productionReasoningContract(
     );
     // Current judgment can change without moving the exact Evaluation identity referenced by Decision.
     const before = await app.repositories.evaluation.getStateByRun(snapshot.id);
-    await assert.rejects(app.repositories.evaluation.saveByRun(snapshot.id,[{...before.record[0],id:'unresolved-'+snapshot.id,measurementSummaryId:'unavailable-summary'}],{commandId:'unresolved-'+snapshot.id,expectedVersion:before.version}),e=>e instanceof ApplicationError&&e.code==='VALIDATION');
+    await assert.rejects(app.repositories.evaluation.saveByRun(snapshot.id,[{...before.record[0],id:'unresolved-'+snapshot.id,measurementSummaryId:'unavailable-summary'}],{commandId:'unresolved-'+snapshot.id,expectedVersion:before.version,expectedInterpretation:state.interpretation??undefined}),e=>e instanceof ApplicationError&&e.code==='VALIDATION');
     assert.deepEqual(await app.repositories.evaluation.getStateByRun(snapshot.id),before);
 
     const updated = [
@@ -175,6 +178,7 @@ export async function productionReasoningContract(
         app.repositories.evaluation.saveByRun(snapshot.id, updated, {
           commandId: `race-${s}-${snapshot.id}`,
           expectedVersion: before.version,
+          expectedInterpretation: state.interpretation ?? undefined,
         }),
       ),
     );
@@ -222,6 +226,7 @@ export async function productionReasoningContract(
         app.repositories.decision.saveByRun(snapshot.id, bad, {
           commandId: 'rollback-' + snapshot.id,
           expectedVersion: currentDecision.version,
+          expectedInterpretation: state.interpretation ?? undefined,
         }),
       );
     } finally {

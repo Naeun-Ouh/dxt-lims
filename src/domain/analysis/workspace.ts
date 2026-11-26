@@ -6,6 +6,8 @@ import {
 } from '../measurement/subject-measurement';
 
 export type AnalysisMeasurementSource = {
+  /** Canonical navigation metadata; never used as scientific or saved-filter identity. */
+  studySlug?: string;
   studyId: string;
   studyLabel: string;
   workspaceContextLabel: string;
@@ -15,6 +17,21 @@ export type AnalysisMeasurementSource = {
   measurements: SubjectMeasurementResultSet;
   parameterLabels: Record<string, string>;
   unitSymbols: Record<string, string>;
+  /** Authorized catalog context retained even when a Subject filter yields no values. */
+  measurementDatasetContexts?: SubjectMeasurementResultSet['datasets'];
+  /** Optional exact Run plan projection; absent/ambiguous scope is never guessed. */
+  measurementApplicability?: Array<{
+    operationId: string;
+    operationLabel: string;
+    measurementOperationDefinitionId: string;
+    measurementPoint: string;
+    parameterIds: string[];
+    subjects: Array<{
+      id: string;
+      applies: boolean | null;
+      plannedExecutionItemId: string;
+    }>;
+  }>;
 };
 
 export type AnalysisAggregation = 'RAW' | 'MEAN' | 'MEDIAN' | 'MIN' | 'MAX';
@@ -39,7 +56,14 @@ export type AnalysisRow = {
   representativeResultId: string | null;
   measurementValueId: string | null;
   sourceMeasurementIds: string[];
-  validity: AnalysisValidity;
+  /** No official validity exists for a synthetic non-applied expectation. */
+  validity: AnalysisValidity | null;
+  expectation?: {
+    operationId: string;
+    operationLabel: string;
+    point: string;
+    applies: boolean | null;
+  };
   exclusionReason: string | null;
   sourceSystem: string | null;
   sourceRecordReference: string | null;
@@ -112,6 +136,101 @@ function aggregate(values: number[], method: Exclude<AnalysisAggregation, 'RAW'>
 }
 
 export function projectAnalysisRows(
+  sources: readonly AnalysisMeasurementSource[],
+  selection: AnalysisSelection,
+): AnalysisRow[] {
+  return sources.flatMap((source) => {
+    if (!source.measurementApplicability?.length)
+      return projectUnscopedAnalysisRows([source], selection);
+    const datasets = (
+      source.measurementDatasetContexts ?? source.measurements.datasets
+    ).filter(
+      (dataset) =>
+        selection.datasetIds.includes(dataset.id) &&
+        (selection.datasetOrigin === 'ALL' ||
+          dataset.datasetOrigin === selection.datasetOrigin),
+    );
+    if (!datasets.length)
+      return projectUnscopedAnalysisRows([source], selection);
+    return selection.parameterIds.flatMap((parameterId) => {
+      type Scope = NonNullable<
+        AnalysisMeasurementSource['measurementApplicability']
+      >[number];
+      const groups = new Map<Scope | undefined, typeof datasets>();
+      for (const dataset of datasets) {
+        const matches = source.measurementApplicability!.filter(
+          (scope) =>
+            scope.measurementOperationDefinitionId ===
+              dataset.measurementOperationDefinitionId &&
+            scope.measurementPoint === dataset.measurementPoint &&
+            dataset.plannedExecutionItemId !== null &&
+            scope.subjects.some(
+              (subject) =>
+                subject.plannedExecutionItemId ===
+                dataset.plannedExecutionItemId,
+            ),
+        );
+        // An imported/unplanned Dataset, or duplicate/ambiguous plan scope, retains
+        // legacy projection behavior. Matching a parameter name is not evidence.
+        const scope = matches.length === 1 ? matches[0] : undefined;
+        const parameterExpected =
+          !scope || scope.parameterIds.includes(parameterId);
+        if (
+          !parameterExpected &&
+          !source.measurements.values.some(
+            (value) =>
+              value.datasetId === dataset.id &&
+              value.parameterDefinitionId === parameterId,
+          )
+        )
+          continue;
+        // Unexpected real parameters remain evidence, but do not invent a planned expectation.
+        const expectedScope = parameterExpected ? scope : undefined;
+        const group = groups.get(expectedScope) ?? [];
+        group.push(dataset);
+        groups.set(expectedScope, group);
+      }
+      return [...groups].flatMap(([scope, scopedDatasets]) =>
+        projectUnscopedAnalysisRows(
+          [
+            {
+              ...source,
+              measurements: {
+                ...source.measurements,
+                datasets: scopedDatasets,
+              },
+            },
+          ],
+          { ...selection, parameterIds: [parameterId] },
+        )
+          .filter((row) => scope || groups.size === 1 || row.datasetId)
+          .map((row) => {
+            if (!scope) return row;
+            const applies =
+              scope.subjects.find((subject) => subject.id === row.subject.id)
+                ?.applies ?? null;
+            return {
+              ...row,
+              // Preserve every real observation, including unexpected out-of-plan evidence.
+              validity:
+                !row.datasetId && applies === false ? null : row.validity,
+              id: row.datasetId
+                ? row.id
+                : `${row.id}:${JSON.stringify([scope.operationId, scope.measurementPoint])}`,
+              expectation: {
+                operationId: scope.operationId,
+                operationLabel: scope.operationLabel,
+                point: scope.measurementPoint,
+                applies,
+              },
+            };
+          }),
+      );
+    });
+  });
+}
+
+function projectUnscopedAnalysisRows(
   sources: readonly AnalysisMeasurementSource[],
   selection: AnalysisSelection,
 ): AnalysisRow[] {

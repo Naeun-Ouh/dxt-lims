@@ -103,7 +103,7 @@ export function AnalysisChart({
               </div>
               <small>
                 {points.length} {t('plotted ·')}{' '}
-                {panelRows.length - points.length} {t('missing')}
+                {panelRows.filter(row => row.validity === 'MISSING').length} {t('missing')}
               </small>
             </header>
             {!points.length ? (

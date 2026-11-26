@@ -205,12 +205,13 @@ export class PostgresMeasurementRepository implements MeasurementRepository {
   async listDatasets(): Promise<MeasurementDatasetEntry[]> {
     const rows = await this.database.query<{
       payload: MeasurementDatasetEntry['dataset'];
+      study_slug: string;
       parameters: string[];
       subjects: string[];
-    }>(`SELECT d.payload,
+    }>(`SELECT d.payload, st.series_slug AS study_slug,
    ARRAY(SELECT DISTINCT v.parameter_id FROM measurement_value v WHERE v.dataset_id=d.id) AS parameters,
    ARRAY(SELECT DISTINCT s.subject_domain_id FROM measurement_value v JOIN run_subject rs ON rs.run_subject_id=v.run_subject_id JOIN subject s USING(subject_id) WHERE v.dataset_id=d.id) AS subjects
-   FROM measurement_dataset d JOIN experiment_run r ON r.run_id=d.run_id ${this.principalId ? "WHERE r.study_id IN (SELECT study_id FROM dxt_discoverable_studies($1) WHERE reason=ANY($2::text[]))" : ''} ORDER BY d.domain_id LIMIT 1001`,this.principalId?[this.principalId,allowReasons]:[]);
+   FROM measurement_dataset d JOIN experiment_run r ON r.run_id=d.run_id JOIN study st ON st.study_id=r.study_id ${this.principalId ? "WHERE r.study_id IN (SELECT study_id FROM dxt_discoverable_studies($1) WHERE reason=ANY($2::text[]))" : ''} ORDER BY d.domain_id LIMIT 1001`,this.principalId?[this.principalId,allowReasons]:[]);
     if (rows.rows.length > 1000)
       throw new ApplicationError(
         'VALIDATION',
@@ -218,6 +219,7 @@ export class PostgresMeasurementRepository implements MeasurementRepository {
       );
     return rows.rows.map((r) => ({
       dataset: r.payload,
+      studySlug: r.study_slug,
       parameterIds: r.parameters,
       subjectIds: r.subjects,
     }));

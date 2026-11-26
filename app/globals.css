@@ -3,6 +3,7 @@
 @import 'shadcn/tailwind.css';
 @import './run-plan-final.css';
 @import './entry-final.css';
+@import './dxt-grid.css';
 @import './study-final.css';
 @import './lifecycle-final.css';
 @import './home-final.css';
@@ -6851,6 +6852,7 @@ footer {
 .analysis-validity { display: inline-block; padding: 2px 5px; background: #edf3ef; color: #51705c; font-size: 7px; font-weight: 700; }
 .analysis-validity.excluded { background: #f6eee6; color: #95623d; }
 .analysis-validity.missing { background: #f0f1f2; color: #7e878d; }
+.analysis-validity.not-participating { background: #edf1f5; color: #526372; }
 .analysis-v1-inspector { border: 1px solid #c9d7df; border-left: 0; background: #fff; }
 .analysis-v1-inspector > header { display: flex; justify-content: space-between; padding: 16px; background: #315b77; color: white; }
 .analysis-v1-inspector header span { font-size: 8px; letter-spacing: .8px; opacity: .75; }

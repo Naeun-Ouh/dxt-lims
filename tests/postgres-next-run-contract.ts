@@ -2,7 +2,7 @@ import {createNextRunPreview} from '@/src/features/run-registration/decision-con
 import assert from 'node:assert/strict';
 import {DxtApplication} from '@/src/application/dxt-application';
 import type {SqlDatabase} from '@/src/infrastructure/postgres/sql-database';
-import {createProductionSliceRepositories} from '@/src/infrastructure/postgres/postgres-repositories';
+import {createProductionSliceRepositories} from './explicit-scientific-repositories';
 import {hydrateConfigurationPackages} from '@/src/infrastructure/postgres/configuration-hydrator';
 import type {productionReasoningContract} from './postgres-reasoning-contract';
 import {persistStudySetupVersion} from '@/src/infrastructure/postgres/slice-seed';
@@ -15,7 +15,7 @@ export async function productionNextRunContract(db:SqlDatabase,reasoning:Awaited
  const change=source.assignments.find(a=>a.kind==='CONDITION'&&a.intentRole==='FIXED')!;
  const proposal=createNextRunPreview(source,state.nextRunPreview!.snapshot.id,[{assignmentId:change.id,after:String(Number(change.value)+1)}]);
  const decision={context:{...state.decisionContext!,decision:{...state.decisionContext!.decision,id:'next-proposal-'+source.id}},nextRunPreview:proposal};
- await app.repositories.decision.saveByRun(source.id,decision,{commandId:'next-proposal-'+source.id,expectedVersion:state.decisionVersion});
+ await app.repositories.decision.saveByRun(source.id,decision,{commandId:'next-proposal-'+source.id,expectedVersion:state.decisionVersion,expectedInterpretation:state.interpretation??undefined});
  state=await app.loadLifecycle(source,proof.profile);const preview=state.nextRunPreview!;
  const before=(await app.repositories.run.listSnapshots()).length;assert.ok(preview);assert.equal((await app.repositories.run.listSnapshots()).length,before,'preview loading does not create');
  const commandId='next-'+source.id;

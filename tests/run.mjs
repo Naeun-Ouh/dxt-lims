@@ -7,6 +7,14 @@ await mkdir(testRoot, { recursive: true });
 const dir = await mkdtemp(join(testRoot, 'dxt-lims-test-'));
 try {
   for (const [entry, name, format] of [
+    ['tests/condition-copy-review.test.tsx', 'condition-copy-review.test.cjs', 'cjs'],
+    ['tests/condition-consumers.test.ts', 'condition-consumers.test.cjs', 'cjs'],
+    ['tests/generic-lifecycle.test.ts', 'generic-lifecycle.test.cjs', 'cjs'],
+    ['tests/analysis-applicability.test.tsx', 'analysis-applicability.test.cjs', 'cjs'],
+    ['tests/run-draft-grid.test.tsx', 'run-draft-grid.test.cjs', 'cjs'],
+    ['tests/execution-readiness.test.ts', 'execution-readiness.test.cjs', 'cjs'],
+    ['tests/study-bootstrap-feedback.test.ts', 'study-bootstrap-feedback.test.cjs', 'cjs'],
+    ['tests/study-bootstrap.test.ts', 'study-bootstrap.test.cjs', 'cjs'],
     ['tests/study-creation.test.tsx', 'study-creation.test.cjs', 'cjs'],
     ['tests/package-validation.test.tsx', 'package-validation.test.cjs', 'cjs'],
     ['tests/evaluation-workflow.test.tsx', 'evaluation-workflow.test.cjs', 'cjs'],

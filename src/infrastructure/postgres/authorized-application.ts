@@ -1,3 +1,6 @@
+import { runCriteriaOperation } from './run-criteria';
+import { scopedMaterialUsage } from './material-usage';
+import { readBootstrap, saveBootstrap, initializeReasoning } from './study-bootstrap';
 import { PostgresStudyCreation } from './study-creation';
 import {scopedDashboard,scopedStudyList,scopedRunSummaries,scopedSearch} from './scoped-discovery';
 import {accessibleSavedAnalysisIds} from './saved-analysis-authorization';
@@ -27,6 +30,10 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
   // avoiding a SHARE-to-ROW-EXCLUSIVE lock-upgrade deadlock between creators.
   const policyLock = raw.operation === 'study.create' ? 'SHARE ROW EXCLUSIVE' : 'SHARE';
   await sql.query(`LOCK TABLE auth_principal,auth_org_unit,auth_membership,study_access,study_module_access,study_access_grant,configuration_access_scope,configuration_access_grant,study_creation_grant IN ${policyLock} MODE`);
+  // Sample grant revocation must serialize before the repeatable-read snapshot.
+  // Reasoning-only and Study commands remain independent of the Sample schema.
+  if(['run.create','run.preview','run.create.preview','run.plan.save','run.get','run.planning','run.list','run.created','run.next'].includes(String(raw.operation)))
+    await sql.query('SELECT dxt_sample.lock_policy()');
   const principal=await resolvePrincipal(sql,principalId), policy=new PostgresAuthorization(sql);
   const input=structuredClone(raw), op=text(input.operation);
   if(op.startsWith('analysis.'))return savedAnalysisOperation(sql,principal,input);
@@ -43,6 +50,7 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
    }
   }
   if(op==='study.identity')return studyCreation.get(text(input.slug));
+  if(op==='material.usage')return scopedMaterialUsage(sql,principal,input.query);
   if(op==='run.summaries')return scopedRunSummaries(sql,principal,input.query);
   if(op==='search.query')return scopedSearch(sql,principal,input.query,text(input.kind)||'ALL');
   const study=async(slug:string,action:StudyAction)=>{
@@ -50,11 +58,89 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
    if(!r)throw new ApplicationError('NOT_FOUND','Resource unavailable or access denied.');
    await policy.require(principal,action,r.study_id);return r.study_id;
   };
+    if (
+      [
+        'study.bootstrap.load',
+        'study.bootstrap.save',
+        'study.reasoning.initialize',
+      ].includes(op)
+    ) {
+      const slug = text(input.slug),
+        action =
+          op === 'study.bootstrap.save'
+            ? 'EDIT_STUDY_SETUP'
+            : op === 'study.reasoning.initialize'
+              ? 'MANAGE_REASONING_CONTEXT'
+              : 'VIEW_STUDY';
+      const studyId = await study(slug, action);
+      const permissions = await policy.permissions(principal, studyId);
+      const canReason =
+        (await policy.authorize(principal, 'MANAGE_REASONING_CONTEXT', studyId))
+          .effect === 'ALLOW';
+      const commandId = text(input.commandId);
+      const scopedCommand = `bootstrap:${createHash('sha256')
+        .update(JSON.stringify([principalId, op, commandId]))
+        .digest('hex')}`;
+      if (op !== 'study.bootstrap.load' && !commandId)
+        throw new ApplicationError(
+          'VALIDATION',
+          'Command identity is required.',
+        );
+      try {
+        if (op === 'study.reasoning.initialize')
+          return await initializeReasoning(
+            sql,
+            slug,
+            principalId,
+            input.input,
+            scopedCommand,
+          );
+        const state =
+          op === 'study.bootstrap.save'
+            ? await saveBootstrap(
+                sql,
+                slug,
+                principalId,
+                input.input,
+                scopedCommand,
+              )
+            : await readBootstrap(sql, slug, principalId);
+        return {
+          ...state,
+          canEditSetup: permissions.canEditStudySetup && !state.closed,
+          canInitializeReasoning: canReason && !state.closed,
+          canCreateRun: permissions.canCreateRun,
+        };
+      } catch (error) {
+        if (
+          error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === '40001'
+        )
+          throw new ApplicationError(
+            'CONFLICT',
+            'Study changed concurrently. Retry the same request.',
+          );
+        throw error;
+      }
+    }
   const run=async(id:string,action:StudyAction)=>{
    const r=(await sql.query<{study_id:string}>('SELECT study_id FROM experiment_run WHERE run_domain_id=$1',[id])).rows[0];
    if(!r)throw new ApplicationError('NOT_FOUND','Resource unavailable or access denied.');
    await policy.require(principal,action,r.study_id);return r.study_id;
   };
+    if (op.startsWith('run.criteria.'))
+      return runCriteriaOperation(
+        sql,
+        principalId,
+        op,
+        text(input.runId),
+        input.input,
+        createHash('sha256')
+          .update(JSON.stringify([principalId, op, input.commandId]))
+          .digest('hex'),
+      );
   let sid:string|undefined;
   const configurationRequest=op==='configuration.execute'?await authorizeConfigurationMutation(sql,principalId,input.request):undefined;
   if(configurationRequest)input.request=configurationRequest;
@@ -102,9 +188,9 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
   const configuration=await hydrateConfigurationPackages(sql,[...new Set([...pins,...(requestedPin?[requestedPin]:[])])]);
   // Nested repository read transactions inherit this already-established repeatable snapshot.
   // They must not change the outer command into a read-only transaction.
-  const joined={query:async <R extends import('./sql-database').SqlRow>(query:string,args?:unknown[])=>query==='SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY'?{rows:[] as R[],rowCount:0}:sql.query<R>(query,args)};
-  const transactionDb:SqlDatabase={query:joined.query,transaction:work=>work(joined),close:async()=>{}};
-  const repositories=createProductionSliceRepositories(transactionDb,configuration);
+  const joined={trustedPrincipalId:principalId,query:async <R extends import('./sql-database').SqlRow>(query:string,args?:unknown[])=>query==='SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY'?{rows:[] as R[],rowCount:0}:sql.query<R>(query,args)};
+  const transactionDb:SqlDatabase={trustedPrincipalId:principalId,query:joined.query,transaction:work=>work(joined),close:async()=>{}};
+  const repositories=createProductionSliceRepositories(transactionDb,configuration,principalId);
   repositories.measurement=new PostgresMeasurementRepository(transactionDb,principalId);
   const app=new DxtApplication(repositories,[],[],{},new PostgresConfigurationAuthoring(transactionDb));
   if(op==='measurement.query'){

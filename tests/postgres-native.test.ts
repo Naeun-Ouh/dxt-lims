@@ -1,3 +1,9 @@
+import {completeLegacyFixtureMeasurementPlans} from './complete-legacy-fixture-measurement-plans';
+import {runCriteriaContract} from './postgres-run-criteria-contract';
+import {seedScientificTestPrincipal} from './postgres-reasoning-fixtures';
+import { explicitScientificContract } from './postgres-explicit-scientific-contract';
+import { materialUsageContract } from './postgres-material-usage-contract';
+import { studyBootstrapContract } from './postgres-study-bootstrap-contract';
 import { studyCreationContract } from './postgres-study-creation-contract';
 import {dashboardAuthorizationContract} from './postgres-dashboard-authorization-contract';
 import {savedAnalysisAuthorizationContract} from './postgres-saved-analysis-authorization-contract';
@@ -33,7 +39,7 @@ import { DxtApplication } from '@/src/application/dxt-application';
 import { configurationRepository } from '@/src/mock/configuration-packages';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
 import { PgDatabase } from '@/src/infrastructure/postgres/pg-database';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { seedProductionSlice } from '@/src/infrastructure/postgres/slice-seed';
 
 void test('native PostgreSQL 18 executes the Production Adapter slice through node-postgres', async () => {
@@ -78,9 +84,17 @@ void test('native PostgreSQL 18 executes the Production Adapter slice through no
   await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/012_authorization_saved_analysis.sql'), 'utf8'));
   await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/013_authorization_discovery.sql'), 'utf8'));
     await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/014_study_creation_grant.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/015_study_initial_reasoning.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/016_shared_scientific_authority.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/017_run_reasoning_provenance.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/018_sample_lifecycle.sql'), 'utf8'));
     await seedProductionSlice(database, configurationRepository);
+  await seedScientificTestPrincipal(database);
     await provisionMeasurementReferences(database, definitions);
   await provisionReasoningContexts(database,lifecycleAuthoringProfiles);
+  await completeLegacyFixtureMeasurementPlans(database);
+  // The criteria contract uses the pristine legacy fixture as its explicit source.
+  await runCriteriaContract(database);
     await activationContract(database);
     await productionRunContract(database);
     const configuration = await hydrateConfigurationPackages(database, ['config-package-photo-v1']);
@@ -90,7 +104,11 @@ void test('native PostgreSQL 18 executes the Production Adapter slice through no
     assert.match(version.rows[0].server_version, /^18\./);
     assert.deepEqual(await application.repositories.run.getSnapshot(created.id), created);
     await runRepositoryContract(application.repositories.run, created, 'native-shared-contract');
+    await explicitScientificContract(database);
     await authorizationContract(database);
+    // The authorization contract intentionally removes all access for a seeded Study.
+    // Re-provision only this isolated service principal for the next independent contract.
+    await seedScientificTestPrincipal(database);
     await scientificAuthorizationContract(database);
     const measurementProof=await productionMeasurementContract(database);
     const savedProof=await productionSavedAnalysisContract(database,measurementProof);
@@ -147,7 +165,9 @@ void test('native PostgreSQL 18 executes the Production Adapter slice through no
     await configurationAuthorizationContract(database);
     await savedAnalysisAuthorizationContract(database,measurementProof);
     await dashboardAuthorizationContract(database,measurementProof);
+    await materialUsageContract(database,measurementProof);
     await studyCreationContract(database);
+    await studyBootstrapContract(database);
     await database.close();
   } finally {
     await database?.close().catch(() => undefined);

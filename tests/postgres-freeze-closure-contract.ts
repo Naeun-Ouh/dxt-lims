@@ -1,7 +1,8 @@
+import {adoptTestCriteria} from './postgres-reasoning-fixtures';
 import {resolveSavedAnalysisView,projectSavedAnalysisRows} from '@/src/features/analysis/saved-view-repository';
 import assert from 'node:assert/strict';
 import { DxtApplication } from '@/src/application/dxt-application';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
 import type { SqlDatabase } from '@/src/infrastructure/postgres/sql-database';
 import type { productionConfigurationStudyContract } from './postgres-configuration-study-contract';
@@ -21,6 +22,12 @@ export async function productionFreezeClosureContract(db:SqlDatabase,adoption:Aw
       const template=(await app.repositories.run.getCreatedRun(slug))!;
       const request={seriesSlug:slug,source,...(source==='EXISTING_RUN'?{sourceRunId:template.id}:{})};
       const preview=await app.runs.previewCreation(request);
+      if(source==='BLANK'){
+        assert.equal(preview.readiness.status,'NOT_READY','Blank is empty authoring input, not a persisted executable plan');
+        assert.equal(preview.snapshot.subjects.length,0);assert.equal(preview.snapshot.steps.length,0);
+        await assert.rejects(app.runs.createFromPreview(request,preview.fingerprint,`empty-${slug}`),/required execution/);
+        continue;
+      }
       assert.equal(preview.readiness.status,'READY');
       const before=(await app.repositories.run.listSnapshots()).length;
       const command=`closure-${slug}-${source}`;
@@ -29,10 +36,6 @@ export async function productionFreezeClosureContract(db:SqlDatabase,adoption:Aw
       assert.equal((await app.repositories.run.listSnapshots()).length,before+1);
       assert.deepEqual(await app.repositories.run.getSnapshot(template.id),template);
       assert.deepEqual(await app.repositories.run.getCreatedRun(slug,run.runNumber),run);
-      if(source==='BLANK'){
-        assert.equal(run.steps.length,0);assert.equal(run.assignments.length,0);assert.equal(run.measurements.length,0);
-        assert.ok(run.subjects.length);assert.equal(createExperimentWorkspace(run,configuration).operations.length,0,'Blank cannot expand fixture Operations');
-      }
       // Every source shares the same transactional insert/receipt path.
       const retryPreview=await app.runs.previewCreation(request);
       await db.query("CREATE OR REPLACE FUNCTION fail_closure_subject() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'closure injected failure'; END $$");
@@ -64,6 +67,7 @@ export async function productionFreezeClosureContract(db:SqlDatabase,adoption:Aw
     state=await app.recordActual(state,model,{id:`full-actual-${slug}`,operationId:operation.id,subjectId:model.subjects[0].id,status:'COMPLETED',startedAt:'2026-09-19T01:00:00Z',endedAt:'2026-09-19T01:30:00Z',actualOverrides:{[numeric.referenceId]:String(Number(numeric.value)+1)}});
     assert.deepEqual(await app.repositories.run.getSnapshot(snapshot.id),edited.snapshot);
     await assert.rejects(app.runs.savePlanning(edited,`stale-after-evidence-${slug}`),/locked/);
+    await adoptTestCriteria(db,snapshot.id);
     const ctx=await app.repositories.evaluation.getContext!(snapshot.id);
     const binding=ctx.targetBindings[0];
     const catalog=await app.repositories.measurement.getCatalog(newPin);

@@ -5,7 +5,7 @@ import pg from 'pg';
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error('DATABASE_URL is required.');
 /* Migration 001 remains checksum-locked. Apply incremental migrations in order. */
-const migrations = ['001_production_adapter_slice_1', '002_actual_execution', '003_measurement', '004_evaluation_decision', '005_saved_analysis', '006_configuration_study_authoring', '007_run_plan_authoring', '008_study_reasoning_adoption', '009_authorization_study_run', '010_authorization_scientific', '011_authorization_configuration', '012_authorization_saved_analysis', '013_authorization_discovery', '014_study_creation_grant'];
+const migrations = ['001_production_adapter_slice_1', '002_actual_execution', '003_measurement', '004_evaluation_decision', '005_saved_analysis', '006_configuration_study_authoring', '007_run_plan_authoring', '008_study_reasoning_adoption', '009_authorization_study_run', '010_authorization_scientific', '011_authorization_configuration', '012_authorization_saved_analysis', '013_authorization_discovery', '014_study_creation_grant', '015_study_initial_reasoning', '016_shared_scientific_authority', '017_run_reasoning_provenance', '018_sample_lifecycle'];
 const pool = new pg.Pool({ connectionString, max: 1 });
 const client = await pool.connect();
 try {
@@ -20,6 +20,10 @@ try {
       if (applied.rows[0].checksum !== checksum) throw new Error('Applied migration checksum differs; a corrective migration is required.');
       process.stdout.write('Migration already applied; checksum verified.\n');
     } else {
+      // These migrations are approved for isolated development only until rollout review.
+      if (Number(name.slice(0, 3)) >= 16 && process.env.DXT_SCHEMA_STAGE !== 'disposable-development') {
+        throw new Error('New lifecycle migrations require the separately prepared disposable development environment.');
+      }
       await client.query(sql.replace(/^BEGIN;\s*/, '').replace(/COMMIT;\s*$/, ''));
       await client.query('INSERT INTO dxt_schema_migration (name, checksum) VALUES ($1,$2)', [name, checksum]);
       process.stdout.write(`${name} migration applied.\n`);

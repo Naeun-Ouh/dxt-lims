@@ -1,7 +1,7 @@
 import {editOperationParticipation} from '@/src/features/run-registration/participation';
 import assert from 'node:assert/strict';
 import {DxtApplication} from '@/src/application/dxt-application';
-import {createProductionSliceRepositories} from '@/src/infrastructure/postgres/postgres-repositories';
+import {createProductionSliceRepositories} from './explicit-scientific-repositories';
 import {hydrateConfigurationPackages} from '@/src/infrastructure/postgres/configuration-hydrator';
 import type {SqlDatabase} from '@/src/infrastructure/postgres/sql-database';
 import {createExperimentWorkspace} from '@/src/features/run-registration/workspace-model';

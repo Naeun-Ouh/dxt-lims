@@ -1,3 +1,9 @@
+import {completeLegacyFixtureMeasurementPlans} from './complete-legacy-fixture-measurement-plans';
+import {runCriteriaContract} from './postgres-run-criteria-contract';
+import {seedScientificTestPrincipal} from './postgres-reasoning-fixtures';
+import { explicitScientificContract } from './postgres-explicit-scientific-contract';
+import { materialUsageContract } from './postgres-material-usage-contract';
+import { studyBootstrapContract } from './postgres-study-bootstrap-contract';
 import { studyCreationContract } from './postgres-study-creation-contract';
 import {ProductionHome} from '@/src/features/experiment-home/production-home';
 import {dashboardAuthorizationContract} from './postgres-dashboard-authorization-contract';
@@ -45,7 +51,7 @@ import { definitions } from '@/src/mock/reference';
 import { updateStudySetupItem } from '@/src/features/experiment-series/study-setup-model';
 import { hydrateConfigurationPackages } from '@/src/infrastructure/postgres/configuration-hydrator';
 import { PGliteTestDatabase } from '@/src/infrastructure/postgres/pglite-test-database';
-import { createProductionSliceRepositories } from '@/src/infrastructure/postgres/postgres-repositories';
+import { createProductionSliceRepositories } from './explicit-scientific-repositories';
 import { persistStudySetupVersion, seedProductionSlice } from '@/src/infrastructure/postgres/slice-seed';
 import { createInMemoryRepositories } from '@/src/infrastructure/memory/in-memory-repositories';
 
@@ -69,9 +75,15 @@ async function withDatabase() {
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/012_authorization_saved_analysis.sql'), 'utf8'));
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/013_authorization_discovery.sql'), 'utf8'));
   await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/014_study_creation_grant.sql'), 'utf8'));
+  await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/015_study_initial_reasoning.sql'), 'utf8'));
+  await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/016_shared_scientific_authority.sql'), 'utf8'));
+    await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/017_run_reasoning_provenance.sql'), 'utf8'));
+    await database.exec(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/018_sample_lifecycle.sql'), 'utf8'));
   await seedProductionSlice(database, configurationRepository);
+  await seedScientificTestPrincipal(database);
   await provisionMeasurementReferences(database, definitions);
   await provisionReasoningContexts(database,lifecycleAuthoringProfiles);
+  await completeLegacyFixtureMeasurementPlans(database);
   return { directory, dataDir, database };
 }
 
@@ -297,7 +309,7 @@ void test('Saved Analysis sharing UI uses server permissions and explains source
 void test("Dashboard Authorization: scoped policy, search, aggregate leakage, calendar, organization and generic evidence",async()=>{const s=await withDatabase();try{await dashboardAuthorizationContract(s.database,await productionMeasurementContract(s.database));}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
 
 void test('Production Home uses scoped projections without fixture counts or names',()=>{
- const html=renderToStaticMarkup(<ProductionHome studies={[]} dashboard={{counts:{studies:0,runs:0,activeRuns:0,thisWeek:0,needReview:0,measurements:0,savedAnalyses:0},continueWorking:null,recent:[],calendar:[],calendarTotal:0,groups:[],diagnostics:{principalId:'viewer',projection:'dashboard.query',scope:{kind:'MY'},policyVersion:'organization-discovery-v5'}}}/>);
+ const html=renderToStaticMarkup(<ProductionHome studies={[]} dashboard={{counts:{studies:0,runs:0,activeRuns:0,thisWeek:0,needReview:0,measurements:0,savedAnalyses:0},continueWorking:null,recent:[],calendar:[],calendarTotal:0,groups:[],diagnostics:{principalId:'viewer',projection:'dashboard.query',scope:{kind:'MY'},policyVersion:'explicit-scientific-authoring-v6'}}}/>);
  assert.match(html,/No personal experiment work/);assert.match(html,/No accessible Studies/);
  assert.ok(!html.includes('DTS Improvement'));assert.ok(!html.includes('Run 18'));
 });
@@ -307,3 +319,18 @@ void test('Study creation: explicit scoped grants, exact references, atomic writ
   try { await studyCreationContract(state.database); }
   finally { await state.database.close(); await rm(state.directory, { recursive: true, force: true }); }
 });
+
+void test('Study bootstrap: generic first Run and initial reasoning authorization/provenance', async () => {
+  const s = await withDatabase();
+  try {
+    await studyBootstrapContract(s.database);
+  } finally {
+    await s.database.close();
+    await rm(s.directory, { recursive: true, force: true });
+  }
+});
+
+void test('Explicit scientific authorization: responsibility separation, revocation and transition inventory',async()=>{const s=await withDatabase();try{await explicitScientificContract(s.database);}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
+void test("Material usage: authoritative assignments, exact refs, permission-scoped search/count/page and no writes",async()=>{const s=await withDatabase();try{await materialUsageContract(s.database,await productionMeasurementContract(s.database));}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
+
+void test('Run criteria: immutable revisions, exact adoption, optional continuation, replay and explicit authority',async()=>{const s=await withDatabase();try{await runCriteriaContract(s.database);}finally{await s.database.close();await rm(s.directory,{recursive:true,force:true});}});
