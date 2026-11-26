@@ -19,7 +19,7 @@ Date: 2026-11-27. **Implementation submitted for review; Human acceptance NOT RU
 | WP-03 | Explicit latest-or-historical clone, R1→R2 and R1→R3, exact origin, optional reason | Three unit tests + 15 native Sample tests PASS, concurrency/receipts/immutability | R1→R2→R1-cloned-R3, property/source and past usage retained; KO/EN PASS | Same commits; Human NOT RUN |
 | WP-04 | RUN_ONLY or CRITERIA_BACKED judgment; no result/Evaluation/rationale gate; existing permissions/actions | Ten workflow tests + both-domain native contracts PASS | Criteria-free Specimen judgment saved and restored on reload; no fabricated evidence | Same commits; criteria-backed and complete NextAction browser path pending |
 | WP-05 | Existing Grid/Inspector, collapsed summaries, 50-row pages, view-only manual focus, scope editor, warnings/KO–EN | Nine focused UI tests; 1,200×25 projection benchmark ~176.7 ms | KO/EN Group/judgment/Sample and viewer/denied state inspected inline | Same runtime commit; exhaustive keyboard/25-column and focus network audit pending |
-| WP-06 | Integrated shared consumers and disposable environments | Final full regression **396/396**, native full + focused contracts, TSC/lint/build PASS | Two bounded vertical browser journeys PASS | **Partial verification**: all A01–A35 browser combinations and Human UAT are not claimed complete |
+| WP-06 | Integrated shared consumers and disposable environments | Final full regression **396/396**, native full + focused contracts, TSC/lint/build PASS | Group→judgment and Actual→Measurement→Analysis, plus Wafer Source→Sample journeys PASS | **Partial verification**: all A01–A35 browser combinations and Human UAT are not claimed complete |
 
 The schema commit is shared because SQL019 Group identity is a prerequisite of SQL022 exact scoped Source links. Runtime consumers are integrated together to avoid a commit that temporarily interprets Group values with old precedence. No second workspace or parallel execution model was created.
 
@@ -102,9 +102,15 @@ Only synthetic writer configuration permission was added inside this new disposa
 ## Remaining gates and next actions
 
 1. No confirmed open P1 was observed in the executed automated and bounded browser scenarios. This is not a claim that unexecuted scenarios are defect-free.
-2. Complete the explicitly pending combinations in `acceptance-traceability.md`: repeated-operation multi-Group browser flow, full Source inheritance/CLEAR/denial browser matrix, unexpected Actual/Measurement/Analysis/NextAction mixed-version journey, focus no-write proof, and 25-Subject keyboard/scroll usability. A distinct device-experiment browser scenario is NOT RUN; shared semiconductor/Specimen contracts do not constitute that separate browser proof.
+2. Complete the explicitly pending combinations in `acceptance-traceability.md`: repeated-operation multi-Group browser flow, full Source inheritance/CLEAR/denial browser matrix, unexpected Actual/Measurement/Analysis/NextAction mixed-version journey, broader focus/selection combinations, and 25-Subject keyboard/scroll usability. A distinct device-experiment browser scenario is NOT RUN; shared semiconductor/Specimen contracts do not constitute that separate browser proof.
 3. Human UAT: **NOT RUN**. Prepare a separate explicitly labeled Human dataset and exact reviewed head before participant acceptance; agent observations remain separate.
 4. Keep existing Activation intermittency unresolved until reproducible evidence establishes its cause. No unrelated P2/P3 redesign added. Source-only Plan change counter polish is a follow-up; persisted Source history and usage are authoritative.
 5. Review SQL019–022 and additive migration deployment/rollback operational planning before any production use. No additional business policy decision is currently required for implemented D01–D08.
 
 No merge, production migration, UAT mutation or acceptance declaration was performed.
+
+## Supplemental final-head browser verification
+
+After the first documentation commit, the existing fresh **Agent-only** Specimen Run 3 was explicitly used for Actual/Measurement regression. SP02 Plan 5/VARIED remained unchanged while Actual 6 persisted. A write attempt for skipped SP03 was rejected with no new event. SP01 Peel Force 24 N persisted, survived reload and displayed in Analysis TABLE; non-applicable SP02/SP03 displayed N/A. This supplements, rather than overwrites, the earlier zero-Actual snapshot.
+
+Manual focus selected Test, expanded it and restored the full Experiment scope. Before/after read-only SQL hashes for Plan, allocation, conditions, Actual, Measurement and Decision tables matched exactly. `evidence/final-lifecycle-readback.json` records the values, hashes and timestamps. A new Actual on a skipped Subject remains subject to the existing recording guard; preserved unexpected historical evidence is separately verified by unit/native tests. No policy bypass was introduced. Human acceptance remains NOT RUN.
