@@ -6,6 +6,8 @@ export type SqlResult<T extends SqlRow = SqlRow> = {
 };
 
 export interface SqlSession {
+  /** Set only by trusted server composition after resolving Principal. Never request input. */
+  trustedPrincipalId?: string;
   query<T extends SqlRow = SqlRow>(sql: string, parameters?: unknown[]): Promise<SqlResult<T>>;
 }
 

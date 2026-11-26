@@ -29,6 +29,10 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
   // avoiding a SHARE-to-ROW-EXCLUSIVE lock-upgrade deadlock between creators.
   const policyLock = raw.operation === 'study.create' ? 'SHARE ROW EXCLUSIVE' : 'SHARE';
   await sql.query(`LOCK TABLE auth_principal,auth_org_unit,auth_membership,study_access,study_module_access,study_access_grant,configuration_access_scope,configuration_access_grant,study_creation_grant IN ${policyLock} MODE`);
+  // Sample grant revocation must serialize before the repeatable-read snapshot.
+  // Reasoning-only and Study commands remain independent of the Sample schema.
+  if(['run.create','run.preview','run.create.preview','run.plan.save','run.get','run.planning','run.list','run.created','run.next'].includes(String(raw.operation)))
+    await sql.query('SELECT dxt_sample.lock_policy()');
   const principal=await resolvePrincipal(sql,principalId), policy=new PostgresAuthorization(sql);
   const input=structuredClone(raw), op=text(input.operation);
   if(op.startsWith('analysis.'))return savedAnalysisOperation(sql,principal,input);
@@ -172,9 +176,9 @@ export async function authorizedOperation<T>(database:SqlDatabase,principalId:st
   const configuration=await hydrateConfigurationPackages(sql,[...new Set([...pins,...(requestedPin?[requestedPin]:[])])]);
   // Nested repository read transactions inherit this already-established repeatable snapshot.
   // They must not change the outer command into a read-only transaction.
-  const joined={query:async <R extends import('./sql-database').SqlRow>(query:string,args?:unknown[])=>query==='SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY'?{rows:[] as R[],rowCount:0}:sql.query<R>(query,args)};
-  const transactionDb:SqlDatabase={query:joined.query,transaction:work=>work(joined),close:async()=>{}};
-  const repositories=createProductionSliceRepositories(transactionDb,configuration);
+  const joined={trustedPrincipalId:principalId,query:async <R extends import('./sql-database').SqlRow>(query:string,args?:unknown[])=>query==='SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY'?{rows:[] as R[],rowCount:0}:sql.query<R>(query,args)};
+  const transactionDb:SqlDatabase={trustedPrincipalId:principalId,query:joined.query,transaction:work=>work(joined),close:async()=>{}};
+  const repositories=createProductionSliceRepositories(transactionDb,configuration,principalId);
   repositories.measurement=new PostgresMeasurementRepository(transactionDb,principalId);
   const app=new DxtApplication(repositories,[],[],{},new PostgresConfigurationAuthoring(transactionDb));
   if(op==='measurement.query'){

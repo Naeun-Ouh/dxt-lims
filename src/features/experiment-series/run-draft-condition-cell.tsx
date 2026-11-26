@@ -1,5 +1,6 @@
 'use client';
 import { useContext } from 'react';
+import {SampleRevisionPicker} from '@/src/features/samples/revision-picker';
 import { DraftFeedbackContext, RunDraftFeedback } from './run-draft-feedback';
 import type { RunDraft } from '@/src/application/run-draft';
 import type { BootstrapOperationOption } from '@/src/application/study-bootstrap';
@@ -27,7 +28,7 @@ export function editDraftConditionValue(
         item.subjectId !== subjectId,
     );
   if (index >= 0)
-    return items.map((item, i) => (i === index ? { ...item, value } : item));
+    return items.map((item, i) => (i === index ? { ...item, value, ...(item.value!==value&&('sampleRevisionId' in item||item.sampleAccessDenied)?{sampleRevisionId:null,sampleAccessDenied:false}:{}) } : item));
   if (!value.trim()) return items;
   return [...items, { applicabilityId, subjectId, value, intentRole: 'FIXED' }];
 }
@@ -72,6 +73,7 @@ export function RunDraftConditionCell({
     : [
         {
           item: {
+            sampleRevisionId:undefined as string|null|undefined, sampleAccessDenied:undefined as boolean|undefined,
             applicabilityId: def.applicabilityId,
             subjectId,
             value: '',
@@ -150,6 +152,7 @@ export function RunDraftConditionCell({
                 onChange={(e) => setValue(e.target.value)}
               />
             )}
+            {index>=0&&def.kind==='MATERIAL'&&<SampleRevisionPicker value={item.sampleRevisionId} denied={item.sampleAccessDenied} onChange={sampleRevisionId=>update({sampleRevisionId,sampleAccessDenied:false})}/>}
             {index >= 0 && (
               <div className="draft-cell-role">
                 <select
