@@ -43,30 +43,104 @@ try {
   const migrations = (await readdir('src/infrastructure/postgres/migrations'))
     .filter((f) => /^\d{3}_.*\.sql$/.test(f))
     .sort();
-  await db.query('CREATE TABLE dxt_schema_migration (name text PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())');
-  const migrationClient = new Client({ connectionString: process.env.DATABASE_URL });
+  await db.query(
+    'CREATE TABLE dxt_schema_migration (name text PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())',
+  );
+  const migrationClient = new Client({
+    connectionString: process.env.DATABASE_URL,
+  });
   await migrationClient.connect();
   try {
     for (const file of migrations) {
-      const bytes = await readFile('src/infrastructure/postgres/migrations/' + file);
+      const bytes = await readFile(
+        'src/infrastructure/postgres/migrations/' + file,
+      );
       const checksum = createHash('sha256').update(bytes).digest('hex');
       await migrationClient.query('BEGIN');
       try {
-        await migrationClient.query(bytes.toString('utf8').replace(/^BEGIN;\s*/m, '').replace(/COMMIT;\s*$/, ''));
-        await migrationClient.query('INSERT INTO dxt_schema_migration(name,checksum) VALUES($1,$2)', [file.replace(/\.sql$/, ''),checksum]);
+        await migrationClient.query(
+          bytes
+            .toString('utf8')
+            .replace(/^BEGIN;\s*/m, '')
+            .replace(/COMMIT;\s*$/, ''),
+        );
+        await migrationClient.query(
+          'INSERT INTO dxt_schema_migration(name,checksum) VALUES($1,$2)',
+          [file.replace(/\.sql$/, ''), checksum],
+        );
         await migrationClient.query('COMMIT');
       } catch (error) {
         await migrationClient.query('ROLLBACK');
         throw error;
       }
     }
-  } finally { await migrationClient.end(); }
+  } finally {
+    await migrationClient.end();
+  }
   await seedConfigurationRegistry(
     db,
     configurationRepository.getConfigurationRegistry(),
   );
   await provisionConfigurationCatalog(db, definitions);
   await provisionMeasurementReferences(db, definitions);
+  // Explicit AGENT-only exact packages make existing evaluation references selectable.
+  // These are eligible references only: no Target or Run criteria are created here.
+  const registry = configurationRepository.getConfigurationRegistry();
+  for (const [domain, sourceId] of [
+    ['specimen', 'config-package-material-rd-v1'],
+    ['wafer', 'config-package-photo-v2'],
+  ] as const) {
+    const source = registry.packages.find((p) => p.id === sourceId)!;
+    const criteria = definitions.evaluationCriteria
+      .filter((c) =>
+        definitions.evaluations[0].criterionDefinitionIds.includes(c.id),
+      )
+      .map((c) => ({
+        ...c,
+        id: `agent-integration-${domain}-${c.id}`,
+        scope: source.scope,
+      }));
+    const evaluation = {
+      ...definitions.evaluations[0],
+      id: `agent-integration-${domain}-evaluation`,
+      scope: source.scope,
+      criterionDefinitionIds: criteria.map((c) => c.id),
+    };
+    const actions = definitions.nextActionTypes
+      .filter((t) => t.active)
+      .map((t) => ({
+        ...t,
+        id: `agent-integration-${domain}-${t.id}`,
+        scope: source.scope,
+      }));
+    await provisionConfigurationCatalog(db, {
+      ...definitions,
+      evaluations: [...definitions.evaluations, evaluation],
+      evaluationCriteria: [...definitions.evaluationCriteria, ...criteria],
+      nextActionTypes: [...definitions.nextActionTypes, ...actions],
+    });
+    const refs = [evaluation, ...criteria, ...actions];
+    await seedConfigurationRegistry(db, {
+      ...registry,
+      packages: [
+        {
+          ...source,
+          id: `agent-integration-${domain}-package`,
+          packageId: `agent-integration-${domain}`,
+          version: 1,
+          definitionRevisionIds: [
+            ...source.definitionRevisionIds,
+            ...refs.map((r) => r.id),
+          ],
+          nextActionTypeRevisionIds: actions.map((a) => a.id),
+        },
+      ],
+      externalReferences: [
+        ...registry.externalReferences,
+        ...refs.map((r) => ({ id: r.id, scope: r.scope })),
+      ],
+    });
+  }
   await db.query(
     "INSERT INTO auth_org_unit VALUES('agent-integration-dept','DEPARTMENT',NULL),('agent-integration-area','AREA',NULL)",
   );
@@ -90,15 +164,22 @@ try {
       );
     }
   }
-  await db.query("INSERT INTO auth_principal VALUES($1,$2,true,'GENERAL_USER')", [denied,'AGENT TEST ONLY denied principal']);
+  await db.query(
+    "INSERT INTO auth_principal VALUES($1,$2,true,'GENERAL_USER')",
+    [denied, 'AGENT TEST ONLY denied principal'],
+  );
   // The denied principal intentionally has no membership or visibility/authoring grants.
   // Sample authoring capabilities are independent of Study/Run capabilities.
   for (const principal of [writer, viewer]) {
-    const actions = principal === writer ? ['READ_SAMPLE', 'REGISTER_SAMPLE', 'REVISE_SAMPLE'] : ['READ_SAMPLE'];
-    for (const action of actions) await db.query(
-      'INSERT INTO dxt_sample.access_grant(id,owning_org_id,principal_id,action,granted_by) VALUES($1,$2,$3,$4,$5)',
-      [randomUUID(), 'agent-integration-dept', principal, action, writer],
-    );
+    const actions =
+      principal === writer
+        ? ['READ_SAMPLE', 'REGISTER_SAMPLE', 'REVISE_SAMPLE']
+        : ['READ_SAMPLE'];
+    for (const action of actions)
+      await db.query(
+        'INSERT INTO dxt_sample.access_grant(id,owning_org_id,principal_id,action,granted_by) VALUES($1,$2,$3,$4,$5)',
+        [randomUUID(), 'agent-integration-dept', principal, action, writer],
+      );
   }
   await db.query(
     "INSERT INTO study_creation_grant(id,principal_id,department_id,granted_by) VALUES($1,$2,'agent-integration-dept',$2)",
@@ -111,8 +192,8 @@ try {
   })) as StudyCreationOptions;
   const routes = [];
   for (const [domain, pkg] of [
-    ['specimen', 'config-package-material-rd-v1'],
-    ['wafer', 'config-package-photo-v2'],
+    ['specimen', 'agent-integration-specimen-package'],
+    ['wafer', 'agent-integration-wafer-package'],
   ] as const) {
     const context = options.contexts.find((c) => c.packageVersionId === pkg);
     if (!context)
