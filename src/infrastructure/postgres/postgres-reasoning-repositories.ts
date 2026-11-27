@@ -103,12 +103,12 @@ async function exactProvenance(
   const table = kind === 'evaluation' ? 'engineer_evaluation' : 'decision';
   const result = await sql.query<{
     record_id: string;
-    context_id: string;
-    revision: number;
+    context_id: string | null;
+    revision: number | null;
     record: unknown;
-    payload: import('@/src/application/study-readiness').StudyReasoningContext;
+    payload: import('@/src/application/study-readiness').StudyReasoningContext | null;
   }>(
-    `SELECT e.domain_id record_id,e.context_id,c.revision,c.payload,${kind==='decision'?"e.payload || jsonb_build_object('decision',e.payload->'decision' || jsonb_build_object('nextAction',a.payload))":'e.payload'} record FROM ${table} e JOIN reasoning_criteria_revision c ON c.id=e.context_id ${kind==='decision'?'LEFT JOIN next_action a ON a.decision_id=e.id':''} WHERE e.run_id=$1 ORDER BY e.domain_id`,
+    `SELECT e.domain_id record_id,e.context_id,c.revision,c.payload,${kind==='decision'?"e.payload || jsonb_build_object('decision',e.payload->'decision' || jsonb_build_object('nextAction',a.payload))":'e.payload'} record FROM ${table} e ${kind === 'decision' ? 'LEFT JOIN' : 'JOIN'} reasoning_criteria_revision c ON c.id=e.context_id ${kind==='decision'?'LEFT JOIN next_action a ON a.decision_id=e.id':''} WHERE e.run_id=$1 ORDER BY e.domain_id`,
     [rid],
   );
   return result.rows.map((r) => ({
@@ -118,6 +118,32 @@ async function exactProvenance(
     context: r.payload,
     record: r.record,
   }));
+}
+// Existing exact catalog records supply choices; this does not adopt Criteria or
+// create synthetic Targets for a Run with no interpretation context.
+async function runDecisionCatalog(sql: SqlSession, runId: string) {
+  const rows = await sql.query<{ payload: import('@/src/application/study-readiness').StudyReasoningContext }>(
+    `SELECT c.payload FROM experiment_run r JOIN reasoning_criteria_revision c
+     ON c.study_id=r.study_id AND c.package_version_id=r.configuration_package_version_id
+     WHERE r.run_domain_id=$1 ORDER BY c.recorded_at NULLS FIRST,c.id`, [runId]);
+  const catalog = referenceCatalogSchema.parse(Object.fromEntries(
+    Object.keys(referenceCatalogSchema.shape).map((key) => [key, []])));
+  const choices = new Map<string, typeof catalog.nextActionTypes[number]>();
+  for (const row of rows.rows) for (const choice of row.payload.catalog.nextActionTypes) {
+    const previous = choices.get(choice.id);
+    if (previous && hash(previous) !== hash(choice))
+      throw new ApplicationError('VALIDATION', 'The configured Next Action versions conflict. Ask the Study manager to review the experiment reference information.');
+    choices.set(choice.id, choice);
+  }
+  catalog.nextActionTypes = [...choices.values()];
+  return catalog;
+}
+async function decisionAuthoringContext(sql: SqlSession, rid: string, runId: string,
+  cmd: RepositoryCommand, action: 'AUTHOR_DECISION' | 'AUTHOR_NEXT_ACTION') {
+  await sql.query('SELECT assert_run_decision_authoring($1,$2,$3,$4,$5)', [rid,
+    cmd.expectedInterpretation?.contextId ?? null,
+    cmd.expectedInterpretation?.sequence ?? 0, sql.trustedPrincipalId, action]);
+  return readReasoningContext(sql, runId);
 }
 async function authoringContext(
   sql: SqlSession,
@@ -179,7 +205,8 @@ async function commandWrite(
           'Scientific authoring permission is required.',
         );
       const proposedDecision = kind==='decision' ? input as DecisionRecord : null;
-      if(proposedDecision?.context?.decision.nextAction||proposedDecision?.nextRunPreview){
+      const previousDecision = kind === 'decision' ? await decision(sql, id) : null;
+      if(proposedDecision?.context?.decision.nextAction||proposedDecision?.nextRunPreview||previousDecision?.context?.decision.nextAction||previousDecision?.nextRunPreview){
         const nextAllowed=(await sql.query<{reason:string}>('SELECT dxt_explicit_scientific_access_reason($1,study_id,$2) reason FROM experiment_run WHERE run_id=$3',[sql.trustedPrincipalId,'AUTHOR_NEXT_ACTION',id])).rows[0];
         if(nextAllowed?.reason!=='EXPLICIT_GRANT')throw new ApplicationError('FORBIDDEN','You do not have permission to record Next Action.');
       }
@@ -285,12 +312,9 @@ export class PostgresEvaluationRepository implements EvaluationRepository {
           interpretation: { contextId: context.id, sequence: context.sequence },
         }
       : {
+          actor,
           targetBindings: [],
-          catalog: referenceCatalogSchema.parse(
-            Object.fromEntries(
-              Object.keys(referenceCatalogSchema.shape).map((key) => [key, []]),
-            ),
-          ),
+          catalog: await runDecisionCatalog(this.db, id),
           interpretation: null,
         };
   }
@@ -433,10 +457,10 @@ export class PostgresDecisionRepository implements DecisionRepository {
     if (!parsed.success)
       throw new ApplicationError('VALIDATION', 'Invalid Decision context.');
     const context = parsed.data;
-    if (!context.decision.conclusion.trim() || !context.decision.reason.trim())
+    if (!context.decision.conclusion.trim())
       throw new ApplicationError(
         'VALIDATION',
-        'Decision and scientific rationale are required.',
+        'Run Conclusion is required.',
       );
     if (
       new Set(context.engineerEvaluationIds).size !==
@@ -480,13 +504,7 @@ export class PostgresDecisionRepository implements DecisionRepository {
             );
           return [existing.rows[0].id];
         }
-        const ctx = await authoringContext(
-          sql,
-          rid,
-          id,
-          cmd,
-          'AUTHOR_DECISION',
-        );
+        const ctx = await decisionAuthoringContext(sql, rid, id, cmd, 'AUTHOR_DECISION');
         if (context.decision.experimentRunId !== id)
           throw new ApplicationError(
             'VALIDATION',
@@ -494,31 +512,18 @@ export class PostgresDecisionRepository implements DecisionRepository {
           );
         const action = context.decision.nextAction;
         if (action || record.nextRunPreview)
-          await sql.query(
-            'SELECT assert_run_reasoning_authoring($1,$2,$3,$4,$5)',
-            [
-              rid,
-              ctx.id,
-              ctx.sequence,
-              sql.trustedPrincipalId,
-              'AUTHOR_NEXT_ACTION',
-            ],
-          );
-        if (
-          action &&
-          !ctx.payload.catalog.nextActionTypes.some(
-            (t) => t.id === action.nextActionTypeDefinitionId,
-          )
-        )
-          throw new ApplicationError(
-            'VALIDATION',
-            'Exact Next Action definition is unavailable.',
-          );
+          await decisionAuthoringContext(sql, rid, id, cmd, 'AUTHOR_NEXT_ACTION');
+        const catalog = ctx?.payload.catalog ?? await runDecisionCatalog(sql, id);
+        if (action && !catalog.nextActionTypes.some(
+          (t) => t.id === action.nextActionTypeDefinitionId && t.active))
+          throw new ApplicationError('VALIDATION', 'Exact Next Action definition is unavailable.');
+        if (!ctx && (context.engineerEvaluationIds.length || context.targetAchievementReferences.length || context.decision.evaluations.length || context.decision.criterionAssessments.length))
+          throw new ApplicationError('VALIDATION', 'Selected evidence requires its exact Evaluation Criteria. Reload before saving.');
         const eidRefs: string[] = [];
         for (const ref of context.engineerEvaluationIds) {
           const e = await sql.query<{ id: string }>(
             'SELECT id FROM engineer_evaluation WHERE run_id=$1 AND domain_id=$2 AND context_id=$3',
-            [rid, ref, ctx.id],
+            [rid, ref, ctx?.id ?? null],
           );
           if (!e.rows[0])
             throw new ApplicationError(
@@ -562,15 +567,16 @@ export class PostgresDecisionRepository implements DecisionRepository {
           decision: { ...context.decision, nextAction: null },
         };
         await sql.query(
-          'INSERT INTO decision(id,domain_id,run_id,context_id,payload,preview,content_hash) VALUES($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7)',
+          'INSERT INTO decision(id,domain_id,run_id,context_id,payload,preview,content_hash,judgment_basis) VALUES($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7,$8)',
           [
             did,
             context.decision.id,
             rid,
-            ctx.id,
+            ctx?.id ?? null,
             JSON.stringify(payload),
             JSON.stringify(record.nextRunPreview),
             hash(record),
+            ctx ? 'CRITERIA_BACKED' : 'RUN_ONLY',
           ],
         );
         if (action)
@@ -591,7 +597,7 @@ export class PostgresDecisionRepository implements DecisionRepository {
         for (const [i, ref] of context.targetAchievementReferences.entries()) {
           const result = await summary(sql, rid, ref.measurementSummaryId);
           if (
-            !ctx.payload.targetBindings.some(
+            !ctx?.payload.targetBindings.some(
               (b) =>
                 b.target.id === ref.seriesTargetId &&
                 b.target.parameterDefinitionId === result.parameter_id,

@@ -1,4 +1,5 @@
 'use client';
+import {allocationLabel} from '@/src/shared/i18n/allocation-messages';
 import { lifecycleErrorMessage } from './lifecycle-feedback';
 import { LifecycleInspectorClose } from '@/src/shared/ui/lifecycle-inspector-close';
 import { participatesInOperation } from './grid-plan-context';
@@ -589,7 +590,7 @@ function ActualOperationRows({
   activeSubjectId: string;
   onSelect: (subject: SubjectRef, row: ActualRow) => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [expanded, setExpanded] = useState(true);
   return (
     <>
@@ -626,7 +627,7 @@ function ActualOperationRows({
               ) ? (
               <span title={t('No execution record')}>○</span>
             ) : (
-              <span title={t('Not participating')}>N/A</span>
+              <span title={allocationLabel(locale,model.snapshot,operation.id,subject.id)}>{allocationLabel(locale,model.snapshot,operation.id,subject.id)}</span>
             )}
           </td>
         ))}
@@ -674,8 +675,8 @@ function ActualOperationRows({
                 )
               )
                 return (
-                  <td key={subject.id} title={t('Not participating')}>
-                    N/A
+                  <td key={subject.id} title={allocationLabel(locale,model.snapshot,operation.id,subject.id)}>
+                    {allocationLabel(locale,model.snapshot,operation.id,subject.id)}
                   </td>
                 );
               return (

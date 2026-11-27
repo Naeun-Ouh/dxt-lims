@@ -88,6 +88,11 @@ void test('native PostgreSQL 18 executes the Production Adapter slice through no
     await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/016_shared_scientific_authority.sql'), 'utf8'));
     await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/017_run_reasoning_provenance.sql'), 'utf8'));
     await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/018_sample_lifecycle.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/019_operation_group_design.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/020_sample_revision_clone_origin.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/021_run_judgment_optional_basis.sql'), 'utf8'));
+    await database.query(await readFile(join(process.cwd(), 'src/infrastructure/postgres/migrations/022_recipe_source_bindings.sql'), 'utf8'));
+
     await seedProductionSlice(database, configurationRepository);
   await seedScientificTestPrincipal(database);
     await provisionMeasurementReferences(database, definitions);

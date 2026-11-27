@@ -29,5 +29,5 @@ export type AuthoritativeRunPreview = {
   sourceFingerprint?: string;
   options?: BootstrapOperationOption[];
   catalog?: ReferenceCatalog;
-  readiness: Pick<StudyReadiness, 'status' | 'missing'>;
+  readiness: Pick<StudyReadiness, 'status' | 'missing'> & {warnings?:string[]};
 };

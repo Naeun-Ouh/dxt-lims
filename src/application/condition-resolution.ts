@@ -15,14 +15,14 @@ export type ConditionInterpretationChange = {
 export function prospectiveConditions(snapshot: RunPlanningSnapshot): RunPlanningSnapshot {
   const keys = new Set<string>();
   for (const a of snapshot.assignments) {
-    const key = JSON.stringify([a.processStepId, a.kind, a.label, a.subjectId, a.positionId]);
+    const key = JSON.stringify([a.processStepId, a.kind, a.applicabilityId ?? a.label, a.subjectId, a.positionId, a.groupId ?? null]);
     if (keys.has(key)) throw new ApplicationError('VALIDATION', 'Duplicate assignment.');
     keys.add(key);
   }
   return {
     ...snapshot,
-    conditionResolution: 'SUBJECT_FIRST_V1',
-    assignments: snapshot.assignments.filter(a => a.subjectId === null || !!a.value.trim()),
+    conditionResolution: snapshot.conditionResolution==='GROUPS_V2'?'GROUPS_V2':'SUBJECT_FIRST_V1',
+    assignments: snapshot.assignments.filter(a => (snapshot.conditionResolution!=='GROUPS_V2' && a.subjectId === null) || !!a.value.trim()),
   };
 }
 
@@ -60,7 +60,7 @@ export function legacyConditionAmbiguities(snapshot: RunPlanningSnapshot): boole
   if (snapshot.conditionResolution) return false;
   const seen = new Set<string>();
   return snapshot.assignments.some(a => {
-    const key = JSON.stringify([a.processStepId, a.kind, a.label, a.subjectId, a.positionId]);
+    const key = JSON.stringify([a.processStepId, a.kind, a.applicabilityId ?? a.label, a.subjectId, a.positionId, a.groupId ?? null]);
     const duplicate = seen.has(key);
     seen.add(key);
     return duplicate || (a.subjectId !== null && !a.positionId && snapshot.assignments.some(common =>

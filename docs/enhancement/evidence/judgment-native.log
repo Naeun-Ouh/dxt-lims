@@ -1,0 +1,11 @@
+dts-improvement: no Criteria/result/Evaluation/reason, exact readback, history, CAS, retry, revoked/no actor, criteria adoption, existing NextAction PASS
+adhesion-material-optimization: no Criteria/result/Evaluation/reason, exact readback, history, CAS, retry, revoked/no actor, criteria adoption, existing NextAction PASS
+✔ Run judgment Native PostgreSQL: criteria-free and optional Evaluation with preserved history/permissions (1809.932125ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2007.590542

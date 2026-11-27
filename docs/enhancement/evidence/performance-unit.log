@@ -1,0 +1,14 @@
+✔ Group membership is explicit: COMMON is not Base; deleting Group is UNASSIGNED, not Skip (5.023ms)
+✔ Subject > Group > common resolves value and role together, independently of storage order, including zero/false (0.915ms)
+✔ Missing and Unassigned warn without blocking; structural invalidity remains distinct (3.330958ms)
+✔ 1200 Operations x 25 Subjects resolves bounded state without expanding Group condition storage (176.665333ms)
+✔ Planned Skip preserves unexpected Actual evidence and has no fabricated planned/default condition (5.95675ms)
+✔ Missing V2 Plan rows stay editable and value-only Subject edits retain inherited Group intent (9.219916ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 532.6675

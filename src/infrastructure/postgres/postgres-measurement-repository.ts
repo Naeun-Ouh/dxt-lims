@@ -393,7 +393,7 @@ export class PostgresMeasurementRepository implements MeasurementRepository {
           operation_definition_revision_id: string;
           subject_domain_id: string;
         }>(
-          `SELECT o.operation_domain_id,o.operation_definition_revision_id,s.subject_domain_id FROM run_subject_operation l JOIN run_operation o ON o.run_operation_id=l.run_operation_id JOIN run_subject rs ON rs.run_subject_id=l.run_subject_id JOIN subject s USING(subject_id) WHERE l.run_id=$1`,
+          `SELECT o.operation_domain_id,o.operation_definition_revision_id,s.subject_domain_id FROM run_subject_operation l JOIN run_operation o ON o.run_operation_id=l.run_operation_id JOIN run_subject rs ON rs.run_subject_id=l.run_subject_id JOIN subject s USING(subject_id) WHERE l.run_id=$1 AND l.plan_state IN ('COMMON','ASSIGNED')`,
           [run.run_id],
         );
         const actual = await session.query<{

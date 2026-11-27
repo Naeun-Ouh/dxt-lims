@@ -1,4 +1,5 @@
 'use client';
+import { allocationUi } from '@/src/shared/i18n/allocation-messages';
 import { RunDraftFeedback } from './run-draft-feedback';
 import { useState } from 'react';
 import type { RunDraft } from '@/src/application/run-draft';
@@ -9,9 +10,11 @@ export function removeDraftSubject(draft: RunDraft, id: string): RunDraft {
   return {
     ...draft,
     subjects: draft.subjects.filter((s) => s.id !== id),
+    recipeSourceBindings:draft.recipeSourceBindings?.filter(b=>b.subjectId!==id),
     operations: draft.operations.map((op) => ({
       ...op,
       subjectIds: op.subjectIds.filter((s) => s !== id),
+      ...(op.design?{design:{...op.design,allocations:Object.fromEntries(Object.entries(op.design.allocations).filter(([subject])=>subject!==id))}}:{}),
       items: op.items.filter((item) => item.subjectId !== id),
     })),
   };
@@ -24,7 +27,7 @@ export function RunDraftSubjects({
   draft: RunDraft;
   onChange: (draft: RunDraft) => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [id, setId] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -37,6 +40,7 @@ export function RunDraftSubjects({
       return setError('This Subject ID is already added.');
     onChange({
       ...draft,
+      operations:draft.operations.map(op=>op.design?{...op,subjectIds:op.design.mode==='COMMON'?[...op.subjectIds,subjectId]:op.subjectIds,design:{...op.design,allocations:{...op.design.allocations,[subjectId]:{state:op.design.mode==='COMMON'?'COMMON' as const:'UNASSIGNED' as const}}}}:op),
       subjects: [
         ...draft.subjects,
         { id: subjectId, displayLabel: name.trim() || subjectId },
@@ -145,7 +149,7 @@ export function RunDraftSubjects({
         </table>
       </DxtGridFrame>
       <small>
-        {t(
+        {draft.planningContract==='GROUPS_V2'?allocationUi(locale,'newSubjects'):t(
           'Existing Operations do not automatically apply to new Subjects. Choose Operation application in the grid below.',
         )}
       </small>

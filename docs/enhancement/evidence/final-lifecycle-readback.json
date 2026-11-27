@@ -1,0 +1,118 @@
+{
+  "before": {
+    "recordedAt": "2026-11-26T22:22:12.522Z",
+    "codeHead": "2a878b71671035bf677c3e2a0811634822bd22ff",
+    "humanAcceptance": "NOT RUN",
+    "access": "BEGIN READ ONLY / SELECT / ROLLBACK",
+    "runId": "1a0b574a-86e5-4def-ae63-7fcfbd846e29",
+    "values": [
+      {
+        "subject": "AGENT-SP02",
+        "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+        "label": "Coating Thickness",
+        "value": "5",
+        "role": "VARIED"
+      },
+      {
+        "subject": null,
+        "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+        "label": "Coating Thickness",
+        "value": "20",
+        "role": "FIXED"
+      },
+      {
+        "subject": null,
+        "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+        "label": "Coating Thickness",
+        "value": "0",
+        "role": "VARIED"
+      }
+    ],
+    "actual": [
+      {
+        "subject": "AGENT-SP02",
+        "observed_operation": "Coat",
+        "definition_revision_id": "condition-coating-thickness-v1",
+        "value": "6"
+      }
+    ],
+    "measured": [
+      {
+        "subject": "AGENT-SP01",
+        "parameter_id": "parameter-peel-force-v1",
+        "value": 24
+      }
+    ],
+    "state": {
+      "experiment_run": "d3a429ded6c4ff3d471a91113b5c443ab6eaab3976fc488c98e9e8252d64665a",
+      "run_operation": "5edbbea7caefca2ade430b56fe53f9124ff8b66401686bf883d3e6cbf35a57e6",
+      "run_subject": "d12133a254d54bbe482eae6954424ea546a454b2c231d274f615854f87b4358a",
+      "run_operation_group": "d7246573cde89dbed25bb71297cd48ce98b237d6bca64c4dc6bdda7738ab9523",
+      "run_subject_operation": "8db75f9ea34e1ffdc439f27119f5468a804aa5337b8b5f205916e11e5605179e",
+      "run_assignment": "eec1d39d2ea2e5c605c901533de4f380d298d321492dd851db4cc77572f1cc68",
+      "run_measurement_plan": "c4203682bdd45092b3a2a662e7ed7ba26ee4cd4d0c34842c62f061feab01ac68",
+      "execution_event": "f758139eb7bea1511a6e94913f8eb533205a7bea3a98ac239e6d33d7f2ea1096",
+      "measurement_value": "40cecce7a5ea20ccefe4b362f7da13c57283a4e1c49e8ccb1064ffe2c9bbcee9",
+      "decision": "b7786189857409645873264cf91c39496f232c5a4361129843c6b215473cf778"
+    }
+  },
+  "after": {
+    "recordedAt": "2026-11-26T22:22:47.481Z",
+    "codeHead": "2a878b71671035bf677c3e2a0811634822bd22ff",
+    "humanAcceptance": "NOT RUN",
+    "access": "BEGIN READ ONLY / SELECT / ROLLBACK",
+    "runId": "1a0b574a-86e5-4def-ae63-7fcfbd846e29",
+    "values": [
+      {
+        "subject": "AGENT-SP02",
+        "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+        "label": "Coating Thickness",
+        "value": "5",
+        "role": "VARIED"
+      },
+      {
+        "subject": null,
+        "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+        "label": "Coating Thickness",
+        "value": "20",
+        "role": "FIXED"
+      },
+      {
+        "subject": null,
+        "operation": "run-9cb5dcd2-03b3-4e03-805e-77e48e285187-2-step-1",
+        "label": "Coating Thickness",
+        "value": "0",
+        "role": "VARIED"
+      }
+    ],
+    "actual": [
+      {
+        "subject": "AGENT-SP02",
+        "observed_operation": "Coat",
+        "definition_revision_id": "condition-coating-thickness-v1",
+        "value": "6"
+      }
+    ],
+    "measured": [
+      {
+        "subject": "AGENT-SP01",
+        "parameter_id": "parameter-peel-force-v1",
+        "value": 24
+      }
+    ],
+    "state": {
+      "experiment_run": "d3a429ded6c4ff3d471a91113b5c443ab6eaab3976fc488c98e9e8252d64665a",
+      "run_operation": "5edbbea7caefca2ade430b56fe53f9124ff8b66401686bf883d3e6cbf35a57e6",
+      "run_subject": "d12133a254d54bbe482eae6954424ea546a454b2c231d274f615854f87b4358a",
+      "run_operation_group": "d7246573cde89dbed25bb71297cd48ce98b237d6bca64c4dc6bdda7738ab9523",
+      "run_subject_operation": "8db75f9ea34e1ffdc439f27119f5468a804aa5337b8b5f205916e11e5605179e",
+      "run_assignment": "eec1d39d2ea2e5c605c901533de4f380d298d321492dd851db4cc77572f1cc68",
+      "run_measurement_plan": "c4203682bdd45092b3a2a662e7ed7ba26ee4cd4d0c34842c62f061feab01ac68",
+      "execution_event": "f758139eb7bea1511a6e94913f8eb533205a7bea3a98ac239e6d33d7f2ea1096",
+      "measurement_value": "40cecce7a5ea20ccefe4b362f7da13c57283a4e1c49e8ccb1064ffe2c9bbcee9",
+      "decision": "b7786189857409645873264cf91c39496f232c5a4361129843c6b215473cf778"
+    }
+  },
+  "focusScientificRowsUnchanged": true,
+  "note": "Explicit browser Actual SP02=6 follows earlier no-fabricated-Actual readback. Attempted new Actual for skipped SP03 rejected; no event persisted. Measurement SP01=24 saved and Analysis TABLE displayed 24 with SP02/SP03 N/A. Focus/collapse changed only view."
+}

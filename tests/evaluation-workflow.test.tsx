@@ -100,34 +100,17 @@ const render = (
     </LocaleProvider>,
   );
 
-void test('achieved result still requires an independently saved Engineer Evaluation', () => {
-  assert.equal(selected.achievement.status, 'ACHIEVED');
-  assert.match(
-    conclusionPrerequisite(selected, evaluation.comment, 'INFORMATIVE')!,
-    /Save Evaluation/,
-  );
-});
-void test('missing result cannot inherit an old Evaluation or unlock Run Conclusion', () => {
-  const absent = projectEvaluations(
-    model.snapshot.id,
-    model.subjects,
-    [],
-    bindings,
-    engineeringGridEvaluationScenarios.PHOTO.engineerEvaluations,
-  )[0];
-  assert.equal(absent.achievement.status, 'MISSING_RESULT');
-  assert.equal(absent.engineerEvaluation, null);
-  assert.match(
-    conclusionPrerequisite(absent, '', 'INFORMATIVE')!,
-    /Result Missing/,
-  );
+void test('Run judgment is independent from Criteria, individual Evaluation and missing results', () => {
+  assert.equal(conclusionPrerequisite(selected, '', 'INFORMATIVE'), null);
+  assert.equal(conclusionPrerequisite(null, '', 'INFORMATIVE'), null);
   const html = render({
-    results: { ...results, datasets: [], values: [], summaries: [] },
-    onRecordEvaluation: () => {},
-    onRecordDecision: () => {},
+    targetBindings: [], results: { ...results, datasets: [], values: [], summaries: [] },
+    onRecordEvaluation: () => {}, onRecordDecision: () => {},
   });
-  assert.match(html, /evaluation-conclusion-fields" disabled/);
-  assert.match(html, /Record a measured result/);
+  assert.doesNotMatch(html, /evaluation-conclusion-fields" disabled/);
+  assert.match(html, /Reason \(optional\)/);
+  assert.match(html, /Evaluation Criteria, individual Evaluations and a reason are optional/);
+  assert.match(render({ targetBindings: [], onRecordDecision: () => {} }, 'ko'), /판단 근거 \(선택 사항\)/);
 });
 void test('evaluation-only permission remains independent from decision permission', () => {
   const html = render({ onRecordEvaluation: () => {} });
@@ -150,46 +133,28 @@ void test('Korean and English keep explicit draft and save boundaries', () => {
   assert.match(render(props, 'ko'), /선택은 아직 초안/);
   assert.match(render(props, 'ko'), /실험 차수 결론 저장/);
 });
-void test('authoritative save refreshes the exact projection; edited comment or disposition blocks conclusion again', async () => {
-  const app = new DxtApplication(
-    createInMemoryRepositories(configurationRepository),
-  );
-  const saved = await saveEvaluationRecord(
-    model.snapshot.id,
-    evaluation,
-    (command) =>
-      app.recordEvaluation(seed(), { ...command, id: 'g03-evaluation' }),
-  );
-  const current = projections(saved.engineerEvaluations).find(
-    (p) => p.subject.id === selected.subject.id,
-  )!;
-  assert.equal(
-    conclusionPrerequisite(current, evaluation.comment, 'INFORMATIVE'),
-    null,
-  );
+void test('Evaluation edits never gate independent Run judgment or fabricate evaluation evidence', async () => {
+  const app = new DxtApplication(createInMemoryRepositories(configurationRepository));
+  const saved = await saveEvaluationRecord(model.snapshot.id, evaluation,
+    (command) => app.recordEvaluation(seed(), { ...command, id: 'g03-evaluation' }));
+  const current = projections(saved.engineerEvaluations).find((p) => p.subject.id === selected.subject.id)!;
   assert.equal(current.engineerEvaluation?.id, 'g03-evaluation');
-  assert.match(
-    conclusionPrerequisite(current, 'Unsaved change', 'INFORMATIVE')!,
-    /changes/,
-  );
-  assert.match(
-    conclusionPrerequisite(current, evaluation.comment, 'ACCEPT')!,
-    /changes/,
-  );
-  assert.match(
-    conclusionPrerequisite(
-      {
-        ...current,
-        achievement: {
-          ...current.achievement,
-          measurementSummaryId: 'different-result',
-        },
-      },
-      evaluation.comment,
-      'INFORMATIVE',
-    )!,
-    /Save Evaluation/,
-  );
+  assert.equal(conclusionPrerequisite(current, 'Unsaved change', 'ACCEPT'), null);
+});
+void test('Run judgment with optional empty rationale persists without a result or evaluation', async () => {
+  const app = new DxtApplication(createInMemoryRepositories(configurationRepository));
+  const state = createEmptyLifecycleState(model.snapshot);
+  const command: Omit<DecisionCommand, 'id'> = {
+    decisionStatement: 'Exploratory observation', conclusion: 'Exploratory observation', reason: '',
+    nextActionTypeDefinitionId: '', nextActionNote: '', evaluationIds: [], targetReferences: [],
+    targetSubjectIds: [], targetOperationIds: [], recordedBy: 'test', recordedAt: evaluation.evaluatedAt, nextRunChange: null,
+  };
+  const saved = await saveConclusionRecord(model.snapshot.id, command,
+    (value) => app.recordDecision(state, definitions, { ...value, id: 'run-only-judgment' }));
+  assert.equal(saved.decisionContext?.decision.reason, '');
+  assert.deepEqual(saved.decisionContext?.engineerEvaluationIds, []);
+  assert.equal(saved.engineerEvaluations.length, 0);
+  assert.match(render({ targetBindings: [], decisionContext: saved.decisionContext }), /Exploratory observation/);
 });
 void test('failed, unauthorized, empty or stale save acknowledgements cannot produce success', async () => {
   await assert.rejects(

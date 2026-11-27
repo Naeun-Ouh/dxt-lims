@@ -70,7 +70,7 @@ function assignmentFor(
     model.snapshot.assignments.find(
       (assignment) =>
         assignment.processStepId === operation.sourceOperationId &&
-        !assignment.subjectId &&
+        !assignment.subjectId && !assignment.groupId &&
         assignment.kind === definition.assignmentKind &&
         (assignment.referenceId === definition.assignmentReferenceId ||
           assignment.label === definition.label),
@@ -78,7 +78,7 @@ function assignmentFor(
       id: `${operation.id}-${definition.applicabilityId}`,
       kind: definition.assignmentKind,
       label: definition.label,
-      value: definition.defaultValue,
+      value: model.snapshot.conditionResolution==='GROUPS_V2'?'':definition.defaultValue,
       referenceId: definition.assignmentReferenceId,
       processStepId: operation.sourceOperationId,
       subjectId: null,
@@ -122,7 +122,7 @@ export function projectEngineeringGridRows(
     )
       .filter(
         (definition) =>
-          !model.explicitAssignments ||
+          !model.explicitAssignments || model.snapshot.conditionResolution==='GROUPS_V2' ||
           model.snapshot.assignments.some(
             (a) =>
               a.processStepId === operation.sourceOperationId &&
@@ -146,7 +146,7 @@ export function projectEngineeringGridRows(
           assignment,
           role: assignment.intentRole,
           values,
-          ...(model.snapshot.conditionResolution === 'SUBJECT_FIRST_V1'
+          ...(model.snapshot.conditionResolution
             ? {
                 subjectRoles: Object.fromEntries(
                   model.subjects

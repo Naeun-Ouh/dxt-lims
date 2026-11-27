@@ -1,4 +1,7 @@
 'use client';
+import { operationGroupLabel } from '../run-registration/operation-group-display';
+import { RunDraftWarnings } from './run-draft-warnings';
+import { allocationLabel } from '@/src/shared/i18n/allocation-messages';
 import type { AuthoritativeRunPreview } from '@/src/application/run-creation';
 import { ConditionCopyNotice } from './condition-copy-notice';
 import { effectiveAssignments } from '@/src/features/run-registration/planning-model';
@@ -17,7 +20,7 @@ export function RunCreationReview({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { snapshot } = preview;
   const effective = new Map(snapshot.subjects.map(subject => [subject.id, effectiveAssignments(snapshot, subject.id)]));
   return (
@@ -33,6 +36,7 @@ export function RunCreationReview({
         )}
       </p>
       <ConditionCopyNotice preview={preview} />
+      <RunDraftWarnings warnings={preview.readiness.warnings} />
       <h3>
         {t('Subjects')} · {snapshot.subjects.length}
       </h3>
@@ -71,19 +75,19 @@ export function RunCreationReview({
                   <td>
                     {snapshot.subjects
                       .filter((s) => applies(s.id))
-                      .map((s) => s.displayLabel)
+                      .map((s) => {const allocation=snapshot.operationDesign?.[step.id]?.allocations[s.id];const group=snapshot.operationDesign?.[step.id]?.groups.find(g=>g.id===allocation?.groupId);return group?`${s.displayLabel} · ${operationGroupLabel(snapshot.operationDesign?.[step.id], group.id)}`:s.displayLabel;})
                       .join(', ') || '—'}
                   </td>
                   <td>
                     {snapshot.subjects
                       .filter((s) => !applies(s.id))
-                      .map((s) => s.displayLabel)
+                      .map((s) => `${s.displayLabel} · ${allocationLabel(locale,snapshot,step.id,s.id)}`)
                       .join(', ') || '—'}
                   </td>
                   <td>
                     {snapshot.subjects.map(subject => <div key={subject.id}>
                       <strong>{subject.displayLabel}: </strong>
-                      {!applies(subject.id) ? t('Operation does not apply') :
+                      {!applies(subject.id) ? allocationLabel(locale,snapshot,step.id,subject.id) :
                         [...new Set(snapshot.assignments.filter(a => a.processStepId === step.id).map(a => `${a.kind}:${a.label}`))].map(key => {
                           const value = effective.get(subject.id)?.[`${step.id}:${key}`];
                           return <div key={key}>{key.slice(key.indexOf(':') + 1)}: {value?.value || t('Missing')} · {value ? t(value.intentRole === 'VARIED' ? 'Intentionally Varied' : 'Fixed') : '—'}</div>;

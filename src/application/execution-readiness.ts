@@ -1,3 +1,4 @@
+import { effectiveAssignments } from '@/src/features/run-registration/planning-model';
 import type { RunPlanningSnapshot } from '@/src/features/run-registration/planning-model';
 import {
   validateVariableValue,
@@ -26,6 +27,9 @@ export function executionReadiness(
   configuration: ConfigurationRegistrySource,
   catalog: ReferenceCatalog,
 ) {
+  const warnings:string[]=[];
+  const flexible=snapshot.conditionResolution==='GROUPS_V2';
+  for(const [op,design] of Object.entries(snapshot.operationDesign??{}))for(const [subject,a] of Object.entries(design.allocations))if(a.state==='UNASSIGNED')warnings.push(`Unassigned Subject: {0}.|${snapshot.steps.find(s=>s.id===op)?.label??op} · ${subject}`);
   const missing: string[] = [],
     measurementMissing: string[] = [];
   if (!snapshot.subjects.length)
@@ -50,7 +54,7 @@ export function executionReadiness(
     if (op.role === 'MEASUREMENT') {
       const plans = snapshot.measurements.filter((m) => m.stepId === op.id);
       if (!plans.length)
-        measurementMissing.push(
+        (flexible?warnings:measurementMissing).push(
           `Complete the Measurement plan for {0}.|${op.label}`,
         );
       for (const plan of plans) {
@@ -95,7 +99,7 @@ export function executionReadiness(
         for (const subject of snapshot.subjects.filter((s) =>
           snapshot.subjectOperationIds[s.id]?.includes(op.id),
         )) {
-          const values = snapshot.assignments.filter(
+          const values = (flexible?Object.values(effectiveAssignments(snapshot,subject.id)):snapshot.assignments).filter(
             (a) =>
               a.processStepId === op.id &&
               (!a.subjectId || a.subjectId === subject.id) &&
@@ -104,13 +108,13 @@ export function executionReadiness(
                 d.allowedOptions.some((o) => o.referenceId === a.referenceId)),
           );
           if (d.validationProfile?.required && !values.length)
-            missing.push(
+            (flexible?warnings:missing).push(
               `Enter the required execution condition: {0}.|${op.label} · ${d.label}`,
             );
           for (const a of values) {
             try {
-              if (d.validationProfile?.required && !a.value.trim())
-                throw new Error('empty');
+              if (!a.value.trim() && flexible) { if(d.validationProfile?.required)warnings.push(`Enter the required execution condition: {0}.|${op.label} · ${d.label}`); continue; }
+              if (d.validationProfile?.required && !a.value.trim())throw new Error('empty');
               validateVariableValue(
                 {
                   id: d.revisionId,
@@ -140,7 +144,7 @@ export function executionReadiness(
     }
   }
   return {
-    execution: layer([...missing, ...measurementMissing]),
+    execution: {...layer([...missing, ...measurementMissing]),warnings},
     measurement: snapshot.steps.some((o) => o.role === 'MEASUREMENT')
       ? layer(measurementMissing)
       : { status: 'NOT_CONFIGURED' as const, missing: [] },

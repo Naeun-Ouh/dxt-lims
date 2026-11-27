@@ -1,0 +1,17 @@
+{
+  "focusedTests": 35,
+  "passed": 35,
+  "failed": 0,
+  "uiRender": 11,
+  "delta": 6,
+  "runDraftRegression": 11,
+  "operationDesignRegression": 6,
+  "nativePostgresHarness": 1,
+  "typescript": "PASS",
+  "changedFileLint": "PASS",
+  "productionBuild": "PASS",
+  "browser": "NOT RUN: previous disposable server was not listening; no UAT environment reset or reseed",
+  "humanAcceptance": "NOT RUN",
+  "schemaChanges": false,
+  "existingUatDataChanged": false
+}

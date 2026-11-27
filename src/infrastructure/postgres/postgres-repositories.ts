@@ -1,3 +1,6 @@
+import {remapRecipeSourceBindings} from '@/src/application/recipe-source';
+import {readRecipeSourceBindings,syncRecipeSourceBindings,pruneRecipeSourceBindings} from './postgres-recipe-sources';
+import {readOperationDesign,syncOperationDesign} from './operation-design';
 import {readSampleSelections,syncSampleSelections} from './sample-run-links';
 import { prospectiveConditions, conditionInterpretationChanges, legacyConditionAmbiguities } from '@/src/application/condition-resolution';
 import { executionOptions } from './study-bootstrap';
@@ -58,9 +61,10 @@ function renumberSnapshot(snapshot: RunPlanningSnapshot, runNumber: number): Run
   if (snapshot.runNumber === runNumber) return structuredClone(snapshot);
   const previousId = snapshot.id;
   const runId = previousId.replace(/-\d+$/, `-${runNumber}`);
-  const stepIds = new Map(snapshot.steps.map((step, index) => [step.id, `${runId}-step-${index + 1}`]));
+  const stepIds = new Map(snapshot.steps.map((step, index) => [step.id, snapshot.conditionResolution==='GROUPS_V2'?step.id:`${runId}-step-${index + 1}`]));
   return {
     ...structuredClone(snapshot), id: runId, runNumber, name: `Run ${runNumber}`,
+    ...(snapshot.recipeSourceBindings?{recipeSourceBindings:remapRecipeSourceBindings(snapshot.recipeSourceBindings,stepIds,()=>randomUUID())}:{}),
     steps: snapshot.steps.map((step) => ({ ...step, id: stepIds.get(step.id)! })),
     assignments: snapshot.assignments.map((item, index) => ({
       ...item, id: `${runId}-assignment-${index + 1}`,
@@ -193,9 +197,9 @@ async function readRun(session: SqlSession, where: string, parameters: unknown[]
      JOIN run_subject membership ON membership.run_subject_id = link.run_subject_id
      JOIN subject ON subject.subject_id = membership.subject_id
      JOIN run_operation operation ON operation.run_operation_id = link.run_operation_id
-     WHERE membership.run_id = $1 ORDER BY membership.ordinal, operation.sequence`, [row.run_id]);
+     WHERE membership.run_id = $1 AND link.plan_state IN ('COMMON','ASSIGNED') ORDER BY membership.ordinal, operation.sequence`, [row.run_id]);
   const assignments = await session.query<{
-    assignment_domain_id: string; assignment_kind: SetupAssignment['kind']; label: string; value_text: string;
+    group_domain_id: string|null; applicability_rule_id:string; assignment_domain_id: string; assignment_kind: SetupAssignment['kind']; label: string; value_text: string;
     assignment_reference_revision_id: string; operation_domain_id: string | null; subject_domain_id: string | null;
     position_domain_id: string | null; intent_role: SetupAssignment['intentRole']; provenance: SetupAssignment['provenance'];
   }>(`SELECT assignment.*, operation.operation_domain_id, subject.subject_domain_id
@@ -226,6 +230,7 @@ async function readRun(session: SqlSession, where: string, parameters: unknown[]
     subjectOps.rows.filter((item) => item.subject_domain_id === subject.subject_domain_id).map((item) => item.operation_domain_id),
   ]));
   const snapshot: RunPlanningSnapshot = {
+    ...(row.planning_context?.conditionResolution==='GROUPS_V2'?{operationDesign:await readOperationDesign(session,row.run_id)}:{}),
     ...(row.planning_context?.conditionResolution ? {conditionResolution: row.planning_context.conditionResolution} : {}),
     id: row.run_domain_id, configurationPackageVersionId: row.configuration_package_version_id,
     experimentTypeProfileVersionId: row.experiment_type_profile_version_id,
@@ -242,10 +247,12 @@ async function readRun(session: SqlSession, where: string, parameters: unknown[]
     assignments: assignments.rows.map((item) => ({ id: item.assignment_domain_id, kind: item.assignment_kind,
       label: item.label, value: item.value_text, referenceId: item.assignment_reference_revision_id,
       processStepId: item.operation_domain_id, subjectId: item.subject_domain_id, positionId: item.position_domain_id,
-      intentRole: item.intent_role, provenance: item.provenance })),
+      intentRole: item.intent_role, provenance: item.provenance, ...(row.planning_context?.conditionResolution==='GROUPS_V2'?{groupId:item.group_domain_id,applicabilityId:item.applicability_rule_id}:{}) })),
     measurements: plans, delta: row.delta,
   };
   await readSampleSelections(session,row.run_id,snapshot.assignments);
+  const sourceBindings=await readRecipeSourceBindings(session,row.run_id);
+  if(sourceBindings.length)snapshot.recipeSourceBindings=sourceBindings;
   const errors = validatePlanningSnapshot(snapshot);
   if (errors.length) throw new ApplicationError('PERSISTENCE', `Persisted Run snapshot is invalid: ${errors.join('; ')}`);
   return snapshot;
@@ -266,10 +273,32 @@ async function insertSnapshot(session: SqlSession, study: StudyRow, snapshot: Ru
       snapshot.experimentType, snapshot.area, snapshot.workspaceContextLabel ?? null, snapshot.createdAt.length === 10 ? `${snapshot.createdAt}T00:00:00.000Z` : snapshot.createdAt,
       snapshot.intent, snapshot.provenance.kind, snapshot.provenance.label, snapshot.provenance.sourceId,
       JSON.stringify(snapshot.candidateSubjects ?? null), JSON.stringify(snapshot.manufacturingContext ?? null), JSON.stringify(snapshot.delta), snapshot.series.name, JSON.stringify({ranges:[],manualFocus:[],conditionResolution:snapshot.conditionResolution})]);
-  await insertPlanChildren(session,runId,snapshot,registry,'CREATE_RUN');
+  await syncPlanChildren(session,runId,snapshot,registry,'CREATE_RUN');
   return runId;
 }
-async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPlanningSnapshot,registry:ReturnType<import('@/src/application/hydrated-configuration').HydratedConfiguration['getConfigurationRegistry']>,sampleAction:'CREATE_RUN'|'EDIT_RUN_PLAN'='EDIT_RUN_PLAN'){
+async function syncPlanChildren(session:SqlSession,runId:string,snapshot:RunPlanningSnapshot,registry:ReturnType<import('@/src/application/hydrated-configuration').HydratedConfiguration['getConfigurationRegistry']>,sampleAction:'CREATE_RUN'|'EDIT_RUN_PLAN'='EDIT_RUN_PLAN'){
+  // The Run root is locked by the caller. Reconcile by logical identity rather than
+  // replacing children: physical IDs are referenced by evidence and Group design.
+  // Temporarily move order values into a disjoint positive range to permit swaps
+  // under the existing immediate UNIQUE constraints without changing identity.
+  const currentSubjects=(await session.query<{run_subject_id:string;subject_domain_id:string}>(
+    'SELECT rs.run_subject_id,s.subject_domain_id FROM run_subject rs JOIN subject s USING(subject_id) WHERE rs.run_id=$1',[runId])).rows;
+  const currentOperations=(await session.query<{run_operation_id:string;operation_domain_id:string}>(
+    'SELECT run_operation_id,operation_domain_id FROM run_operation WHERE run_id=$1',[runId])).rows;
+  const currentAssignments=(await session.query<{run_assignment_id:string;assignment_domain_id:string;assignment_kind:string}>(
+    'SELECT run_assignment_id,assignment_domain_id,assignment_kind FROM run_assignment WHERE run_id=$1',[runId])).rows;
+  const currentMeasurements=(await session.query<{measurement_plan_id:string;measurement_domain_id:string}>(
+    'SELECT measurement_plan_id,measurement_domain_id FROM run_measurement_plan WHERE run_id=$1',[runId])).rows;
+  const existingSubjectIds=new Map(currentSubjects.map(row=>[row.subject_domain_id,row.run_subject_id]));
+  const existingOperationIds=new Map(currentOperations.map(row=>[row.operation_domain_id,row.run_operation_id]));
+  const existingAssignments=new Map(currentAssignments.map(row=>[row.assignment_domain_id,row]));
+  const existingMeasurementIds=new Map(currentMeasurements.map(row=>[row.measurement_domain_id,row.measurement_plan_id]));
+  await session.query('UPDATE run_subject SET ordinal=ordinal+(SELECT COALESCE(MAX(ordinal),0) FROM run_subject WHERE run_id=$1)+$2 WHERE run_id=$1',[runId,snapshot.subjects.length]);
+  await session.query('UPDATE run_operation SET sequence=sequence+(SELECT COALESCE(MAX(sequence),0) FROM run_operation WHERE run_id=$1)+$2 WHERE run_id=$1',[runId,snapshot.steps.length]);
+  // Delete only explicitly removed assignments/plans. Remove parents after child
+  // reconciliation so a retained assignment can move to another retained parent.
+  await session.query('DELETE FROM run_assignment WHERE run_id=$1 AND NOT(assignment_domain_id=ANY($2::text[]))',[runId,snapshot.assignments.map(a=>a.id)]);
+  await session.query('DELETE FROM run_measurement_plan WHERE run_id=$1 AND NOT(measurement_domain_id=ANY($2::text[]))',[runId,snapshot.measurements.map(m=>m.id)]);
   const rules=registry.applicabilityRuleSets.flatMap(set=>set.rules);
   const subjectIds = new Map<string, string>();
   for (const [index, subject] of snapshot.subjects.entries()) {
@@ -280,31 +309,28 @@ async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPl
     if (!existing.rows[0]) await session.query(
       `INSERT INTO subject (subject_id, subject_domain_id, subject_type_revision_id, subject_kind, business_identifier, display_label)
        VALUES ($1,$2,$3,$4,$5,$6)`, [subjectId, subject.id, snapshot.subjectTypeRevisionId, subject.type, subject.id, subject.displayLabel]);
-    const runSubjectId = randomUUID();
-    await session.query('INSERT INTO run_subject (run_subject_id, run_id, subject_id, ordinal, display_label) VALUES ($1,$2,$3,$4,$5)',
+    const runSubjectId = existingSubjectIds.get(subject.id) ?? randomUUID();
+    await session.query('INSERT INTO run_subject (run_subject_id, run_id, subject_id, ordinal, display_label) VALUES ($1,$2,$3,$4,$5) ON CONFLICT(run_subject_id) DO UPDATE SET ordinal=EXCLUDED.ordinal,display_label=EXCLUDED.display_label',
       [runSubjectId, runId, subjectId, index + 1, subject.displayLabel]);
     subjectIds.set(subject.id, runSubjectId);
   }
   const operationIds = new Map<string, string>();
   for (const [index, operation] of snapshot.steps.entries()) {
-    const operationId = randomUUID(); operationIds.set(operation.id, operationId);
+    const operationId = existingOperationIds.get(operation.id) ?? randomUUID(); operationIds.set(operation.id, operationId);
     await session.query(`INSERT INTO run_operation (run_operation_id, run_id, operation_domain_id, sequence, label,
-      operation_definition_revision_id, role, measurement_point, operation_context) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)`,
+      operation_definition_revision_id, role, measurement_point, operation_context) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
+      ON CONFLICT(run_operation_id) DO UPDATE SET sequence=EXCLUDED.sequence,label=EXCLUDED.label,operation_definition_revision_id=EXCLUDED.operation_definition_revision_id,role=EXCLUDED.role,measurement_point=EXCLUDED.measurement_point,operation_context=EXCLUDED.operation_context`,
       [operationId, runId, operation.id, index + 1, operation.label, operation.operationDefinitionId, operation.role, operation.measurementPoint, JSON.stringify(operation.context)]);
   }
-  for (const [subjectDomainId, operationDomainIds] of Object.entries(snapshot.subjectOperationIds)) {
-    const runSubjectId = subjectIds.get(subjectDomainId);
-    if (!runSubjectId) throw new ApplicationError('VALIDATION', `Unknown Run Subject membership: ${subjectDomainId}`);
-    for (const operationDomainId of operationDomainIds) {
-      const runOperationId = operationIds.get(operationDomainId);
-      if (!runOperationId) throw new ApplicationError('VALIDATION', `Unknown Run Operation membership: ${operationDomainId}`);
-      await session.query('INSERT INTO run_subject_operation (run_subject_id, run_operation_id, run_id) VALUES ($1,$2,$3)', [runSubjectId, runOperationId, runId]);
-    }
-  }
+  await pruneRecipeSourceBindings(session,runId,snapshot,sampleAction);
+  await syncOperationDesign(session,runId,snapshot,subjectIds,operationIds);
   const assignmentScopes=new Set<string>();
   const displayedDefinitions=new Map<string,string>();
   for (const assignment of snapshot.assignments) {
-    const assignmentId = randomUUID();
+    const previousAssignment=existingAssignments.get(assignment.id);
+    if(previousAssignment&&previousAssignment.assignment_kind!==assignment.kind)
+      throw new ApplicationError('VALIDATION','Existing assignment identity cannot change its kind.');
+    const assignmentId = previousAssignment?.run_assignment_id ?? randomUUID();
     const step = snapshot.steps.find((item) => item.id === assignment.processStepId);
     const context=step?.context;
     if(!step||!context)throw new ApplicationError('VALIDATION','Exact assignment Operation context is required.');
@@ -314,7 +340,7 @@ async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPl
     if (!rule || !descriptor) throw new ApplicationError('VALIDATION', 'Assignment has no exact definition in its pinned package.');
     if(snapshot.conditionResolution){
       if(assignment.label!==resolved!.label)throw new ApplicationError('VALIDATION','Condition name must match its exact definition.');
-      const scope=JSON.stringify([assignment.processStepId,rule.id,assignment.subjectId,assignment.positionId]);
+      const scope=JSON.stringify([assignment.processStepId,rule.id,assignment.subjectId,assignment.positionId,assignment.groupId??null]);
       const display=JSON.stringify([assignment.processStepId,assignment.kind,assignment.label]);
       if(assignmentScopes.has(scope))throw new ApplicationError('VALIDATION','Duplicate assignment.');
       if(displayedDefinitions.has(display)&&displayedDefinitions.get(display)!==rule.id)throw new ApplicationError('VALIDATION','Conditions with the same name cannot be resolved unambiguously.');
@@ -331,30 +357,40 @@ async function insertPlanChildren(session:SqlSession,runId:string,snapshot:RunPl
     await session.query(`INSERT INTO run_assignment (run_assignment_id, run_id, assignment_domain_id, run_operation_id,
       run_subject_id, position_domain_id, assignment_kind, label, value_text, assignment_reference_revision_id,
       intent_role, provenance, definition_revision_id, reference_kind, grain_revision_id,
-      unit_definition_revision_id, applicability_rule_id, value_type, value_number, value_boolean)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+      unit_definition_revision_id, applicability_rule_id, value_type, value_number, value_boolean, group_domain_id)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+      ON CONFLICT(run_assignment_id) DO UPDATE SET run_operation_id=EXCLUDED.run_operation_id,run_subject_id=EXCLUDED.run_subject_id,
+      position_domain_id=EXCLUDED.position_domain_id,label=EXCLUDED.label,value_text=EXCLUDED.value_text,
+      assignment_reference_revision_id=EXCLUDED.assignment_reference_revision_id,intent_role=EXCLUDED.intent_role,provenance=EXCLUDED.provenance,
+      definition_revision_id=EXCLUDED.definition_revision_id,reference_kind=EXCLUDED.reference_kind,grain_revision_id=EXCLUDED.grain_revision_id,
+      unit_definition_revision_id=EXCLUDED.unit_definition_revision_id,applicability_rule_id=EXCLUDED.applicability_rule_id,
+      value_type=EXCLUDED.value_type,value_number=EXCLUDED.value_number,value_boolean=EXCLUDED.value_boolean,group_domain_id=EXCLUDED.group_domain_id`,
       [assignmentId, runId, assignment.id, operationId, subjectId, assignment.positionId, assignment.kind,
         assignment.label, assignment.value, assignment.referenceId, assignment.intentRole, assignment.provenance,
         descriptor.revisionId, assignment.kind === 'CONDITION' ? 'definitionDescriptors' : 'externalReferences',
         rule.defaultGrainRevisionId, descriptor.unitDefinitionRevisionId, rule.id, valueType, numeric,
-        valueType === 'BOOLEAN' ? assignment.value === 'true' : null]);
+        valueType === 'BOOLEAN' ? assignment.value === 'true' : null,assignment.groupId??null]);
     const subtype = { CONDITION: ['run_condition_assignment', 'condition_revision_id'], RECIPE: ['run_recipe_assignment', 'recipe_revision_id'],
       MATERIAL: ['run_material_usage', 'material_revision_id'], RESOURCE: ['run_resource_usage', 'resource_revision_id'] }[assignment.kind]!;
-    await session.query(`INSERT INTO ${subtype[0]} (run_assignment_id, ${subtype[1]}) VALUES ($1,$2)`, [assignmentId, assignment.referenceId]);
+    await session.query(`INSERT INTO ${subtype[0]} (run_assignment_id, ${subtype[1]}) VALUES ($1,$2) ON CONFLICT(run_assignment_id) DO UPDATE SET ${subtype[1]}=EXCLUDED.${subtype[1]}`, [assignmentId, assignment.referenceId]);
   }
   for (const measurement of snapshot.measurements) {
     const operationId = operationIds.get(measurement.stepId);
     if (!operationId) throw new ApplicationError('VALIDATION', `Unknown Measurement Plan Operation: ${measurement.stepId}`);
-    const measurementId = randomUUID();
+    const measurementId = existingMeasurementIds.get(measurement.id) ?? randomUUID();
     await session.query(`INSERT INTO run_measurement_plan (measurement_plan_id, run_id, measurement_domain_id,
       run_operation_id, measurement_operation_definition_id, operation_label, measurement_point)
-      VALUES ($1,$2,$3,$4,$5,$6,$7)`, [measurementId, runId, measurement.id, operationId,
+      VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(measurement_plan_id) DO UPDATE SET run_operation_id=EXCLUDED.run_operation_id,measurement_operation_definition_id=EXCLUDED.measurement_operation_definition_id,operation_label=EXCLUDED.operation_label,measurement_point=EXCLUDED.measurement_point`, [measurementId, runId, measurement.id, operationId,
       measurement.measurementOperationDefinitionId, measurement.operation, measurement.point]);
+    await session.query('DELETE FROM run_measurement_plan_parameter WHERE measurement_plan_id=$1 AND ordinal>$2',[measurementId,measurement.parameterDefinitionIds.length]);
     for (let index = 0; index < measurement.parameterDefinitionIds.length; index += 1)
       await session.query(`INSERT INTO run_measurement_plan_parameter
-        (measurement_plan_id, ordinal, parameter_definition_id, parameter_label) VALUES ($1,$2,$3,$4)`,
+        (measurement_plan_id, ordinal, parameter_definition_id, parameter_label) VALUES ($1,$2,$3,$4) ON CONFLICT(measurement_plan_id,ordinal) DO UPDATE SET parameter_definition_id=EXCLUDED.parameter_definition_id,parameter_label=EXCLUDED.parameter_label`,
         [measurementId, index + 1, measurement.parameterDefinitionIds[index], measurement.parameters[index]]);
   }
+  await syncRecipeSourceBindings(session,runId,snapshot,sampleAction);
+  await session.query('DELETE FROM run_operation WHERE run_id=$1 AND NOT(operation_domain_id=ANY($2::text[]))',[runId,snapshot.steps.map(operation=>operation.id)]);
+  await session.query('DELETE FROM run_subject WHERE run_id=$1 AND NOT(run_subject_id=ANY($2::uuid[]))',[runId,[...subjectIds.values()]]);
   await syncSampleSelections(session,runId,snapshot,sampleAction);
   return runId;
 }
@@ -417,7 +453,7 @@ async function previewPersistedCreation(session:SqlSession,raw:RunCreationReques
   if(request.draft && request.sourceFingerprint!==sourceFingerprint)throw new ApplicationError('CONFLICT','Creation source changed. Review a fresh preview before creating.');
   if(!request.draft && !request.includeDraftOptions){
     const readiness=request.source==='BLANK' ? {status:'NOT_READY' as const,missing:['Add and save at least one Subject.','Add and save ordered Operations.']} : await creationReadiness(session,request.seriesSlug,snapshot);
-    return {snapshot,sourceChanges,legacySourceAmbiguous,sourceFingerprint,fingerprint:hash(comparableStudyData({snapshot:{...snapshot,createdAt:undefined},sourceFingerprint})),readiness:{status:readiness.status,missing:readiness.missing}};
+    return {snapshot,sourceChanges,legacySourceAmbiguous,sourceFingerprint,fingerprint:hash(comparableStudyData({snapshot:{...snapshot,createdAt:undefined},sourceFingerprint})),readiness:{status:readiness.status,missing:readiness.missing,...('warnings' in readiness?{warnings:readiness.warnings as string[]}: {})}};
   }
   const setup=(await readSetup(session,request.seriesSlug as SeriesSlug))!;
   const choices=await executionOptions(session,{...setup,configurationPackageVersionId:snapshot.configurationPackageVersionId,experimentTypeProfileVersionId:snapshot.experimentTypeProfileVersionId,subjectTypeRevisionId:snapshot.subjectTypeRevisionId,area:snapshot.area});
@@ -429,7 +465,7 @@ async function previewPersistedCreation(session:SqlSession,raw:RunCreationReques
     readiness.missing.push(...draftValueProblems(request.draft,choices.options));
     readiness.status=readiness.missing.length?'NOT_READY':'READY';
   }
-  return {snapshot,sourceChanges,legacySourceAmbiguous,sourceFingerprint,fingerprint:hash(comparableStudyData({snapshot:{...snapshot,createdAt:undefined},sourceFingerprint})),readiness:{status:readiness.status,missing:readiness.missing},options:choices.options,catalog:choices.catalog};
+  return {snapshot,sourceChanges,legacySourceAmbiguous,sourceFingerprint,fingerprint:hash(comparableStudyData({snapshot:{...snapshot,createdAt:undefined},sourceFingerprint})),readiness:{status:readiness.status,missing:readiness.missing,...('warnings' in readiness?{warnings:readiness.warnings as string[]}: {})},options:choices.options,catalog:choices.catalog};
 }
 
 export class PostgresRunRepository implements RunRepository {
@@ -550,8 +586,7 @@ export class PostgresRunRepository implements RunRepository {
       const current=(await readRun(session,'WHERE run.run_id=$1',[root.run_id]))!;
       const configuration=await hydrateConfigurationPackages(session,[current.configurationPackageVersionId]);
       const snapshot=validatePlanEdit(current,record.snapshot,configuration);
-      for(const table of ['run_measurement_plan','run_assignment','run_subject_operation','run_operation','run_subject'])await session.query(`DELETE FROM ${table} WHERE run_id=$1`,[root.run_id]);
-      await insertPlanChildren(session,root.run_id,snapshot,configuration.getConfigurationRegistry());
+      await syncPlanChildren(session,root.run_id,snapshot,configuration.getConfigurationRegistry());
       await session.query(`UPDATE experiment_run SET display_name=$2,intent=$3,candidate_subjects=$4::jsonb,manufacturing_context=$5::jsonb,delta=$6::jsonb,planning_context=$7::jsonb,aggregate_version=aggregate_version+1 WHERE run_id=$1`,[root.run_id,snapshot.name,snapshot.intent,JSON.stringify(snapshot.candidateSubjects??null),JSON.stringify(snapshot.manufacturingContext??null),JSON.stringify(snapshot.delta),JSON.stringify({ranges:record.ranges,manualFocus:record.manualFocus,conditionResolution:snapshot.conditionResolution})]);
       await session.query("INSERT INTO idempotency_record(idempotency_record_id,command_scope,idempotency_key,request_hash,status,result_run_id,completed_at) VALUES($1,$2,$3,$4,'SUCCEEDED',$5,now())",[randomUUID(),scope,command.commandId,requestHash,root.run_id]);
     });}catch(error){throw persistenceError('Save Plan failed.',error);}

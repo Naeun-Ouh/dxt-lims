@@ -1,5 +1,5 @@
 import { participatesInOperation } from './grid-plan-context';
-import type { RunPlanningSnapshot } from './planning-model';
+import {effectiveAssignments,type RunPlanningSnapshot} from './planning-model';
 import type { EngineeringGridRow } from './engineering-grid-model';
 /** Translate only the frozen grid's role/value edits into its full Run snapshot. */
 export function applyGridPlanEdits(snapshot:RunPlanningSnapshot,rows:EngineeringGridRow[],dirty:Record<string,string>,roles:Record<string,'FIXED'|'VARIED'>){
@@ -8,18 +8,19 @@ export function applyGridPlanEdits(snapshot:RunPlanningSnapshot,rows:Engineering
   if(!row.assignment||!row.definition)continue;
   const base=row.assignment,definition=row.definition;
   const matches=(a:typeof base)=>a.processStepId===row.operation.sourceOperationId&&a.kind===base.kind&&a.label===base.label&&!a.positionId;
-  if(roles[row.id])assignments=assignments.map(a=>matches(a)?{...a,intentRole:roles[row.id]}:a);
+  if(roles[row.id])assignments=assignments.map(a=>matches(a)&&(snapshot.conditionResolution!=='GROUPS_V2'||(!a.groupId&&!a.subjectId))?{...a,intentRole:roles[row.id]}:a);
   for(const subject of snapshot.subjects){
    if(!participatesInOperation(snapshot,subject.id,row.operation.sourceOperationId))continue;
    const value=dirty[`${row.id}:${subject.id}`];if(value===undefined)continue;
    const existing=assignments.find(a=>matches(a)&&a.subjectId===subject.id);
-   if(snapshot.conditionResolution==='SUBJECT_FIRST_V1'&&!value.trim()){
+   if(snapshot.conditionResolution&&!value.trim()){
     assignments=assignments.filter(a=>!(matches(a)&&a.subjectId===subject.id));
     continue;
    }
-   const selectedReference=existing?.referenceId??base.referenceId;
+   const effective=snapshot.conditionResolution==='GROUPS_V2'?effectiveAssignments(snapshot,subject.id)[`${row.operation.sourceOperationId}:${base.kind}:${base.label}`]:undefined;
+   const selectedReference=existing?.referenceId??effective?.referenceId??base.referenceId;
    const option=definition.options.find(o=>o.value===value&&o.referenceId===selectedReference)??definition.options.find(o=>o.value===value);
-   const item={...base,...existing,id:existing?.id??`${base.id}:subject:${subject.id}`,processStepId:row.operation.sourceOperationId,subjectId:subject.id,positionId:null,value,intentRole:roles[row.id]??existing?.intentRole??base.intentRole,referenceId:option?.referenceId??selectedReference};
+   const item={...base,...existing,id:existing?.id??`${base.id}:subject:${subject.id}`,processStepId:row.operation.sourceOperationId,subjectId:subject.id,groupId:null,positionId:null,value,intentRole:roles[row.id]??existing?.intentRole??effective?.intentRole??base.intentRole,referenceId:option?.referenceId??selectedReference};
    if(item.kind==='MATERIAL'&&item.referenceId!==selectedReference){item.sampleRevisionId=null;item.sampleAccessDenied=false;}
    assignments=existing?assignments.map(a=>a.id===existing.id?item:a):[...assignments,item];
   }

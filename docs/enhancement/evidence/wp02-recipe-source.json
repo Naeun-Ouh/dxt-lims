@@ -1,0 +1,10 @@
+{
+  "unitTests": 5,
+  "unitStatus": "PASS",
+  "nativePostgres": "18.7",
+  "nativeStatus": "PASS",
+  "migration": "022_recipe_source_bindings.sql",
+  "sha256": "572a09de743d7bb94ee0f8344d0742ba168e31ef7d730f18aaf8ae76d733b1f0",
+  "humanAcceptance": "NOT RUN",
+  "existingUatModified": false
+}

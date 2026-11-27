@@ -145,7 +145,7 @@ export function recordActualExecution(
     throw new Error('Completion time is required for a completed execution.');
   const plan = projectOperationExecution(model, operation, subject, []);
   const recipeDefinition =
-    model.snapshot.conditionResolution === 'SUBJECT_FIRST_V1'
+    model.snapshot.conditionResolution
       ? resolvedVariableDefinitions(model, operation.id).find(
           (definition) => definition.assignmentKind === 'RECIPE',
         )
@@ -154,7 +154,7 @@ export function recordActualExecution(
     ? plan.comparisons.find((item) => item.key === recipeDefinition.id)
     : undefined;
   const observedRecipe =
-    model.snapshot.conditionResolution === 'SUBJECT_FIRST_V1'
+    model.snapshot.conditionResolution
       ? (command.recipe ??
         (plannedRecipe
           ? (command.actualOverrides[plannedRecipe.key] ??
@@ -390,8 +390,8 @@ export function recordDecisionAndNextAction(
   catalog: ReferenceCatalog,
   command: DecisionCommand,
 ) {
-  if (!command.conclusion.trim() || !command.reason.trim())
-    throw new Error('Decision and scientific rationale are required.');
+  if (!command.conclusion.trim())
+    throw new Error('Run Conclusion is required.');
   if (command.nextActionTypeDefinitionId) {
     if (!command.nextActionNote.trim()) throw new Error('Next Action note is required.');
   resolveById(catalog.nextActionTypes, command.nextActionTypeDefinitionId);
