@@ -1,0 +1,19 @@
+✔ upgrade preserves legacy excluded interpretation and stable operation identities (1.368667ms)
+✔ subject > group > common inherits empty values and preserves 0, invalid, false and role (0.376834ms)
+✔ explicit grouping and removal never turn unassigned into Skip; overrides survive (0.373541ms)
+✔ group duplication copies conditions without sharing identity or changing original (0.136333ms)
+✔ rendering legacy groups is read-only until explicit conversion and KO/EN distinguish states (8.496583ms)
+✔ 1000 Operations × 25 Subjects begins with 50 collapsed summaries and no condition inputs (28.134083ms)
+✔ warning text is explicitly non-blocking and translated without changing identifiers (0.531917ms)
+✔ Source condition copy retains exact revisions and explicit CLEAR but uses fresh identity (0.280708ms)
+✔ V2 accessible descriptions and Subject guidance distinguish allocation, Skip and missing (1.906833ms)
+✔ QA-01 consecutive Split display excludes Base and preserves identity, custom description and input snapshot (0.621958ms)
+✔ QA-01 shared editor renders derived sequence and separate optional descriptions in KO/EN (2.247458ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 225.267458

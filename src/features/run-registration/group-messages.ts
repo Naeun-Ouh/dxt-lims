@@ -11,7 +11,7 @@ const labels = {
   addBase: ['Add Base', 'Base 추가'],
   addSplit: ['Add Split Group', 'Split Group 추가'],
   group: ['Group', 'Group'],
-  rename: ['Group name', 'Group 이름'],
+  description: ['Description (optional)', '설명 (선택 사항)'],
   duplicate: ['Duplicate conditions', '조건 복제'],
   delete: ['Delete Group', 'Group 삭제'],
   deleteWarning: [

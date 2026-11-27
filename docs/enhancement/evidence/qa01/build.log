@@ -1,0 +1,73 @@
+npm WARN logfile could not be created: Error: EPERM: operation not permitted, open '/Users/naeunouh/.npm/_logs/2026-11-27T14_16_37_108Z-debug-0.log'
+
+> dxt-lims@0.1.0 build
+> vinext build
+
+
+  vinext build  (Vite 8.0.13)
+
+[1/5] analyze client references...
+[2Ktransforming...✓ 506 modules transformed.
+rendering chunks...
+✓ built in 1.48s
+[2/5] analyze server references...
+[2Ktransforming...✓ 605 modules transformed.
+rendering chunks...
+✓ built in 746ms
+[3/5] build rsc environment...
+[2Ktransforming...✓ 553 modules transformed.
+rendering chunks...
+computing gzip size...
+✓ built in 1.02s
+[4/5] build client environment...
+[2Ktransforming...✓ 2347 modules transformed.
+rendering chunks...
+computing gzip size...
+✓ built in 1.60s
+[5/5] build ssr environment...
+[2Ktransforming...✓ 609 modules transformed.
+rendering chunks...
+computing gzip size...
+✓ built in 1.00s
+[0m
+  Route (app)
+  ┌ ƒ /                                                             
+  ├ ? /analysis                                                     
+  ├ λ /api/recipe-sources                                           
+  ├ λ /api/repository                                               
+  ├ λ /api/samples                                                  
+  ├ ? /reference                                                    
+  ├ ƒ /reference/conditions/:conditionCode                          
+  ├ ƒ /reference/experiment-types/:typeCode/areas/:areaCode         
+  ├ ƒ /reference/measurement-operations/:operationCode              
+  ├ ? /runs/new                                                     
+  ├ ? /samples                                                      
+  ├ ƒ /samples/:sampleCode                                          
+  ├ ƒ /samples/:sampleCode/revisions/:revision                      
+  ├ ƒ /series/:seriesSlug                                           
+  ├ ƒ /series/:seriesSlug/runs/:runNumber/engineering-grid          
+  ├ ? /series/adhesion-material-optimization                        
+  ├ ? /series/adhesion-material-optimization/runs/3/engineering-grid
+  ├ ? /series/adhesion-material-optimization/runs/4/engineering-grid
+  ├ ? /series/cmp-stability                                         
+  ├ ? /series/cmp-stability/runs/12/engineering-grid                
+  ├ ? /series/cmp-stability/runs/12/workspace                       
+  ├ ? /series/cmp-stability/runs/13/engineering-grid                
+  ├ ? /series/dts-improvement                                       
+  ├ ? /series/dts-improvement/analysis                              
+  ├ ƒ /series/dts-improvement/runs/:runId                           
+  ├ ƒ /series/dts-improvement/runs/:runId/data-preparation          
+  ├ ? /series/dts-improvement/runs/18/engineering-grid              
+  ├ ? /series/dts-improvement/runs/18/workspace                     
+  ├ ? /series/dts-improvement/runs/19/engineering-grid              
+  ├ ƒ /studies                                                      
+  └ ƒ /studies/new                                                  
+
+  λ API  ƒ Dynamic  ? Unknown
+
+  ? Some routes could not be classified. vinext currently uses static analysis
+    and cannot detect dynamic API usage (headers(), cookies(), etc.) at build time.
+    Automatic classification will be improved in a future release.
+
+  Build complete. Run `vinext start` to start the production server.
+

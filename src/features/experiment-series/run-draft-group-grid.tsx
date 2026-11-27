@@ -1,4 +1,5 @@
 'use client';
+import { operationGroupLabel } from '../run-registration/operation-group-display';
 import '@/src/features/run-registration/operation-group-editor.css';
 import { Fragment, useMemo, useState } from 'react';
 import {
@@ -295,9 +296,7 @@ export function RunDraftGroupGrid({
                         return (
                           <td key={s.id}>
                             {a?.groupId
-                              ? op.design?.groups.find(
-                                  (group) => group.id === a.groupId,
-                                )?.name
+                              ? operationGroupLabel(op.design, a.groupId)
                               : g(
                                   a?.state ??
                                     (op.subjectIds.includes(s.id)
@@ -526,9 +525,7 @@ function DraftScopedConditions({
                   {effective?.subjectId
                     ? g('override')
                     : effective?.groupId
-                      ? op.design?.groups.find(
-                          (group) => group.id === effective.groupId,
-                        )?.name
+                      ? operationGroupLabel(op.design, effective.groupId)
                       : effective
                         ? g('common')
                         : g('missing')}

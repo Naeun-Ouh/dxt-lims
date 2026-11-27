@@ -96,7 +96,7 @@ void test('Group Delta: rename and Skip are separate explicit changes; old write
     allocation = changed.delta.items.find((d) => d.kind === 'ALLOCATION')!;
   assert.match(group.before!, /Split/);
   assert.match(group.after!, /Split B/);
-  assert.equal(allocation.before, 'ASSIGNED · Split');
+  assert.equal(allocation.before, 'ASSIGNED · Split 1');
   assert.equal(allocation.after, 'SKIP');
   assert.throws(
     () =>
@@ -166,4 +166,16 @@ void test('Group Delta: new scope repeated edits retain original absence, not in
   assert.equal(delta.beforeRole, null);
   assert.equal(delta.after, '31');
   assert.equal(delta.afterRole, 'VARIED');
+});
+
+void test('QA-01 display renumbering preserves recorded history and does not hide Group identity changes', () => {
+  const {plan,op} = setup();
+  plan.delta.items.push({id:'historical-label',kind:'ALLOCATION',label:'Historic allocation',change:'CHANGED',before:'ASSIGNED · Split 3',after:'SKIP'});
+  const before = structuredClone(plan);
+  const next = structuredClone(plan);
+  next.operationDesign![op].groups[0].id = 'replacement';
+  const changed = withPlanDelta(plan,next);
+  assert.ok(changed.delta.items.some(d=>d.id===`plan-groups-${op}`),'same visible ordinal does not erase a different internal identity');
+  assert.deepEqual(changed.delta.items.find(d=>d.id==='historical-label'),before.delta.items[0]);
+  assert.deepEqual(plan,before,'old snapshot and historical label remain intact');
 });

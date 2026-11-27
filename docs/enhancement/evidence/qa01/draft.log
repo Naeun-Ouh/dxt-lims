@@ -1,0 +1,19 @@
+✔ required/optional metadata shows missing participation coverage without fabricating values (20.700875ms)
+✔ KO/EN format feedback preserves literal values, units and persisted role (7.440417ms)
+✔ Measurement grid exposes supporting prerequisites and never adds them automatically (1.798333ms)
+✔ Subject removal prunes only its participation and scoped conditions (0.861458ms)
+✔ Unified matrix renders objects and scoped assignments without changing scope or value order (3.804333ms)
+✔ Create-first actions need no preview, remain retryable after invalid input, and never render a durable confirm (1.354417ms)
+✔ authoritative errors locate exact scoped conditions without marking non-applicable Subjects missing (0.637458ms)
+✔ common invalid values attach to their editable cell and feedback renders next to the input (1.913459ms)
+✔ creation review preserves snapshot and shows subjects, order, application, conditions and final-only action (3.17175ms)
+✔ Clearing a Subject condition inherits common value without writing an empty assignment (0.297708ms)
+✔ Common-only conditions stay collapsed; existing Subject values are visible without mutation (3.70025ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 225.263667

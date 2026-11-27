@@ -1,3 +1,4 @@
+import { operationGroupLabel } from '@/src/features/run-registration/operation-group-display';
 import { inheritNewOperationParticipation } from '@/src/features/run-registration/participation';
 import { ApplicationError } from './repository-ports';
 import type { RunPlanningSnapshot } from '@/src/features/run-registration/planning-model';
@@ -71,10 +72,10 @@ export function withPlanDelta(current:RunPlanningSnapshot,next:RunPlanningSnapsh
     const ids=new Set([...Object.keys(current.operationDesign??{}),...Object.keys(next.operationDesign??{})]);
     for(const id of ids){
       const before=current.operationDesign?.[id],after=next.operationDesign?.[id],operation=next.steps.find(o=>o.id===id)?.label??current.steps.find(o=>o.id===id)?.label??id;
-      const groups=(d:typeof before)=>d?`${d.mode}: ${d.groups.map(g=>`${g.kind} ${g.name}`).join(', ')}`:null;
-      if(groups(before)!==groups(after))append({id:`plan-groups-${id}`,kind:'OPERATION_GROUP',label:operation,change:before?'CHANGED':'ADDED',before:groups(before),after:groups(after)});
+      const groups=(d:typeof before)=>d?`${d.mode}: ${d.groups.map(g=>operationGroupLabel(d,g.id)).join(', ')}`:null;
+      if(before?.mode!==after?.mode || JSON.stringify(before?.groups)!==JSON.stringify(after?.groups))append({id:`plan-groups-${id}`,kind:'OPERATION_GROUP',label:operation,change:before?'CHANGED':'ADDED',before:groups(before),after:groups(after)});
       const subjects=new Set([...Object.keys(before?.allocations??{}),...Object.keys(after?.allocations??{})]);
-      const display=(d:typeof before,subject:string)=>{const a=d?.allocations[subject];return a?`${a.state}${a.groupId?' · '+(d?.groups.find(g=>g.id===a.groupId)?.name??a.groupId):''}`:null;};
+      const display=(d:typeof before,subject:string)=>{const a=d?.allocations[subject];return a?`${a.state}${a.groupId?' · '+(operationGroupLabel(d,a.groupId)??a.groupId):''}`:null;};
       for(const subject of subjects)if(JSON.stringify(before?.allocations[subject])!==JSON.stringify(after?.allocations[subject]))append({id:`plan-allocation-${id}-${subject}`,kind:'ALLOCATION',label:`${operation} · ${subject}`,change:before?.allocations[subject]?'CHANGED':'ADDED',before:display(before,subject),after:display(after,subject)});
     }
   }

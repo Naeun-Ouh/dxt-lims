@@ -1,3 +1,4 @@
+import { operationGroupTitle, operationGroupLabel, operationGroupDescription } from '@/src/features/run-registration/operation-group-display';
 import { duplicateGroupBindings } from '@/src/features/run-registration/group-binding-edit';
 import {RunDraftSubjects} from '@/src/features/experiment-series/run-draft-subjects';
 import {allocationDescription,allocationUi} from '@/src/shared/i18n/allocation-messages';
@@ -301,4 +302,44 @@ void test('V2 accessible descriptions and Subject guidance distinguish allocatio
  const draft=prepareGroupDraft(make(),()=> 'stable');const ko=render(<RunDraftSubjects draft={draft} onChange={noWrite}/>,'ko');assert.match(ko,/일반 공정에 공통 적용/);assert.match(ko,/Group 공정에서는 미할당/);assert.match(ko,/기존 방식의 공정은 적용 상태를 그대로 유지/);
  const en=render(<RunDraftSubjects draft={draft} onChange={noWrite}/>);assert.match(en,/New Subjects apply to common Operations/);
  const legacy=render(<RunDraftSubjects draft={make()} onChange={noWrite}/>);assert.match(legacy,/Existing Operations do not automatically apply/);
+});
+
+void test('QA-01 consecutive Split display excludes Base and preserves identity, custom description and input snapshot', () => {
+  let design = commonOperationDesign(['W01']);
+  for (const group of [
+    {id:'base',kind:'BASE' as const,name:'Base'},
+    {id:'s1',kind:'SPLIT' as const,name:'Split 1'},
+    {id:'s2',kind:'SPLIT' as const,name:'Split 2'},
+    {id:'s3',kind:'SPLIT' as const,name:'Split 3'},
+  ]) design = addOperationGroup(design,group);
+  design.allocations.W01 = {state:'ASSIGNED',groupId:'s3'};
+  const original = structuredClone(design);
+  const labels = (d:typeof design) => d.groups.map(group => operationGroupLabel(d,group.id));
+  assert.deepEqual(labels(design),['Base','Split 1','Split 2','Split 3']);
+  const removed = removeOperationGroup(design,'s2');
+  assert.deepEqual(labels(removed),['Base','Split 1','Split 2']);
+  assert.equal(removed.groups[2].id,'s3');
+  assert.equal(removed.groups[2].name,'Split 3','do not rewrite historical/generated names');
+  assert.deepEqual(removed.allocations,original.allocations);
+  const added = addOperationGroup(removed,{id:'s4',kind:'SPLIT',name:'Split'});
+  assert.deepEqual(labels(added),['Base','Split 1','Split 2','Split 3']);
+  assert.deepEqual(design,original,'display projection and removal never mutate the source');
+  const named = {...removed,groups:removed.groups.map(g=>g.id==='s3'?{...g,name:'High temperature'}:g)};
+  assert.equal(operationGroupLabel(named,'s3'),'Split 2 · High temperature');
+  assert.equal(operationGroupDescription(named.groups[2]),'High temperature');
+  assert.equal(operationGroupDescription({...named.groups[2],name:'High '}),'High ','typing a multiword description preserves the trailing space');
+  assert.equal(operationGroupTitle(named,'unknown'),undefined);
+  assert.equal(operationGroupLabel(named,'unknown'),undefined);
+  assert.equal(operationGroupTitle({...added,groups:[added.groups[1],added.groups[0],...added.groups.slice(2)]},'s3'),'Split 2');
+});
+
+void test('QA-01 shared editor renders derived sequence and separate optional descriptions in KO/EN',()=>{
+ const design = {mode:'GROUPED' as const,groups:[{id:'base',kind:'BASE' as const,name:'Base'},{id:'s1',kind:'SPLIT' as const,name:'Split 1'},{id:'s3',kind:'SPLIT' as const,name:'Split 3'}],allocations:{W01:{state:'ASSIGNED' as const,groupId:'s3'}}};
+ for(const locale of ['ko','en'] as const){
+  const html=render(<OperationGroupEditor design={design} subjects={[{id:'W01',displayLabel:'W01'}]} appliedSubjectIds={['W01']} onChange={noWrite} onDuplicate={noWrite} renderConditions={()=>null}/>,locale);
+  assert.match(html,/value="GROUP:s3"[^>]*>Split 2/);
+  assert.match(html,/aria-label="Split 2 · W01"/);
+  assert.match(html,locale==='ko'?/Split 2 · 설명 \(선택 사항\)/:/Split 2 · Description \(optional\)/);
+  assert.doesNotMatch(html,/Split 3/);
+ }
 });

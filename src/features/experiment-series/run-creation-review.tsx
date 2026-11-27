@@ -1,4 +1,5 @@
 'use client';
+import { operationGroupLabel } from '../run-registration/operation-group-display';
 import { RunDraftWarnings } from './run-draft-warnings';
 import { allocationLabel } from '@/src/shared/i18n/allocation-messages';
 import type { AuthoritativeRunPreview } from '@/src/application/run-creation';
@@ -74,7 +75,7 @@ export function RunCreationReview({
                   <td>
                     {snapshot.subjects
                       .filter((s) => applies(s.id))
-                      .map((s) => {const allocation=snapshot.operationDesign?.[step.id]?.allocations[s.id];const group=snapshot.operationDesign?.[step.id]?.groups.find(g=>g.id===allocation?.groupId);return group?`${s.displayLabel} · ${group.name}`:s.displayLabel;})
+                      .map((s) => {const allocation=snapshot.operationDesign?.[step.id]?.allocations[s.id];const group=snapshot.operationDesign?.[step.id]?.groups.find(g=>g.id===allocation?.groupId);return group?`${s.displayLabel} · ${operationGroupLabel(snapshot.operationDesign?.[step.id], group.id)}`:s.displayLabel;})
                       .join(', ') || '—'}
                   </td>
                   <td>

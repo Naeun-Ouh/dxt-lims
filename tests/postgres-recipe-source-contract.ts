@@ -1,3 +1,5 @@
+import { operationGroupLabel } from '@/src/features/run-registration/operation-group-display';
+import { removeOperationGroup } from '@/src/features/run-registration/operation-design';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createExperimentWorkspace } from '@/src/features/run-registration/workspace-model';
@@ -283,6 +285,35 @@ export async function recipeSourceContract(db: SqlDatabase) {
     })?.binding.sampleRevisionId,
     'source-contract-r2',
   );
+  // QA-01: display-only sequencing must preserve the remaining Group's exact links.
+  const beforeSequence = structuredClone(record.snapshot);
+  const originalGroup = beforeSequence.operationDesign![common.operationId].groups[0];
+  const numbered = {
+    ...beforeSequence.operationDesign![common.operationId],
+    groups: [
+      {id:'sequence-base',kind:'BASE' as const,name:'Base'},
+      {id:'sequence-s1',kind:'SPLIT' as const,name:'Split 1'},
+      {id:'sequence-s2',kind:'SPLIT' as const,name:'Split 2'},
+      originalGroup,
+    ],
+  };
+  await app.runs.savePlanning({...record,snapshot:applyOperationDesign(record.snapshot,common.operationId,numbered)},'sequence-initial');
+  record=(await app.runs.loadPlanning(created.id))!;
+  assert.equal(operationGroupLabel(record.snapshot.operationDesign![common.operationId],originalGroup.id),'Split 3 · Source Group');
+  const withoutMiddle=removeOperationGroup(record.snapshot.operationDesign![common.operationId],'sequence-s2');
+  await app.runs.savePlanning({...record,snapshot:applyOperationDesign(record.snapshot,common.operationId,withoutMiddle)},'sequence-delete');
+  record=(await app.runs.loadPlanning(created.id))!;
+  assert.equal(operationGroupLabel(record.snapshot.operationDesign![common.operationId],originalGroup.id),'Split 2 · Source Group');
+  const withNew=addOperationGroup(record.snapshot.operationDesign![common.operationId],{id:'sequence-new',kind:'SPLIT',name:'Split'});
+  await app.runs.savePlanning({...record,snapshot:applyOperationDesign(record.snapshot,common.operationId,withNew)},'sequence-add');
+  record=(await app.runs.loadPlanning(created.id))!;
+  const afterSequence=record.snapshot.operationDesign![common.operationId];
+  assert.deepEqual(afterSequence.groups.map(g=>operationGroupLabel(afterSequence,g.id)),['Base','Split 1','Split 2 · Source Group','Split 3']);
+  assert.deepEqual(afterSequence.groups.find(g=>g.id===originalGroup.id),originalGroup);
+  assert.deepEqual(afterSequence.allocations,beforeSequence.operationDesign![common.operationId].allocations);
+  assert.deepEqual(record.snapshot.recipeSourceBindings,beforeSequence.recipeSourceBindings,'Recipe/Parameter/Sample Revision identities unchanged');
+  assert.deepEqual(record.snapshot.assignments,beforeSequence.assignments,'all condition and Recipe values and roles unchanged');
+
   // Invalid exact selection atomically rolls back every Plan edit.
   await assert.rejects(
     app.runs.savePlanning(

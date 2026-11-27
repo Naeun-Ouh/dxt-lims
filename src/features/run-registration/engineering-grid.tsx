@@ -4,6 +4,7 @@ import {SampleSelectionDetail} from '@/src/features/samples/selection-detail';
 import { legacyConditionAmbiguities } from '@/src/application/condition-resolution';
 import { runAnalysisHref } from './run-analysis-link';
 import { allocationLabel, allocationDescription, allocationUi } from '@/src/shared/i18n/allocation-messages';
+import { operationGroupLabel } from './operation-group-display';
 import { allocationFor } from './operation-design';
 import { groupText } from './group-messages';
 import { PlanOperationDesignEditor } from './plan-operation-design-editor';
@@ -1489,7 +1490,7 @@ function GridRow(props: {
   const { t, locale } = useLocale();
   const { row, model } = props;
   const v2=model.snapshot.conditionResolution==='GROUPS_V2';
-  const allocationText=(subjectId:string)=>{if(!v2)return 'N/A';const a=allocationFor(model.snapshot,row.operation.sourceOperationId,subjectId);const groupId='groupId' in a?a.groupId:null;const name=groupId?model.snapshot.operationDesign?.[row.operation.sourceOperationId]?.groups.find(g=>g.id===groupId)?.name:null;return name??allocationLabel(locale,model.snapshot,row.operation.sourceOperationId,subjectId);};
+  const allocationText=(subjectId:string)=>{if(!v2)return 'N/A';const a=allocationFor(model.snapshot,row.operation.sourceOperationId,subjectId);const groupId='groupId' in a?a.groupId:null;const name=groupId?operationGroupLabel(model.snapshot.operationDesign?.[row.operation.sourceOperationId],groupId):null;return name??allocationLabel(locale,model.snapshot,row.operation.sourceOperationId,subjectId);};
   if (row.kind === 'OPERATION')
     return (
       <tr

@@ -1,0 +1,14 @@
+✔ Group Delta: subject override records inherited Group value and role, never unrelated common value (1.266125ms)
+✔ Group Delta: repeated edits preserve original value and original role together (0.269959ms)
+✔ Group Delta: rename and Skip are separate explicit changes; old writers cannot discard design (1.592042ms)
+✔ Group Delta: removing an edited assignment preserves the original role provenance (0.269792ms)
+✔ Group Delta: new scope repeated edits retain original absence, not invented prior values (0.299042ms)
+✔ QA-01 display renumbering preserves recorded history and does not hide Group identity changes (0.9645ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 171.111667

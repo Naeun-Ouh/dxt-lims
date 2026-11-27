@@ -9,6 +9,7 @@ import {
   type Allocation,
   type OperationDesign,
 } from './operation-design';
+import { operationGroupTitle, operationGroupLabel, operationGroupDescription } from './operation-group-display';
 import { groupText } from './group-messages';
 export type ConditionScope = { groupId?: string; subjectId?: string };
 export function OperationGroupEditor({
@@ -36,10 +37,7 @@ export function OperationGroupEditor({
     const group = {
       id: crypto.randomUUID(),
       kind,
-      name:
-        kind === 'BASE'
-          ? 'Base'
-          : `Split ${(design?.groups.filter((x) => x.kind === 'SPLIT').length ?? 0) + 1}`,
+      name: kind === 'BASE' ? 'Base' : 'Split',
     };
     onChange(
       addOperationGroup(
@@ -60,7 +58,7 @@ export function OperationGroupEditor({
       allocations: { ...current.allocations, [id]: allocation },
     });
     setAnnouncement(
-      `${id} · ${allocation.groupId ? current.groups.find((x) => x.id === allocation.groupId)?.name : g(allocation.state)}. ${g('retained')}`,
+      `${id} · ${allocation.groupId ? operationGroupLabel(current, allocation.groupId) : g(allocation.state)}. ${g('retained')}`,
     );
   };
   return (
@@ -166,7 +164,7 @@ export function OperationGroupEditor({
                       <option value="SKIP">{g('SKIP')}</option>
                       {design?.groups.map((group) => (
                         <option key={group.id} value={`GROUP:${group.id}`}>
-                          {group.name}
+                          {operationGroupLabel(design, group.id)}
                         </option>
                       ))}
                     </select>
@@ -184,18 +182,19 @@ export function OperationGroupEditor({
             {design?.groups.map((group) => (
               <tr key={group.id} className="matrix-condition">
                 <th>
-                  <span>{group.kind === 'BASE' ? 'Base' : 'Split'} · </span>
+                  <span>{operationGroupTitle(design, group.id)}</span>
                   <input
                     maxLength={200}
                     disabled={readOnly}
-                    aria-label={`${group.name} · ${g('rename')}`}
-                    value={group.name}
+                    aria-label={`${operationGroupTitle(design, group.id)} · ${g('description')}`}
+                    placeholder={g('description')}
+                    value={operationGroupDescription(group)}
                     onChange={(e) =>
                       onChange({
                         ...design,
                         groups: design.groups.map((x) =>
                           x.id === group.id
-                            ? { ...x, name: e.target.value }
+                            ? { ...x, name: e.target.value.trim() ? e.target.value : (x.kind === 'BASE' ? 'Base' : 'Split') }
                             : x,
                         ),
                       })
@@ -213,7 +212,7 @@ export function OperationGroupEditor({
                   {!readOnly && (
                     <>
                       <select
-                        aria-label={`${group.name} · ${g('duplicate')}`}
+                        aria-label={`${operationGroupLabel(design, group.id)} · ${g('duplicate')}`}
                         value=""
                         onChange={(e) => {
                           if (e.target.value)
@@ -225,7 +224,7 @@ export function OperationGroupEditor({
                           .filter((x) => x.id !== group.id)
                           .map((x) => (
                             <option key={x.id} value={x.id}>
-                              {x.name}
+                              {operationGroupLabel(design, x.id)}
                             </option>
                           ))}
                       </select>
@@ -251,7 +250,7 @@ export function OperationGroupEditor({
                     <input
                       type="checkbox"
                       disabled={readOnly}
-                      aria-label={`${group.name} · ${s.id}`}
+                      aria-label={`${operationGroupLabel(design, group.id)} · ${s.id}`}
                       checked={design.allocations[s.id]?.groupId === group.id}
                       onChange={(e) =>
                         allocate(
@@ -276,7 +275,7 @@ export function OperationGroupEditor({
           {scope.subjectId
             ? `${g('override')} · ${scope.subjectId}`
             : scope.groupId
-              ? design?.groups.find((x) => x.id === scope.groupId)?.name
+              ? operationGroupLabel(design, scope.groupId)
               : g('common')}
         </h4>
         {renderConditions(scope)}
